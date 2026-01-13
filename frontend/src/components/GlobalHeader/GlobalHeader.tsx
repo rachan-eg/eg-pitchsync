@@ -1,0 +1,171 @@
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useApp } from '../../AppContext';
+import type { SessionState } from '../../types';
+import './GlobalHeader.css';
+
+interface GlobalHeaderProps {
+    session: SessionState | null;
+    currentPhaseNumber?: number;
+    totalPhases?: number;
+}
+
+const Icons = {
+
+    Trophy: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /></svg>
+    ),
+    Sparkles: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /><path d="M5 3v4" /><path d="M3 5h4" /><path d="M21 17v4" /><path d="M19 19h4" /></svg>
+    ),
+    ArrowLeft: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
+    )
+};
+
+export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
+    session,
+    currentPhaseNumber,
+    totalPhases
+}) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { resetToStart, fetchLeaderboard } = useApp();
+
+    const currentPath = location.pathname;
+
+    // Don't show header on landing/team input pages
+    if (!session || ['/', '/team'].includes(currentPath)) {
+        return null;
+    }
+
+
+    const getScoreTier = (score: number): { label: string; className: string } => {
+        if (score >= 900) return { label: 'S', className: 'header-tier-badge--s' };
+        if (score >= 800) return { label: 'A', className: 'header-tier-badge--a' };
+        if (score >= 700) return { label: 'B', className: 'header-tier-badge--b' };
+        if (score >= 500) return { label: 'C', className: 'header-tier-badge--c' };
+        return { label: 'D', className: 'header-tier-badge--default' };
+    };
+
+    const tier = getScoreTier(session.total_score);
+
+    const handleLogoClick = () => {
+        resetToStart();
+        navigate('/');
+    };
+
+    const handleViewLeaderboard = () => {
+        fetchLeaderboard();
+        navigate('/leaderboard');
+    };
+
+    const renderLeftContent = () => {
+        switch (currentPath) {
+            case '/mission':
+                return (
+                    <div className="header-left-content">
+                        <span className="header-phase-label">Mission Brief</span>
+                    </div>
+                );
+
+            case '/war-room':
+                return (
+                    <div className="header-left-content">
+                        <div className="header-phase-badge">
+                            <div className="header-phase-badge__group">
+                                <span className="header-phase-badge__label">PHASE</span>
+                                <span className="header-phase-badge__number">
+                                    {currentPhaseNumber}<span className="header-phase-badge__sep">/</span>{totalPhases}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="header-project-info">
+                            <span className="header-project-info__title" title={session?.usecase.title}>{session?.usecase.title}</span>
+                            <span className="header-project-info__sep">/</span>
+                            <span className="header-project-info__team">{session?.team_id}</span>
+                        </div>
+                    </div>
+                );
+
+            case '/curate':
+                return (
+                    <div className="header-left-content">
+                        <button onClick={() => navigate('/war-room')} className="header-nav-button">
+                            <Icons.ArrowLeft />
+                            <span className="header-nav-button__text">Phases</span>
+                        </button>
+                        <span className="header-section-label">Prompt Curation</span>
+                    </div>
+                );
+
+            case '/reveal':
+                return (
+                    <div className="header-left-content">
+                        <div className="header-section-label">
+                            <Icons.Sparkles />
+                            <span>Final Reveal</span>
+                        </div>
+                    </div>
+                );
+
+            default:
+                return null;
+        }
+    };
+
+    const renderCenterContent = () => {
+        return <div className="global-header__center" />;
+    };
+
+    const renderRightContent = () => {
+        return (
+            <div className="global-header__right">
+                <div className="header-score-group">
+                    <div className={`header-tier-badge ${tier.className}`}>
+                        {tier.label}
+                    </div>
+                    <div className="header-score-info">
+                        <div className="header-score-value">
+                            {session.total_score.toFixed(0)}
+                        </div>
+                        <div className="header-score-label">Score</div>
+                    </div>
+                </div>
+
+                <div className="global-header__divider global-header__divider--tall" />
+
+                <button
+                    onClick={handleViewLeaderboard}
+                    className="header-leaderboard-btn"
+                >
+                    <Icons.Trophy />
+                    <span className="header-leaderboard-btn__text">Ranks</span>
+                </button>
+            </div>
+        );
+    };
+
+    return (
+        <header className="global-header glass-panel">
+            <div className="global-header__container">
+                <div className="global-header__left">
+                    <button
+                        onClick={handleLogoClick}
+                        className="global-header__logo"
+                    >
+                        <span className="text-gradient">PITCH</span>
+                        <span className="text-white">-SYNC</span>
+                    </button>
+                    <div className="global-header__divider" />
+                    {renderLeftContent()}
+                </div>
+
+                {renderCenterContent()}
+
+                {renderRightContent()}
+            </div>
+        </header>
+    );
+};

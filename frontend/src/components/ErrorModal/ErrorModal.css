@@ -1,0 +1,57 @@
+/* =============================================================================
+   ERROR MODAL STYLES
+   ============================================================================= */
+
+.error-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.error-modal__content {
+    width: 100%;
+    max-width: 28rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.error-modal__header {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ef4444;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.error-modal__message {
+    color: #d4d4d8;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.error-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.error-modal__dismiss-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.error-modal__dismiss-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}

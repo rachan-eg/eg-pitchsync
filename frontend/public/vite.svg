@@ -1,0 +1,13 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer Sync Ring (Dynamic Purple) -->
+  <path d="M44 24C44 35.0457 35.0457 44 24 44C12.9543 44 4 35.0457 4 24C4 12.9543 12.9543 4 24 4" stroke="#a855f7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 4L20 8M24 4L28 8" stroke="#a855f7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Central Pitch Bolt (Electric Blue) -->
+  <path d="M26 12L14 26H22L20 38L34 22H26L30 12H26Z" fill="#60a5fa" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="opacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
+  </path>
+
+  <!-- Dual Tone Highlight -->
+  <circle cx="36" cy="12" r="3" fill="#d8b4fe" />
+</svg>

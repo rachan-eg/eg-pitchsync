@@ -1,0 +1,257 @@
+/* =============================================================================
+   MISSION BRIEF STYLES - COMPACT SINGLE PAGE
+   ============================================================================= */
+
+.mission-brief {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+}
+
+.mission-brief__container {
+    flex: 1;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 2rem 2rem 2rem;
+    /* Reduced top/bottom padding */
+    gap: 1rem;
+    /* Reduced gap from 2rem */
+    min-height: 0;
+    justify-content: center;
+    /* Center content vertically */
+}
+
+/* Header - More Compact */
+.mission-brief__header {
+    flex-shrink: 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0;
+    /* Reduced padding */
+}
+
+.mission-brief__title {
+    font-size: 2rem;
+    /* Reduced from 2.5rem */
+    font-weight: 900;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+    /* Reduced margin */
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    max-width: 900px;
+    text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.mission-brief__description {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    /* Reduced from 1rem */
+    font-weight: 500;
+    max-width: 600px;
+}
+
+/* Main Grid - Tighter */
+.mission-brief__grid {
+    flex: 0 1 auto;
+    /* Don't expand to fill space, let it fit content */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    /* Reduced grid gap */
+    min-height: 0;
+}
+
+/* Panels - Compact */
+.mission-brief__panel {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    /* Reduced from 1.5rem */
+    height: 100%;
+    /* Fill the grid row */
+    min-height: 300px;
+    /* Ensure reasonable minimum */
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.mission-brief__panel-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    margin-bottom: 1.0rem;
+    /* Reduced margin */
+    font-weight: 700;
+    opacity: 0.7;
+}
+
+/* Left Panel: Strategic Guidelines - Tighter spacing */
+.mission-brief__info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    /* Reduced from 1.25rem */
+}
+
+.mission-brief__info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0;
+    /* Reduced padding */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.mission-brief__info-label {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    /* Slightly smaller */
+}
+
+.mission-brief__info-value {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1rem;
+    /* Slightly smaller */
+    text-align: right;
+}
+
+.mission-brief__complexity--high {
+    color: #f87171;
+}
+
+.mission-brief__complexity--medium {
+    color: #fca5a5;
+}
+
+/* Right Panel: Execution Milestones - Tighter list */
+.mission-brief__phase-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    /* Reduced gap */
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.mission-brief__phase-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    /* Significantly reduced padding */
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.mission-brief__phase-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.mission-brief__phase-number {
+    width: 1.5rem;
+    /* Smaller badge */
+    height: 1.5rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.mission-brief__phase-info {
+    flex: 1;
+}
+
+.mission-brief__phase-name {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    /* Smaller text */
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.mission-brief__phase-meta {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 0.2rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.mission-brief__phase-weight {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0.5;
+}
+
+
+/* Actions Footer */
+.mission-brief__actions {
+    flex-shrink: 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    /* Reduced gap */
+    /* Reduced gap */
+    margin-top: 1.5rem;
+    padding-top: 0;
+}
+
+.mission-brief__launch-btn {
+    font-size: 1rem;
+    padding: 1rem 4rem;
+    /* Smaller button */
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+    border-radius: 6px !important;
+    background: var(--primary) !important;
+    color: #000 !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.mission-brief__launch-btn:hover {
+    box-shadow: 0 0 50px rgba(168, 85, 247, 0.5);
+    transform: translateY(-2px);
+}
+
+.mission-brief__status {
+    color: #52525b;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0.8;
+}
+
+@media (max-width: 900px) {
+    .mission-brief__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mission-brief__title {
+        font-size: 1.5rem;
+    }
+}

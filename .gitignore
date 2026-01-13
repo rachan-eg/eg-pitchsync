@@ -1,0 +1,35 @@
+# System Files
+.DS_Store
+Thumbs.db
+# gun_app.db typo removed - correct entry is gum_app.db below
+# Environments
+.env
+.venv
+venv/
+env/
+
+
+# IDEs
+.vscode/
+.idea/
+
+# Backend
+backend/__pycache__/
+backend/*.py[cod]
+backend/.pytest_cache/
+gum_app.db
+claude_debug.log
+credentials
+
+bin/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build_log.txt
+frontend/public/generated/
+
+
+# Audit
+AUDIT_REPORT.json
+AUDIT_SUMMARY.md

@@ -1,0 +1,91 @@
+"""
+Session and Phase Data Models
+Core domain models for state management.
+"""
+
+import uuid
+from typing import Dict, List, Optional, Any
+from pydantic import BaseModel, Field
+from datetime import datetime
+from enum import Enum
+
+
+class PhaseStatus(str, Enum):
+    """Phase completion status."""
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    SUBMITTED = "submitted"
+    PASSED = "passed"
+    FAILED = "failed"
+
+
+class PhaseMetric(BaseModel):
+    """Comprehensive metrics for a single phase."""
+    ai_score: float = 0.0
+    weighted_score: float = 0.0
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    duration_seconds: float = 0.0
+    retries: int = 0
+    tokens_used: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    time_penalty: float = 0.0
+    retry_penalty: float = 0.0
+    hint_penalty: float = 0.0
+    efficiency_bonus: float = 0.0
+
+
+class PhaseResponse(BaseModel):
+    """Single question-answer pair."""
+    q: str
+    a: str
+    question_id: Optional[str] = None
+    hint_used: bool = False
+
+
+class PhaseData(BaseModel):
+    """Complete data for a single phase."""
+    phase_id: str = ""
+    status: PhaseStatus = PhaseStatus.PENDING
+    responses: List[PhaseResponse] = []
+    metrics: PhaseMetric = Field(default_factory=PhaseMetric)
+    feedback: Optional[str] = None
+    rationale: Optional[str] = None
+    strengths: List[str] = []
+    improvements: List[str] = []
+
+
+class FinalOutput(BaseModel):
+    """Generated pitch assets."""
+    visionary_hook: str = ""
+    customer_pitch: str = ""
+    image_prompt: str = ""
+    image_url: str = ""
+    generated_at: Optional[datetime] = None
+
+
+class SessionState(BaseModel):
+    """
+    Complete session state following Blueprint 4.2 structure.
+    """
+    session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    team_id: str
+    usecase: Dict[str, Any] = {}
+    usecase_context: str = ""
+    current_phase: int = 1
+    phases: Dict[str, PhaseData] = {}
+    theme_palette: Dict[str, Any] = {}
+    total_tokens: int = 0
+    extra_ai_tokens: int = 0
+    answers_hash: Optional[str] = None
+    final_output: FinalOutput = Field(default_factory=FinalOutput)
+    total_score: float = 0.0
+    phase_scores: Dict[str, float] = {}
+    phase_start_times: Dict[str, datetime] = {}
+    created_at: datetime = Field(default_factory=datetime.now)
+    completed_at: Optional[datetime] = None
+    is_complete: bool = False
+
+    class Config:
+        arbitrary_types_allowed = True

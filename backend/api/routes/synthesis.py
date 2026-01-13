@@ -1,0 +1,202 @@
+"""
+Synthesis API Routes
+Final pitch generation endpoint.
+"""
+
+import json
+from datetime import datetime
+from fastapi import APIRouter, HTTPException
+
+from backend.models import (
+    FinalSynthesisRequest, FinalSynthesisResponse, 
+    PrepareSynthesisRequest, PrepareSynthesisResponse
+)
+from backend.services import (
+    get_session, update_session, synthesize_pitch, prepare_master_prompt_draft, auto_generate_pitch,
+    calculate_total_tokens
+)
+
+router = APIRouter(prefix="/api", tags=["synthesis"])
+
+
+@router.post("/prepare-synthesis", response_model=PrepareSynthesisResponse)
+async def prepare_synthesis(req: PrepareSynthesisRequest):
+    """Generate a draft master prompt from Q&A."""
+    session = get_session(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    draft = prepare_master_prompt_draft(
+        usecase=session.usecase,
+        all_phases_data=session.phases
+    )
+    
+    return PrepareSynthesisResponse(
+        session_id=session.session_id,
+        master_prompt_draft=draft
+    )
+
+
+@router.post("/final-synthesis", response_model=FinalSynthesisResponse)
+async def final_synthesis(req: FinalSynthesisRequest):
+    """Generate final pitch with visionary hook and image."""
+    
+    session = get_session(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Synthesize pitch using automated flow (QnA -> Curator -> Image)
+    result = auto_generate_pitch(
+        usecase=session.usecase,
+        all_phases_data=session.phases,
+        theme=session.theme_palette
+    )
+    
+    # Update session
+    session.final_output.visionary_hook = result.get('visionary_hook', '')
+    session.final_output.customer_pitch = result.get('customer_pitch', '')
+    session.final_output.image_prompt = result.get('image_prompt', '')
+    session.final_output.image_url = result.get('image_url', '')
+    session.final_output.generated_at = datetime.now()
+    session.completed_at = datetime.now()
+    session.is_complete = True
+    
+    # session.total_tokens = calculate_total_tokens(session.phases) + session.extra_ai_tokens
+    # We now accumulate total_tokens in submit_phase/curate_prompt, so we don't overwrite here.
+    update_session(session)
+    
+    return FinalSynthesisResponse(
+        visionary_hook=result.get('visionary_hook', ''),
+        customer_pitch=result.get('customer_pitch', ''),
+        image_url=result.get('image_url', ''),
+        prompt_used=result.get('image_prompt', ''),
+        total_score=int(session.total_score),
+        phase_breakdown=session.phase_scores
+    )
+
+
+@router.post("/curate-prompt")
+async def curate_prompt(req: PrepareSynthesisRequest):
+    """Generate customer-focused image prompt from all phases (without generating image yet)."""
+    from backend.services.ai.synthesizer import generate_customer_image_prompt
+    
+    session = get_session(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    import hashlib # Added import for hashlib
+    
+    session = get_session(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Calculate current answers hash to see if regeneration is actually needed
+    all_answers = []
+    # Sort phases to ensure consistent hash
+    for p_name in sorted(session.phases.keys()):
+        p_data = session.phases[p_name]
+        for resp in p_data.responses:
+            all_answers.append(str(resp.a))
+    
+    current_hash = hashlib.md5("|".join(all_answers).encode()).hexdigest()
+    
+    # If answers haven't changed and we already have a curated prompt, reuse it
+    if session.answers_hash == current_hash and session.final_output.image_prompt:
+        # Ensure the cached prompt is a JSON string if it was stored as such
+        cached_prompt_str = session.final_output.image_prompt
+        if isinstance(cached_prompt_str, dict): # If it was stored as a dict for some reason
+            cached_prompt_str = json.dumps(cached_prompt_str, indent=2)
+
+        return {
+            "session_id": session.session_id,
+            "curated_prompt": cached_prompt_str,
+            "theme": session.theme_palette,
+            "usecase_title": session.usecase.get('title', 'Unknown') if isinstance(session.usecase, dict) else 'Unknown',
+            "extra_ai_tokens": session.extra_ai_tokens,
+            "total_tokens": session.total_tokens
+        }
+
+    # Otherwise, generate new prompt
+    # generate_customer_image_prompt returns (Dict, Dict)
+    curated_prompt_struct, usage = generate_customer_image_prompt(
+        usecase=session.usecase,
+        all_phases_data=session.phases,
+        theme=session.theme_palette,
+        additional_notes=req.additional_notes  # Pass refinement notes
+    )
+    
+    # Store as JSON string (The "Manifest")
+    curated_prompt_str = json.dumps(curated_prompt_struct, indent=2)
+    
+    session.final_output.image_prompt = curated_prompt_str
+
+    # Update Token Usage
+    new_tokens = usage.get('input_tokens', 0) + usage.get('output_tokens', 0)
+    session.extra_ai_tokens += new_tokens
+    session.total_tokens += new_tokens
+    
+    # Update session state with new hash and prompt
+    session.answers_hash = current_hash
+    
+    update_session(session)
+    
+    return {
+        "session_id": session.session_id,
+        "curated_prompt": curated_prompt_str,
+        "theme": session.theme_palette,
+        "usecase_title": session.usecase.get('title', 'Unknown') if isinstance(session.usecase, dict) else 'Unknown',
+        "extra_ai_tokens": session.extra_ai_tokens,
+        "total_tokens": session.total_tokens
+    }
+
+
+@router.post("/generate-image")
+async def generate_image_from_prompt(req: FinalSynthesisRequest):
+    """Generate image from the (optionally edited) prompt."""
+    from backend.services.ai.image_gen import generate_image
+    
+    session = get_session(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Use edited prompt if provided, otherwise use stored prompt
+    # input_prompt is likely the JSON Manifest string from the frontend textarea
+    input_prompt = req.edited_prompt if req.edited_prompt else session.final_output.image_prompt
+    
+    # CLEAN THE PROMPT: Check if input is the JSON Manifest, extract the final prompt if so
+    clean_prompt_for_gen = input_prompt
+    try:
+        # Try to parse as JSON
+        if input_prompt.strip().startswith("{"):
+            data = json.loads(input_prompt)
+            if isinstance(data, dict) and "final_combined_prompt" in data:
+                clean_prompt_for_gen = data["final_combined_prompt"]
+                print("DEBUG: Extracted final_combined_prompt from JSON manifest for generation.")
+    except (json.JSONDecodeError, TypeError):
+        # Not a JSON string, just use as raw text (legacy or manual override)
+        pass
+
+    try:
+        image_url = generate_image(clean_prompt_for_gen)
+    except Exception as e:
+        print(f"Image Generation Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Image generation failed: {str(e)}")
+    
+    # Update session
+    session.final_output.image_prompt = input_prompt # Save the full Manifest (edited)
+    session.final_output.image_url = image_url
+    session.final_output.generated_at = datetime.now()
+    session.completed_at = datetime.now()
+    session.is_complete = True
+    # session.total_tokens = calculate_total_tokens(session.phases) + session.extra_ai_tokens
+    # Preserving accumulated tokens
+    update_session(session)
+    
+    return {
+        "image_url": image_url,
+        "prompt_used": input_prompt, # Return full manifest for display
+        "total_score": int(session.total_score),
+        "phase_breakdown": session.phase_scores,
+        "extra_ai_tokens": session.extra_ai_tokens,
+        "total_tokens": session.total_tokens
+    }
+
