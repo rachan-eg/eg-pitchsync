@@ -83,6 +83,7 @@ class SessionState(BaseModel):
     total_score: float = 0.0
     phase_scores: Dict[str, float] = {}
     phase_start_times: Dict[str, datetime] = {}
+    phase_elapsed_seconds: Dict[str, float] = {}  # Accumulated time per phase (for pause/resume)
     created_at: datetime = Field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
     is_complete: bool = False

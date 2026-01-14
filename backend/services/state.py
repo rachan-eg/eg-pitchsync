@@ -39,6 +39,14 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
         final_output_dict['image_prompt'] = json.dumps(final_output_dict['image_prompt'])
     phase_start_times_dict = json.loads(db_session.phase_start_times_json, strict=False)
     
+    # Load phase_elapsed_seconds (with backwards compat for older DBs)
+    phase_elapsed_seconds = {}
+    if hasattr(db_session, 'phase_elapsed_seconds_json') and db_session.phase_elapsed_seconds_json:
+        try:
+            phase_elapsed_seconds = json.loads(db_session.phase_elapsed_seconds_json, strict=False)
+        except:
+            phase_elapsed_seconds = {}
+    
     # Convert ISO strings back to datetime objects
     phase_start_times = {}
     for k, v in phase_start_times_dict.items():
@@ -66,6 +74,7 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
         final_output=FinalOutput(**final_output_dict),
         phase_scores=phase_scores,
         phase_start_times=phase_start_times,
+        phase_elapsed_seconds=phase_elapsed_seconds,
         
         is_complete=db_session.is_complete,
         created_at=db_session.created_at,
@@ -77,6 +86,11 @@ def _domain_to_db(session: SessionState) -> SessionData:
     # Serialize complex objects
     phases_dict = {k: v.dict() for k, v in session.phases.items()}
     final_dict = session.final_output.dict()
+    
+    # Serialize phase_elapsed_seconds (with backwards compat)
+    elapsed_json = "{}"
+    if hasattr(session, 'phase_elapsed_seconds') and session.phase_elapsed_seconds:
+        elapsed_json = json.dumps(session.phase_elapsed_seconds, default=str)
     
     return SessionData(
         session_id=session.session_id,
@@ -92,6 +106,7 @@ def _domain_to_db(session: SessionState) -> SessionData:
         final_output_json=json.dumps(final_dict, default=str),
         phase_scores_json=json.dumps(session.phase_scores, default=str),
         phase_start_times_json=json.dumps(session.phase_start_times, default=str),
+        phase_elapsed_seconds_json=elapsed_json,
         is_complete=session.is_complete,
         created_at=session.created_at,
         updated_at=datetime.now()
@@ -135,6 +150,7 @@ def update_session(session: SessionState) -> SessionState:
             existing.final_output_json = db_row.final_output_json
             existing.phase_scores_json = db_row.phase_scores_json
             existing.phase_start_times_json = db_row.phase_start_times_json
+            existing.phase_elapsed_seconds_json = db_row.phase_elapsed_seconds_json
             existing.is_complete = db_row.is_complete
             existing.updated_at = datetime.now()
             

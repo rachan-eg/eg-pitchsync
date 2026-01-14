@@ -44,7 +44,8 @@ def create_db_and_tables():
                 "extra_ai_tokens": "INTEGER DEFAULT 0",
                 "answers_hash": "TEXT DEFAULT ''",
                 "final_output_json": "TEXT DEFAULT '{}'",
-                "phase_scores_json": "TEXT DEFAULT '{}'"
+                "phase_scores_json": "TEXT DEFAULT '{}'",
+                "phase_elapsed_seconds_json": "TEXT DEFAULT '{}'"  # For pause/resume timer
             }
             
             for col_name, col_def in migrations.items():

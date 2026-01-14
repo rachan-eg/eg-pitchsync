@@ -4,7 +4,7 @@ Endpoints for session initialization, phase submission.
 """
 
 import random
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException
 
 from backend.config import settings
@@ -171,7 +171,7 @@ async def check_existing_session(team_id: str):
 
 @router.post("/start-phase", response_model=StartPhaseResponse)
 async def start_phase(req: StartPhaseRequest):
-    """Start a phase and record timing."""
+    """Start a phase and record timing. Supports pause/resume when switching phases."""
     
     session = get_session(req.session_id)
     if not session:
@@ -181,7 +181,19 @@ async def start_phase(req: StartPhaseRequest):
     if not phase_def:
         raise HTTPException(status_code=400, detail="Invalid phase number")
     
-    # Check if we should reset the timer (only on first start or explicit retry after failure)
+    # Initialize phase_elapsed_seconds if not present (for backwards compat)
+    if not hasattr(session, 'phase_elapsed_seconds') or session.phase_elapsed_seconds is None:
+        session.phase_elapsed_seconds = {}
+    
+    # STEP 1: Save the leaving phase's elapsed time (pause the old timer)
+    if req.leaving_phase_number is not None and req.leaving_phase_elapsed_seconds is not None:
+        leaving_key = f"phase_{req.leaving_phase_number}"
+        session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
+    
+    # STEP 2: Get or initialize the target phase's data
+    key = f"phase_{req.phase_number}"
+    
+    # Check if we should reset the timer (only on explicit retry after failure)
     is_retry = False
     phase_name = phase_def["name"]
     if phase_name in session.phases:
@@ -189,13 +201,17 @@ async def start_phase(req: StartPhaseRequest):
         if session.phases[phase_name].status == PhaseStatus.FAILED:
             is_retry = True
     
-    # Record start time (don't overwrite if already exists unless it's a retry)
-    key = f"phase_{req.phase_number}"
+    # Record start time if this is the first time entering this phase
     if is_retry or key not in session.phase_start_times:
         start_time = datetime.now(timezone.utc)
         session.phase_start_times[key] = start_time
+        # Reset elapsed time on fresh start or retry
+        session.phase_elapsed_seconds[key] = 0.0
     else:
         start_time = session.phase_start_times[key]
+    
+    # STEP 3: Get accumulated elapsed seconds for this phase (resume)
+    accumulated_seconds = session.phase_elapsed_seconds.get(key, 0.0)
         
     session.current_phase = req.phase_number
     update_session(session)
@@ -224,10 +240,11 @@ async def start_phase(req: StartPhaseRequest):
         phase_id=phase_def.get("id", f"phase_{req.phase_number}"),
         phase_name=phase_def["name"],
         questions=questions,
-        time_limit_seconds=phase_def.get("time_limit_seconds", 300),
+        time_limit_seconds=phase_def.get("time_limit_seconds", 600),
         started_at=start_time,
         current_server_time=datetime.now(timezone.utc),
-        previous_responses=previous_responses
+        previous_responses=previous_responses,
+        elapsed_seconds=accumulated_seconds
     )
 
 
@@ -251,9 +268,26 @@ async def submit_phase(req: SubmitPhaseRequest):
     if not phase_def:
         raise HTTPException(status_code=400, detail="Unknown phase name")
     
-    # Get timing from persisted session
-    start_time = session.phase_start_times.get(f"phase_{phase_number}") or datetime.now(timezone.utc)
+    # Get timing - use accumulated elapsed time for scoring (accounts for pause/resume)
+    key = f"phase_{phase_number}"
+    start_time = session.phase_start_times.get(key) or datetime.now(timezone.utc)
     end_time = datetime.now(timezone.utc)
+    
+    # Calculate actual elapsed time: accumulated + current session
+    # This accounts for time spent in previous sessions on this phase before switching
+    accumulated_elapsed = 0.0
+    if hasattr(session, 'phase_elapsed_seconds') and session.phase_elapsed_seconds:
+        accumulated_elapsed = session.phase_elapsed_seconds.get(key, 0.0)
+    
+    # Current session elapsed (since last phase switch or start)
+    current_session_elapsed = (end_time - start_time).total_seconds()
+    
+    # Total actual time spent on this phase
+    total_elapsed_seconds = accumulated_elapsed + current_session_elapsed
+    
+    # Create synthetic timestamps for scoring function (it expects start/end)
+    # We'll use end_time and calculate a start_time that gives the correct duration
+    synthetic_start_time = end_time - timedelta(seconds=total_elapsed_seconds)
     
     # Check for retries
     retries, prev_feedback = _get_retry_info(session, req.phase_name)
@@ -337,11 +371,11 @@ async def submit_phase(req: SubmitPhaseRequest):
     in_tokens = ai_usage.get('input_tokens', 0)
     out_tokens = ai_usage.get('output_tokens', 0)
     
-    # Calculate Score
+    # Calculate Score - use synthetic_start_time for accurate elapsed time
     score_result = calculate_phase_score(
         ai_score=eval_result['score'],
         retries=retries,
-        start_time=start_time,
+        start_time=synthetic_start_time,  # Uses accumulated elapsed time
         end_time=end_time,
         token_count=tokens,
         phase_number=phase_number,

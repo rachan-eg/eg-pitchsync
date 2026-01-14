@@ -318,16 +318,15 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 return (
                                     <>
                                         <span>
-                                            {timeVal > timeLimit ? 'Time Penalty' : 'Temporal Bonus'}
-                                            <span className="pi-scoring-rule">(-10 / 5 MINS)</span>
+                                            Time Penalty
+                                            <span className="pi-scoring-rule">(-10 / 10 MINS)</span>
                                         </span>
-                                        <span className="pi-scoring-val" style={{ color: timeVal > timeLimit ? 'var(--danger)' : 'var(--success)' }}>
-                                            {timeVal > timeLimit ? '-' : '+'}
-                                            {Math.round(
-                                                timeVal > timeLimit
-                                                    ? Math.min((scoringInfo?.time_penalty_max || 20), Math.ceil((timeVal - timeLimit) / 300) * 10)
-                                                    : Math.min(50, (timeLimit - (timeVal || 0)) * 0.2)
-                                            )} PTS
+                                        <span className="pi-scoring-val" style={{ color: timeVal > timeLimit ? 'var(--danger)' : 'var(--text-muted)' }}>
+                                            {timeVal > timeLimit ? '-' : ''}
+                                            {timeVal > timeLimit
+                                                ? Math.min((scoringInfo?.time_penalty_max || 90), Math.ceil((timeVal - timeLimit) / 600) * 10)
+                                                : 0
+                                            } PTS
                                         </span>
                                     </>
                                 );

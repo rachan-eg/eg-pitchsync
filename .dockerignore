@@ -3,8 +3,15 @@
 venv
 __pycache__
 *.pyc
-.env
+
 .DS_Store
 frontend/node_modules
 frontend/dist
 .gemini
+
+# Database files (prevent local DB from leaking into image)
+*.db
+*.sqlite3
+
+# Logs
+*.log

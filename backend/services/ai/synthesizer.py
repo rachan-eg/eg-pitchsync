@@ -207,7 +207,7 @@ RETURN ONLY THE FINAL PARAGRAPH.
 
 
 def _extract_phase_summaries(all_phases_data: Dict[str, Any]) -> list:
-    """Extract summaries from all phases."""
+    """Extract full Q&A context from all phases."""
     phase_summaries = []
     
     for phase_name, phase_data in all_phases_data.items():
@@ -218,16 +218,23 @@ def _extract_phase_summaries(all_phases_data: Dict[str, Any]) -> list:
         else:
             continue
             
-        answers = []
+        qa_pairs = []
         for r in responses:
-            if hasattr(r, 'a'):
-                answers.append(r.a)
+            # Handle object or dict access
+            if hasattr(r, 'q') and hasattr(r, 'a'):
+                q_text = r.q
+                a_text = r.a
             elif isinstance(r, dict):
-                answers.append(r.get('a', ''))
+                q_text = r.get('q', 'Question')
+                a_text = r.get('a', '')
+            else:
+                continue
+                
+            qa_pairs.append(f"Q: {q_text}\nA: {a_text}")
         
         phase_summaries.append({
             "phase": phase_name,
-            "content": " | ".join(answers)
+            "content": "\n\n".join(qa_pairs)
         })
     
     return phase_summaries
@@ -238,7 +245,7 @@ def auto_generate_pitch(
     theme: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
-    Automated pipeline: QnA -> Customer Image Prompt -> Image.
+    Automated pipeline: QnA -> Customer Image Prompt -> Narrative -> Image.
     """
     # 1. Summarize and Curate Image Prompt
     customer_image_prompt_struct, _ = generate_customer_image_prompt(usecase, all_phases_data, theme)
@@ -246,12 +253,22 @@ def auto_generate_pitch(
     prompt_str = customer_image_prompt_struct.get("final_combined_prompt", "")
     full_json = json.dumps(customer_image_prompt_struct, indent=2)
     
-    # 2. Generate Image
-    image_url = generate_image(prompt_str)
+    # 2. Generate Narrative (Hook + Pitch)
+    # Uses the new context-aware generator
+    narrative = generate_pitch_narrative(usecase, all_phases_data)
+    
+    # 3. Generate Image
+    # Note: If the user is on the manual path, this might be skipped in favor of client-side upload,
+    # but for the auto-pipeline we generate it here.
+    try:
+        image_url = generate_image(prompt_str)
+    except Exception as e:
+        print(f"Auto-gen image failed: {e}")
+        image_url = ""
     
     return {
-        "visionary_hook": "See your vision realized.",
-        "customer_pitch": "Generated from your phases.",
+        "visionary_hook": narrative.get("visionary_hook", "See your vision realized."),
+        "customer_pitch": narrative.get("customer_pitch", "Generated from your phases."),
         "image_prompt": full_json,
         "image_url": image_url
     }
@@ -328,63 +345,63 @@ Make sure the image prompt strongly emphasizes and incorporates these refinement
 """
     
     prompt = f"""
-ACT AS A PRESENTATION DESIGNER FOR ENTERPRISE SOFTWARE.
-Your goal is to create a prompt for a **PROFESSIONAL POWERPOINT SLIDE** showing a product architecture.
-The image should look EXACTLY like a polished corporate presentation slide - NOT a 3D render.
-Reference Style: "Consulting firm pitch deck, McKinsey/BCG style, clean vector graphics, readable text labels".
+ACT AS A SENIOR INFORMATION DESIGNER.
+Your goal is to create a prompt for a **DENSE, TEXT-HEAVY INFOGRAPHIC SLIDE**.
+The user wants an image that looks like a "High-Information Density" slide from a technical whitepaper or a complex dashboard.
+It must NOT be minimal. It must be PACKED with text and data derived from the user's inputs.
 
-=== DATA STREAM (USER ANSWERS) ===
+{refinement_instruction}
+
+=== DATA STREAM (USER ANSWERS) - USE ALL OF THIS CONTENT ===
 {all_answers_context}
 
 === TARGET USE CASE ===
 PRODUCT: "{usecase_title}"
 DOMAIN: {usecase_domain}
 
-=== BRAND COLOR PALETTE (MUST USE) ===
+=== BRAND COLOR PALETTE ===
 {BRAND_COLORS}
-Use these exact hex colors for accents, icons, arrows, and text highlights.
+(Use these for headers, diagrams, and highlights)
 
-=== CREATIVE DIRECTION (POWERPOINT SLIDE STYLE) ===
-1. **LAYOUT**: Clean presentation slide layout (16:9 aspect ratio feel).
-   - **TITLE**: Large, bold "{usecase_title}" at the top.
-   - **SUBTITLE**: Brief tagline or domain descriptor below title.
-   - **CONTENT AREA**: Organized diagram/flowchart in the center.
+=== CREATIVE DIRECTION (DENSE INFOGRAPHIC STYLE) ===
+1. **LAYOUT**:
+   - **Header**: Large Title "{usecase_title}" + Subtitle.
+   - **Structure**: 3-Column or Grid layout packed with content.
+   - **Density**: VERY HIGH. Fill the white space with text, charts, and diagrams.
 
-2. **VISUAL ELEMENTS (FLAT & PROFESSIONAL)**:
-   - Use FLAT 2D icons and simple vector shapes (NOT 3D renders).
-   - Clean connecting arrows with labels.
-   - White or light gray background with subtle gradient.
-   - Apply BRAND COLORS (Orange primary) to key icons and highlights.
-   - Professional sans-serif typography (like Arial, Helvetica, or Segoe UI).
+2. **TEXT CONTENT (CRITICAL)**:
+   - The image MUST appear to have ACTUAL READABLE TEXT (or convincingly detailed pseudo-text blocks).
+   - INSTRUCTIONS: "Include detailed text blocks summarizing the {problem_context[:50]}...", "Add bulleted lists of features", "Show data tables".
+   - Do NOT ask for "lorem ipsum". Ask for "detailed technical specifications", "feature lists", "problem statements".
+   - **Use the User's exact words** from the Data Stream where possible as text labels.
 
-3. **INFORMATION ARCHITECTURE**:
-   - Show a LEFT-TO-RIGHT flow: [Inputs] → [Process/Platform] → [Outputs/Benefits]
-   - Include TEXT LABELS on each section (e.g., "Data Sources", "AI Engine", "Results")
-   - Add bullet points or short text snippets explaining key features.
-   - Include KPI boxes or metric callouts if relevant.
+3. **VISUALS**:
+   - Complex flowcharts connecting multiple nodes.
+   - Data tables / Grids with rows and columns.
+   - Technical diagrams with annotated callouts.
+   - Flat 2D vector style, professional, white/light background.
 
-4. **TEXT CONTENT (MUST INCLUDE)**:
-   - Header: "{usecase_title}"
-   - Section labels with clear readable text
-   - 2-3 bullet points or feature callouts
-   - Footer area for branding
+4. **STYLE**:
+   - "Complex Infographic", "Technical Whitepaper Diagram", "System Architecture Blueprint".
+   - Clean, sharp, vectors.
+   - **NO 3D**. **NO Photorealism**. Think "Stripe Documentation" or "AWS Architecture Diagram".
 
 === REQUIRED PROMPT STRUCTURE (JSON) ===
 Return a JSON object with a 'final_combined_prompt' that follows this structure:
 
-"A professional corporate presentation slide for '{usecase_title}'.
- + [LAYOUT: 16:9 PowerPoint slide, white/light background, clean margins]
- + [HEADER: Bold title "{usecase_title}" at top in dark text]
- + [DIAGRAM: Flat vector flowchart showing data flow left-to-right]
- + [ICONS: Simple flat 2D icons for each process step with text labels]
- + [COLORS: Orange (#BA5400) accents, dark gray text, white background]
- + [TEXT: Include readable labels, bullet points, and section headers]
- + [STYLE: Corporate presentation, consulting deck style, McKinsey aesthetic, clean vector graphics, professional typography, infographic layout]"
+"A high-density technical infographic slide for '{usecase_title}'.
+ + [LAYOUT: Complex grid layout, white background, high information density]
+ + [HEADER: Bold title '{usecase_title}' and domain subtitle]
+ + [CONTENT: Detailed text blocks describing problem and solution, long bullet lists of features]
+ + [DIAGRAMS: Central complex architecture flowchart with labeled nodes]
+ + [DATA: Stylized data tables and metric dashboards]
+ + [TEXT: 'Problem: ...', 'Solution: ...', 'Benefits: ...' (simulated detailed text)]
+ + [STYLE: AWS Architecture Diagram style, flat vector graphics, professional, clean lines, distinct colors: Orange accents]"
 
 === OUTPUT FORMAT ===
 Return ONLY the JSON structure.
 {{
-  "final_combined_prompt": "A professional corporate presentation slide with white background..."
+  "final_combined_prompt": "..."
 }}
 """
 
@@ -454,3 +471,66 @@ Return ONLY the JSON structure.
         raise e
 
 
+
+
+def generate_pitch_narrative(
+    usecase: Dict[str, Any],
+    all_phases_data: Dict[str, Any]
+) -> Dict[str, str]:
+    """
+    Generate the text component of the final pitch (Hook + Narrative) 
+    based on the full Q&A context.
+    """
+    phase_summaries = _extract_phase_summaries(all_phases_data)
+    
+    # Build full context
+    all_answers_context = ""
+    for phase_data in phase_summaries:
+        p_name = phase_data.get("phase", "Unknown Phase")
+        p_content = phase_data.get("content", "")
+        if p_content:
+            all_answers_context += f"=== {p_name} ===\n{p_content}\n\n"
+            
+    usecase_title = usecase.get('title', 'Product')
+    
+    prompt = f"""
+ACT AS A WORLD-CLASS STARTUP PITCH COACH.
+Your goal is to synthesize the team's disparate Q&A inputs into a COHESIVE, PERSUASIVE PITCH NARRATIVE.
+
+=== TEAM INPUT DATA (Q&A) ===
+{all_answers_context}
+
+=== CONTEXT ===
+Product: {usecase_title}
+
+=== TASKS ===
+1. **VISIONARY HOOK**: Write ONE single, punchy sentence (max 20 words) that captures the "Magic Moment" or the headline benefit.
+   - Style: Apple Keynote, provocative, confident.
+2. **CUSTOMER PITCH**: Write a 1-paragraph (100-150 words) narrative explaining the Problem, Solution, and Outcome.
+   - Style: Narrative storytelling, active voice, zero jargon.
+
+=== OUTPUT FORMAT (JSON) ===
+Return ONLY `{{ "visionary_hook": "...", "customer_pitch": "..." }}`
+"""
+    client = get_client()
+    try:
+        response_text, _ = client.generate_content(prompt=prompt, temperature=0.7)
+        
+        # Robust JSON extraction
+        json_str = response_text.strip()
+        import re
+        json_match = re.search(r'(\{.*\})', json_str, re.DOTALL)
+        if json_match:
+            json_str = json_match.group(1).strip()
+            
+        data = json.loads(json_str, strict=False)
+        return {
+            "visionary_hook": data.get("visionary_hook", "Experience the future."),
+            "customer_pitch": data.get("customer_pitch", "A revolutionary solution for your business.")
+        }
+    except Exception as e:
+        print(f"Pitch Narrative Generation Error: {e}")
+        return {
+            "visionary_hook": f"{usecase_title}: The Future is Here.",
+            "customer_pitch": "Leveraging advanced insights to deliver unparalleled value."
+        }

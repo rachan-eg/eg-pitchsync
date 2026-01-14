@@ -5,7 +5,7 @@ Final pitch generation endpoint.
 
 import json
 from datetime import datetime
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form
 
 from backend.models import (
     FinalSynthesisRequest, FinalSynthesisResponse, 
@@ -149,54 +149,58 @@ async def curate_prompt(req: PrepareSynthesisRequest):
     }
 
 
-@router.post("/generate-image")
-async def generate_image_from_prompt(req: FinalSynthesisRequest):
-    """Generate image from the (optionally edited) prompt."""
-    from backend.services.ai.image_gen import generate_image
+@router.post("/submit-pitch-image")
+async def submit_pitch_image(
+    session_id: str = Form(...),
+    edited_prompt: str = Form(...),
+    file: UploadFile = File(...)
+):
+    """Upload an externally generated image and finalize the pitch."""
+    # Import locally to avoid circular deps if any, or just for clarity on what's used
+    import shutil
+    import os
+    from backend.config import GENERATED_DIR
+    from backend.services.ai.image_gen import overlay_logos, LOGOS
     
-    session = get_session(req.session_id)
+    session = get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    # Use edited prompt if provided, otherwise use stored prompt
-    # input_prompt is likely the JSON Manifest string from the frontend textarea
-    input_prompt = req.edited_prompt if req.edited_prompt else session.final_output.image_prompt
-    
-    # CLEAN THE PROMPT: Check if input is the JSON Manifest, extract the final prompt if so
-    clean_prompt_for_gen = input_prompt
     try:
-        # Try to parse as JSON
-        if input_prompt.strip().startswith("{"):
-            data = json.loads(input_prompt)
-            if isinstance(data, dict) and "final_combined_prompt" in data:
-                clean_prompt_for_gen = data["final_combined_prompt"]
-                print("DEBUG: Extracted final_combined_prompt from JSON manifest for generation.")
-    except (json.JSONDecodeError, TypeError):
-        # Not a JSON string, just use as raw text (legacy or manual override)
-        pass
+        # Generate unique filename
+        filename = f"pitch_{os.urandom(4).hex()}.png"
+        filepath = GENERATED_DIR / filename
+        
+        # Save the uploaded file
+        with open(filepath, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        print(f"DEBUG: Uploaded image saved to {filename}")
+        
+        # Overlay logos on the bottom-right corner
+        overlay_logos(str(filepath), LOGOS)
+        
+        image_url = f"/generated/{filename}"
+        
+        # Update session
+        session.final_output.image_prompt = edited_prompt
+        session.final_output.image_url = image_url
+        session.final_output.generated_at = datetime.now()
+        session.completed_at = datetime.now()
+        session.is_complete = True
+        
+        update_session(session)
+        
+        return {
+            "image_url": image_url,
+            "prompt_used": edited_prompt,
+            "total_score": int(session.total_score),
+            "phase_breakdown": session.phase_scores,
+            "extra_ai_tokens": session.extra_ai_tokens,
+            "total_tokens": session.total_tokens
+        }
 
-    try:
-        image_url = generate_image(clean_prompt_for_gen)
     except Exception as e:
-        print(f"Image Generation Error: {e}")
-        raise HTTPException(status_code=500, detail=f"Image generation failed: {str(e)}")
-    
-    # Update session
-    session.final_output.image_prompt = input_prompt # Save the full Manifest (edited)
-    session.final_output.image_url = image_url
-    session.final_output.generated_at = datetime.now()
-    session.completed_at = datetime.now()
-    session.is_complete = True
-    # session.total_tokens = calculate_total_tokens(session.phases) + session.extra_ai_tokens
-    # Preserving accumulated tokens
-    update_session(session)
-    
-    return {
-        "image_url": image_url,
-        "prompt_used": input_prompt, # Return full manifest for display
-        "total_score": int(session.total_score),
-        "phase_breakdown": session.phase_scores,
-        "extra_ai_tokens": session.extra_ai_tokens,
-        "total_tokens": session.total_tokens
-    }
+        print(f"Image Upload/Processing Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Image processing failed: {str(e)}")
 

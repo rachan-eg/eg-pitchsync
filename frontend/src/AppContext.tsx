@@ -96,7 +96,7 @@ interface AppContextType {
     handleFeedbackAction: (action: 'CONTINUE' | 'RETRY') => Promise<{ navigateTo?: string }>;
     curatePrompt: () => Promise<void>;
     regeneratePrompt: (additionalNotes: string, conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>) => Promise<void>;
-    generateImage: (finalPrompt: string) => Promise<void>;
+    submitPitchImage: (finalPrompt: string, file: File) => Promise<void>;
     resetToStart: () => void;
     fetchLeaderboard: () => Promise<void>;
 }
@@ -107,6 +107,7 @@ const AppContext = createContext<AppContextType | null>(null);
 // CONTEXT PROVIDER
 // =============================================================================
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
     const location = useLocation();
     // Selection State
     const [selectedUsecase, setSelectedUsecase] = useState<UseCase | null>(null);
@@ -375,40 +376,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const startPhase = useCallback(async (phaseNum: number) => {
         if (!session) return;
-        setElapsedSeconds(0);
+
+        // Capture current phase's elapsed time BEFORE clearing state
+        const leavingPhaseNum = session.current_phase;
+        const leavingElapsed = elapsedSeconds;
+
+        // IMMEDIATELY stop the current timer by clearing phaseStartTime
+        // This prevents the old phase's timer from continuing to tick
         setPhaseStartTime(null);
 
+        // Clear previous phase result when switching phases
+        setPhaseResult(null);
+
+        // Now fetch the new phase data from server
         try {
             const res = await fetch(getApiUrl('/api/start-phase'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: session.session_id, phase_number: phaseNum })
+                body: JSON.stringify({
+                    session_id: session.session_id,
+                    phase_number: phaseNum,
+                    // Send current phase's elapsed time so server can save it
+                    leaving_phase_number: leavingPhaseNum !== phaseNum ? leavingPhaseNum : null,
+                    leaving_phase_elapsed_seconds: leavingPhaseNum !== phaseNum ? leavingElapsed : null
+                })
             });
 
             if (res.ok) {
                 const data: StartPhaseResponse = await res.json();
 
-                // Robust Timer Sync: Calculate elapsed based on Server Time difference
-                // This handles clock skew between client and server (e.g. Docker UTC vs Local)
-                const serverStartTime = new Date(data.started_at).getTime();
-                const serverNow = data.current_server_time ? new Date(data.current_server_time).getTime() : Date.now();
+                // Use the accumulated elapsed_seconds from the server (pause/resume)
+                // This is the total time spent on this phase across all sessions
+                const accumulatedSeconds = data.elapsed_seconds ?? 0;
 
-                // How long ago did it start according to the SERVER?
-                const elapsedMs = Math.max(0, serverNow - serverStartTime);
+                // Set local start time based on accumulated time
+                // Timer will resume from where we left off
+                const localStartTime = Date.now() - (accumulatedSeconds * 1000);
 
-                // Set local start time relative to NOW based on that elapsed duration
-                const localStartTime = Date.now() - elapsedMs;
-
-                setPhaseStartTime(localStartTime);
-                setElapsedSeconds(Math.floor(elapsedMs / 1000));
-
+                // Update session first
                 setSession(prev => prev ? { ...prev, current_phase: phaseNum } : null);
                 setCurrentPhaseResponses(data.previous_responses || []);
+
+                // Set elapsed BEFORE phaseStartTime to avoid a flicker
+                setElapsedSeconds(accumulatedSeconds);
+                // Now start the timer from the accumulated point
+                setPhaseStartTime(localStartTime);
             }
         } catch (e) {
             console.error("Failed to start phase", e);
         }
-    }, [session]);
+    }, [session, elapsedSeconds]);
 
     const submitPhase = useCallback(async (responses: PhaseResponse[]) => {
         if (!session) return;
@@ -560,19 +577,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     }, [session]);
 
-    const generateImage = useCallback(async (finalPrompt: string) => {
+    const submitPitchImage = useCallback(async (finalPrompt: string, file: File) => {
         if (!session) return;
 
         setLoading(true);
 
         try {
-            const res = await fetch(getApiUrl('/api/generate-image'), {
+            const formData = new FormData();
+            formData.append('session_id', session.session_id);
+            formData.append('edited_prompt', finalPrompt);
+            formData.append('file', file);
+
+            const res = await fetch(getApiUrl('/api/submit-pitch-image'), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    session_id: session.session_id,
-                    edited_prompt: finalPrompt
-                })
+                body: formData
             });
 
             if (res.ok) {
@@ -598,7 +616,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 } : null);
             }
         } catch (e) {
-            console.error("Failed to generate image", e);
+            console.error("Failed to submit pitch image", e);
         } finally {
             setLoading(false);
         }
@@ -665,7 +683,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleFeedbackAction,
         curatePrompt,
         regeneratePrompt,
-        generateImage,
+        submitPitchImage,
         resetToStart,
         fetchLeaderboard
     };

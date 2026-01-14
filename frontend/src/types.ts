@@ -159,6 +159,7 @@ export interface StartPhaseResponse {
     started_at: string;
     current_server_time?: string;
     previous_responses?: PhaseResponse[];
+    elapsed_seconds?: number;  // Accumulated time for pause/resume
 }
 
 export interface SubmitPhaseRequest {

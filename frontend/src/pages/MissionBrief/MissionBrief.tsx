@@ -88,7 +88,7 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
                                     <div className="mission-brief__phase-info">
                                         <div className="mission-brief__phase-name">{phase.name}</div>
                                         <div className="mission-brief__phase-meta">
-                                            {phase.questions?.length || 0} reqs • {Math.floor((phase.time_limit_seconds || 300) / 60)}m
+                                            {phase.questions?.length || 0} reqs • {Math.floor((phase.time_limit_seconds || 600) / 60)}m
                                         </div>
                                     </div>
                                     <div className="mission-brief__phase-weight">

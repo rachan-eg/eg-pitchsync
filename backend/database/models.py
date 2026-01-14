@@ -34,6 +34,7 @@ class SessionData(SQLModel, table=True):
     final_output_json: str = Field(default="{}") 
     phase_scores_json: str = Field(default="{}")
     phase_start_times_json: str = Field(default="{}")
+    phase_elapsed_seconds_json: str = Field(default="{}")  # Accumulated time per phase (pause/resume)
     
     is_complete: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.now)

@@ -35,16 +35,16 @@ def calculate_phase_score(
     # If the AI fails (score 0.0), no points are awarded.
     ai_quality_points = ai_score * settings.AI_QUALITY_MAX_POINTS
     
-    # 2. Time Component (Non-linear penalty)
+    # 2. Time Component - Penalty only when exceeding time limit
     duration_seconds = (end_time - start_time).total_seconds()
-    if duration_seconds <= time_limit:
-        # Speed Bonus: Linear up to 50
-        time_penalty = -min(50, (time_limit - duration_seconds) * 0.2)
-    else:
-        # Overtime Penalty: Step-based (10 points for every 5 minutes started)
+    time_penalty = 0.0  # Default: no penalty if within time limit
+    
+    if duration_seconds > time_limit:
+        # Overtime Penalty: -10 points for every 10 minutes (600 seconds) of overtime
         overtime = duration_seconds - time_limit
-        steps = math.ceil(overtime / 300.0)
-        time_penalty = min(settings.TIME_PENALTY_MAX_POINTS, steps * 10.0)
+        # Calculate how many 10-minute blocks of overtime
+        ten_minute_blocks = math.ceil(overtime / 600.0)
+        time_penalty = min(settings.TIME_PENALTY_MAX_POINTS, ten_minute_blocks * 10.0)
     
     # 3. Retry Penalty
     retry_penalty = retries * settings.RETRY_PENALTY_POINTS

@@ -44,6 +44,9 @@ class StartPhaseRequest(BaseModel):
     """Phase start request."""
     session_id: str
     phase_number: int
+    # When switching phases, save the elapsed time of the phase we're leaving
+    leaving_phase_number: Optional[int] = None
+    leaving_phase_elapsed_seconds: Optional[float] = None
 
 
 class StartPhaseResponse(BaseModel):
@@ -55,6 +58,8 @@ class StartPhaseResponse(BaseModel):
     started_at: datetime
     current_server_time: Optional[datetime] = None
     previous_responses: Optional[List[PhaseResponse]] = None
+    # Accumulated elapsed time for this phase (for resume)
+    elapsed_seconds: float = 0.0
 
 
 class SubmitPhaseRequest(BaseModel):

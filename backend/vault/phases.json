@@ -4,7 +4,7 @@
         "name": "Customer Problem & Value Proposition",
         "description": "Define the Customer's Operational and Financial Pain Points and Your Unique Solution",
         "weight": 0.3,
-        "time_limit_seconds": 300,
+        "time_limit_seconds": 600,
         "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
         "questions": [
             {
@@ -38,7 +38,7 @@
         "name": "Solution Design & Customer Experience",
         "description": "Explain How Customers Use Your Solution and Experience Its Benefits",
         "weight": 0.3,
-        "time_limit_seconds": 300,
+        "time_limit_seconds": 600,
         "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
         "questions": [
             {
@@ -72,7 +72,7 @@
         "name": "Customer Success & Market Positioning",
         "description": "Demonstrate Measurable Customer Value and Competitive Differentiation",
         "weight": 0.4,
-        "time_limit_seconds": 300,
+        "time_limit_seconds": 600,
         "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
         "questions": [
             {

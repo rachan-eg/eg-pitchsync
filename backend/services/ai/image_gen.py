@@ -8,7 +8,7 @@ import os
 import base64
 import requests
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageStat, ImageFilter, ImageOps
 from backend.config import settings, GENERATED_DIR
 
 # Logo paths - placed sequentially on bottom right
@@ -18,64 +18,99 @@ LOGOS = [
     LOGO_DIR / "Construction.png"
 ]
 
+def get_dominant_color(image: Image.Image) -> tuple:
+    """Extract dominant color from image (simple average)."""
+    # Resize to 1x1 to get average color
+    color = image.resize((1, 1), Image.Resampling.LANCZOS).getpixel((0, 0))
+    if isinstance(color, int): # Grayscale
+        return (color, color, color, 255)
+    if len(color) == 3: # RGB
+        return (*color, 255)
+    return color # RGBA
+
 
 def overlay_logos(image_path: str, logos: list, padding: int = 30, logo_height: int = 40) -> None:
     """
-    Overlay logos on the bottom-right corner of an image sequentially.
-    
-    Args:
-        image_path: Path to the base image
-        logos: List of Path objects to logo images
-        padding: Padding from edges and between logos
-        logo_height: Height to resize logos to (maintains aspect ratio)
+    Overlay logos on a footer that matches the image's dominant color.
     """
     try:
         # Open the base image
         base_image = Image.open(image_path).convert("RGBA")
         base_width, base_height = base_image.size
         
-        # Prepare logos (resize and maintain aspect ratio)
+        # Prepare logos
         logo_images = []
         for logo_path in logos:
             if logo_path.exists():
                 logo = Image.open(logo_path).convert("RGBA")
                 original_width, original_height = logo.size
                 
-                # Only downscale, never upscale (preserves quality)
-                if original_height > logo_height:
-                    aspect = original_width / original_height
-                    new_width = int(logo_height * aspect)
-                    # Use high-quality downsampling
-                    logo = logo.resize((new_width, logo_height), Image.Resampling.LANCZOS)
+                # Default scale
+                current_target_height = logo_height
+                
+                # Specific overrides
+                if "Construction.png" in logo_path.name:
+                    current_target_height = int(logo_height * 1.8) # 80% bigger
+                elif "EGDK logo.png" in logo_path.name:
+                    current_target_height = int(logo_height * 1.2) # Slightly bigger for main logo too
+                
+                # Calculate new dimensions preserving aspect ratio
+                aspect = original_width / original_height
+                new_width = int(current_target_height * aspect)
+                
+                # Always resize to normalized height for consistency
+                logo = logo.resize((new_width, current_target_height), Image.Resampling.LANCZOS)
                 
                 logo_images.append(logo)
-            else:
-                print(f"WARNING: Logo not found: {logo_path}")
         
         if not logo_images:
-            print("WARNING: No logos found to overlay")
             return
+
+        # Calculate footer stats
+        footer_height = int(logo_height * 2.5)
+        total_height = base_height + footer_height
         
-        # Calculate total width needed for all logos
-        total_logos_width = sum(logo.width for logo in logo_images) + padding * (len(logo_images) - 1)
+        # --- Create Mirrored Blur Background ---
+        # 1. Take the bottom slice of the image
+        sample_height = int(base_height * 0.15) # Sample bottom 15%
+        bottom_slice = base_image.crop((0, base_height - sample_height, base_width, base_height))
         
-        # Starting position (bottom-right corner)
-        x_position = base_width - total_logos_width - padding
-        y_position = base_height - max(logo.height for logo in logo_images) - padding
+        # 2. Resize to fill the footer height
+        footer_bg = bottom_slice.resize((base_width, footer_height), Image.Resampling.BICUBIC)
         
-        # Paste each logo sequentially
-        for logo in logo_images:
-            # Create a position tuple - align to bottom
-            y_offset = y_position + (max(l.height for l in logo_images) - logo.height)
-            position = (x_position, y_offset)
-            # Paste with alpha channel for transparency
-            base_image.paste(logo, position, logo)
-            x_position += logo.width + padding
+        # 3. Mirror it vertically for better blending seam
+        footer_bg = ImageOps.flip(footer_bg)
         
-        # Save the result with high quality
-        base_image.save(image_path, "PNG", optimize=False)
+        # 4. Apply heavy blur to abstract the details
+        footer_bg = footer_bg.filter(ImageFilter.GaussianBlur(radius=30))
         
-        print(f"DEBUG: Successfully overlaid {len(logo_images)} logos on image")
+        # Create new canvas
+        new_image = Image.new("RGBA", (base_width, total_height), (0, 0, 0, 255))
+        
+        # Paste original image
+        new_image.paste(base_image, (0, 0))
+        
+        # Paste the blurred footer
+        new_image.paste(footer_bg, (0, base_height))
+        
+        # Place logos: Left (EGDK) and Right (Construction)
+        footer_y_start = base_height
+        
+        for logo, path in zip(logo_images, logos):
+            # Center vertically in the footer
+            y_offset = footer_y_start + (footer_height - logo.height) // 2
+            
+            if "EGDK logo.png" in path.name:
+                # Place on LEFT
+                x_pos = padding
+            else:
+                # Place on RIGHT (Default for Construction or others)
+                x_pos = base_width - logo.width - padding
+            
+            new_image.paste(logo, (x_pos, y_offset), logo)
+            
+        new_image.save(image_path, "PNG", optimize=False)
+        print(f"DEBUG: Added blurred mirror footer and split logos")
         
     except Exception as e:
         print(f"WARNING: Failed to overlay logos: {e}")
