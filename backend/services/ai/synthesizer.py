@@ -56,6 +56,12 @@ def _load_brand_colors(usecase: Dict[str, Any] = None) -> str:
                     else:
                         primary = str(p_data)
                     colors.append(f"Primary Color: {primary}")
+                elif "primarySection" in data:
+                    # Support for medical-brand.json structure
+                    p_sect = data["primarySection"]
+                    primary = p_sect.get("primaryColor", "#008B8B")
+                    dark = p_sect.get("primaryColorDark", "#005D5D")
+                    colors.append(f"Primary Color: {primary}, Dark: {dark}")
                 elif "primaryColor" in data:
                     colors.append(f"Primary Color: {data['primaryColor']}")
                 
