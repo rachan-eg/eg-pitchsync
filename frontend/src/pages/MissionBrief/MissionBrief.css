@@ -29,14 +29,14 @@
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 1200px;
-    height: calc(100vh - 80px);
-    margin-top: 60px;
-    /* Account for global header */
+    max-width: 1100px;
+    height: calc(100vh - 100px);
+    margin: 50px auto 0;
     display: flex;
     flex-direction: column;
     padding: 1rem 2rem;
-    gap: 1.25rem;
+    gap: 1.5rem;
+    justify-content: center;
 }
 
 /* -----------------------------------------------------------------------------
@@ -45,77 +45,100 @@
 .mission-brief__header {
     flex-shrink: 0;
     text-align: center;
+    margin-bottom: 0.5rem;
 }
 
 .mission-brief__title {
-    font-size: 1.75rem;
-    font-weight: 900;
-    color: var(--text-primary, #fff);
-    margin: 0 0 0.5rem 0;
+    font-size: 2.2rem;
+    font-weight: 950;
+    color: #fff;
+    margin: 0 0 0.75rem 0;
     text-transform: uppercase;
-    letter-spacing: -0.02em;
-    text-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+    letter-spacing: -0.01em;
+    background: linear-gradient(180deg, #fff 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.4));
 }
 
 .mission-brief__tags {
     display: flex;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
     flex-wrap: wrap;
 }
 
 .mission-brief__tag {
-    padding: 0.25rem 0.6rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    font-size: 0.65rem;
-    font-weight: 600;
+    padding: 0.35rem 0.8rem;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary, #aaa);
+    letter-spacing: 0.1em;
+    color: #a78bfa;
+    backdrop-filter: blur(4px);
 }
 
 /* -----------------------------------------------------------------------------
    GRID LAYOUT
    ----------------------------------------------------------------------------- */
 .mission-brief__grid {
-    flex: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 1rem;
-    min-height: 0;
+    grid-template-columns: 1fr 1fr 1.2fr;
+    gap: 1.25rem;
+    align-items: stretch;
+    min-height: 480px;
+    max-height: 550px;
 }
 
 /* -----------------------------------------------------------------------------
    PANELS
    ----------------------------------------------------------------------------- */
 .mission-brief__panel {
+    position: relative;
     display: flex;
     flex-direction: column;
-    background: rgba(20, 20, 25, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 1rem;
+    background: rgba(15, 15, 20, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 1.25rem;
     min-height: 0;
     overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s, border-color 0.3s;
+}
+
+.mission-brief__panel:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+}
+
+/* Corner Accents */
+.mission-brief__panel::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, transparent 50%, rgba(139, 92, 246, 0.1) 50%);
+    pointer-events: none;
 }
 
 .mission-brief__panel-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.7rem;
-    font-weight: 700;
+    gap: 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-muted, #888);
-    margin-bottom: 0.75rem;
+    letter-spacing: 0.12em;
+    color: #8b5cf6;
+    margin-bottom: 1rem;
     flex-shrink: 0;
-}
-
-.mission-brief__panel-header svg {
-    color: var(--accent-primary, #8b5cf6);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Content Shared */
