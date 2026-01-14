@@ -70,8 +70,8 @@
         "name": "Clinical Innovation",
         "visual_style": "Clean whites, sterile blues, data overlays, precision medical aesthetic",
         "colors": {
-            "primary": "#0ea5e9",
-            "secondary": "#38bdf8",
+            "primary": "#008B8B",
+            "secondary": "#4DCCCC",
             "bg": "#f0f9ff"
         },
         "mood": "Sterile, Advanced, Life-Saving"

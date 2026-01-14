@@ -264,7 +264,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             <span className="pi-char-label">Total Chars</span>
                             <div className="pi-char-row">
                                 <span className={`pi-char-value ${currentValid ? 'pi-char-value--ok' : ''}`}>
-                                    {currentAnswer.length} / 100
+                                    {currentAnswer.length}
                                 </span>
                             </div>
                         </div>
