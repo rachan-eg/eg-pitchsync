@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Dict, Any
 
 from backend.config import settings
-from backend.models import PhaseMetric, PHASE_DEFINITIONS
+from backend.models import PhaseMetric
 
 
 import math
@@ -19,6 +19,7 @@ def calculate_phase_score(
     end_time: datetime,
     token_count: int,
     phase_number: int,
+    phase_def: Dict[str, Any], # Added parameter
     hint_penalty: float = 0.0,
     input_tokens: int = 0,
     output_tokens: int = 0
@@ -27,7 +28,6 @@ def calculate_phase_score(
     Calculate comprehensive score for a phase.
     Formula: (AI × 700) - Time Penalty - (Retries × 50) - Hint Penalty + Efficiency Bonus
     """
-    phase_def = PHASE_DEFINITIONS.get(phase_number, {})
     phase_weight = phase_def.get("weight", 0.33)
     time_limit = phase_def.get("time_limit_seconds", 300)
     

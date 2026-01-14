@@ -11,12 +11,32 @@ from pathlib import Path
 from PIL import Image, ImageStat, ImageFilter, ImageOps
 from backend.config import settings, GENERATED_DIR
 
-# Logo paths - placed sequentially on bottom right
-LOGO_DIR = Path(__file__).parent.parent.parent / "assets" / "logo"
-LOGOS = [
-    LOGO_DIR / "EGDK logo.png",
-    LOGO_DIR / "Construction.png"
-]
+from typing import Dict, Any, List
+
+# Asset paths
+BASE_DIR = Path(__file__).parent.parent.parent
+VAULT_ASSETS_DIR = BASE_DIR / "vault" / "assets"
+COMMON_LOGO_DIR = VAULT_ASSETS_DIR / "logo"
+
+def get_logos_for_usecase(usecase: Dict[str, Any] = None) -> List[Path]:
+    """Identify logo paths based on usecase or fallback to legacy."""
+    logos = []
+    if usecase and "assets" in usecase and "logos" in usecase["assets"]:
+        usecase_id = usecase.get("id")
+        if usecase_id:
+            for l in usecase["assets"]["logos"]:
+                logos.append(VAULT_ASSETS_DIR / usecase_id / l)
+    
+    # Fallback to common if no paths found or usecase not provided
+    if not logos:
+        logos = [
+            COMMON_LOGO_DIR / "EGDK logo.png",
+            COMMON_LOGO_DIR / "Construction.png"
+        ]
+    return logos
+
+# Default logos for backward compatibility if needed
+DEFAULT_LOGOS = get_logos_for_usecase()
 
 def get_dominant_color(image: Image.Image) -> tuple:
     """Extract dominant color from image (simple average)."""
@@ -117,12 +137,13 @@ def overlay_logos(image_path: str, logos: list, padding: int = 30, logo_height: 
         # Don't raise - image generation should still succeed without logos
 
 
-def generate_image(prompt: str) -> str:
+def generate_image(prompt: str, usecase: Dict[str, Any] = None) -> str:
     """
     Generate a visual asset using FLUX.2 via Azure AI Studio endpoint.
     
     Args:
         prompt: Detailed image generation prompt
+        usecase: Optional usecase dictionary for asset injection (logos)
     
     Returns:
         URL path to the generated image
@@ -179,8 +200,9 @@ def generate_image(prompt: str) -> str:
         
         print(f"DEBUG: Flux image successfully saved to {filename}")
         
-        # Overlay logos on the bottom-right corner
-        overlay_logos(str(filepath), LOGOS)
+        # Overlay logos on the bottom of the image
+        logos_to_overlay = get_logos_for_usecase(usecase)
+        overlay_logos(str(filepath), logos_to_overlay)
         
         return f"/generated/{filename}"
 

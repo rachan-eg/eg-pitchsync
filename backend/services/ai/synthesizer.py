@@ -11,38 +11,63 @@ from pathlib import Path
 from backend.services.ai.client import get_client
 from backend.services.ai.image_gen import generate_image
 
-# Color Palette paths
-PALETTE_DIR = Path(__file__).parent.parent.parent / "assets" / "colour_pallete"
+# Asset paths
+BASE_DIR = Path(__file__).parent.parent.parent
+VAULT_ASSETS_DIR = BASE_DIR / "vault" / "assets"
+COMMON_PALETTE_DIR = VAULT_ASSETS_DIR / "colour_pallete"
 
-def _load_brand_colors() -> str:
+def _load_brand_colors(usecase: Dict[str, Any] = None) -> str:
     """Load and extract key brand colors from palette files in a concise format."""
     colors = []
     
+    # Identify palette paths based on usecase
+    palette_paths = []
+    if usecase and "assets" in usecase and "palettes" in usecase["assets"]:
+        usecase_id = usecase.get("id")
+        if usecase_id:
+            for p in usecase["assets"]["palettes"]:
+                palette_paths.append(VAULT_ASSETS_DIR / usecase_id / p)
+    
+    # Fallback to common if no paths found
+    if not palette_paths:
+        palette_paths = [
+            COMMON_PALETTE_DIR / "organe-color-palette.json",
+            COMMON_PALETTE_DIR / "semantic-color-palette.json"
+        ]
+    
     try:
-        # Orange palette - primary brand color
-        orange_path = PALETTE_DIR / "organe-color-palette.json"
-        if orange_path.exists():
-            with open(orange_path) as f:
+        for path in palette_paths:
+            if not path.exists():
+                continue
+                
+            with open(path) as f:
                 data = json.load(f)
+                
+                # Try to extract "orange" or "primary" keys
                 if "orange" in data:
                     primary = data["orange"].get("primaryColor", "#BA5400")
                     dark = data["orange"].get("primaryColorDark", "#D26D2B")
                     colors.append(f"Primary Orange: {primary}, {dark}")
-        
-        # Semantic palette - status colors
-        semantic_path = PALETTE_DIR / "semantic-color-palette.json"
-        if semantic_path.exists():
-            with open(semantic_path) as f:
-                data = json.load(f)
+                elif "primary" in data:
+                    # Generic primary color if defined differently
+                    p_data = data["primary"]
+                    if isinstance(p_data, dict):
+                        primary = p_data.get("color") or p_data.get("primaryColor") or "#BA5400"
+                    else:
+                        primary = str(p_data)
+                    colors.append(f"Primary Color: {primary}")
+                elif "primaryColor" in data:
+                    colors.append(f"Primary Color: {data['primaryColor']}")
+                
                 # Extract key semantic colors
                 if "success" in data:
-                    success_500 = next((s["color"] for s in data["success"]["shadesCompliance"] if s["name"] == "success-500"), "#00855B")
+                    success_500 = next((s["color"] for s in data["success"].get("shadesCompliance", []) if s["name"] == "success-500"), "#00855B")
                     colors.append(f"Success Green: {success_500}")
                 if "error" in data:
-                    error_500 = next((s["color"] for s in data["error"]["shadesCompliance"] if s["name"] == "error-500"), "#D93539")
+                    error_500 = next((s["color"] for s in data["error"].get("shadesCompliance", []) if s["name"] == "error-500"), "#D93539")
                     colors.append(f"Alert Red: {error_500}")
                 if "warning" in data:
-                    warning_500 = next((s["color"] for s in data["warning"]["shadesCompliance"] if s["name"] == "warning-500"), "#956D00")
+                    warning_500 = next((s["color"] for s in data["warning"].get("shadesCompliance", []) if s["name"] == "warning-500"), "#956D00")
                     colors.append(f"Warning Amber: {warning_500}")
     except Exception as e:
         print(f"WARNING: Could not load brand colors: {e}")
@@ -53,8 +78,8 @@ def _load_brand_colors() -> str:
     return "Brand Orange (#BA5400), Corporate White, Dark Background (#0A0A0F)"
 
 
-# Cache the colors
-BRAND_COLORS = _load_brand_colors()
+# Default colors for fallback
+DEFAULT_BRAND_COLORS = _load_brand_colors()
 
 
 def prepare_master_prompt_draft(
@@ -136,7 +161,7 @@ def synthesize_pitch(
     try:
         # 3. Generate Image (Module D)
         # prompt_string_for_gen is the clean string for Flux
-        image_url = generate_image(prompt_string_for_gen)
+        image_url = generate_image(prompt_string_for_gen, usecase=usecase)
         
         return {
             "visionary_hook": filtered_base_prompt,
@@ -261,7 +286,7 @@ def auto_generate_pitch(
     # Note: If the user is on the manual path, this might be skipped in favor of client-side upload,
     # but for the auto-pipeline we generate it here.
     try:
-        image_url = generate_image(prompt_str)
+        image_url = generate_image(prompt_str, usecase=usecase)
     except Exception as e:
         print(f"Auto-gen image failed: {e}")
         image_url = ""
@@ -360,7 +385,7 @@ PRODUCT: "{usecase_title}"
 DOMAIN: {usecase_domain}
 
 === BRAND COLOR PALETTE ===
-{BRAND_COLORS}
+{_load_brand_colors(usecase)}
 (Use these for headers, diagrams, and highlights)
 
 === CREATIVE DIRECTION (DENSE INFOGRAPHIC STYLE) ===

@@ -398,7 +398,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                         {selectedFile ? selectedFile.name : "Click to Select Image"}
                                     </span>
                                     <span className="curate-upload__hint">
-                                        {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : "PNG, JPG up to 10MB"}
+                                        {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : "PNG, JPG up to 20MB"}
                                     </span>
                                 </label>
                             </div>

@@ -160,7 +160,7 @@ async def submit_pitch_image(
     import shutil
     import os
     from backend.config import GENERATED_DIR
-    from backend.services.ai.image_gen import overlay_logos, LOGOS
+    from backend.services.ai.image_gen import overlay_logos, get_logos_for_usecase
     
     session = get_session(session_id)
     if not session:
@@ -177,8 +177,9 @@ async def submit_pitch_image(
             
         print(f"DEBUG: Uploaded image saved to {filename}")
         
-        # Overlay logos on the bottom-right corner
-        overlay_logos(str(filepath), LOGOS)
+        # Overlay logos on the bottom of the image
+        logos_to_overlay = get_logos_for_usecase(session.usecase)
+        overlay_logos(str(filepath), logos_to_overlay)
         
         image_url = f"/generated/{filename}"
         

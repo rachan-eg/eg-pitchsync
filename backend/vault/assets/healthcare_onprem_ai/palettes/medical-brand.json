@@ -1,0 +1,59 @@
+{
+  "primarySection": {
+    "brandName": "Infodoc Teal",
+    "primaryColor": "#008B8B",
+    "primaryColorDark": "#005D5D",
+    "shades": {
+      "50": "#E0F7F7",
+      "100": "#B2EBEB",
+      "200": "#80DCDC",
+      "300": "#4DCCCC",
+      "400": "#26C0C0",
+      "500": "#008B8B",
+      "600": "#007E7E",
+      "700": "#006E6E",
+      "800": "#005D5D",
+      "900": "#004040",
+      "950": "#002424"
+    },
+    "accessibleCombinations": {
+      "primaryOnWhiteBackground": [
+        {
+          "shade": "500",
+          "ratio": "4.62",
+          "compliance": "AA",
+          "isDarkerColor": true
+        },
+        {
+          "shade": "700",
+          "ratio": "7.12",
+          "compliance": "AAA",
+          "isDarkerColor": true
+        }
+      ],
+      "primaryOnBlackBackground": [
+        {
+          "shade": "200",
+          "ratio": "13.4",
+          "compliance": "AAA",
+          "isDarkerColor": false
+        },
+        {
+          "shade": "400",
+          "ratio": "8.5",
+          "compliance": "AAA",
+          "isDarkerColor": false
+        }
+      ],
+      "primaryOnPrimaryBackground": [
+        {
+          "foreground": "#FFFFFF",
+          "background": "500",
+          "ratio": "4.62",
+          "compliance": "AA",
+          "isDarkerColor": false
+        }
+      ]
+    }
+  }
+}

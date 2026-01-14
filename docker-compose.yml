@@ -18,10 +18,8 @@ services:
       - PYTHONPATH=/app
     volumes:
       - generated_data:/app/generated
-      # Mount vault for phase definitions (read-only)
+      # Mount vault for phase definitions and assets (read-only)
       - ./backend/vault:/app/backend/vault:ro
-      # Mount assets for logos, reference images, color palettes (read-only)
-      - ./backend/assets:/app/backend/assets:ro
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s

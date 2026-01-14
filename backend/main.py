@@ -45,7 +45,7 @@ app.add_middleware(
 # Mount Static Files
 app.mount("/generated", StaticFiles(directory=str(GENERATED_DIR)), name="generated")
 # Use /backend-assets to avoid conflict with frontend's /assets directory
-app.mount("/backend-assets", StaticFiles(directory=str(settings.BACKEND_DIR / "assets")), name="backend-assets")
+app.mount("/backend-assets", StaticFiles(directory=str(settings.BACKEND_DIR / "vault" / "assets")), name="backend-assets")
 
 # Include Routers
 app.include_router(session_router)

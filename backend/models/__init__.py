@@ -12,7 +12,7 @@ from backend.models.api import (
     LeaderboardEntry, LeaderboardResponse
 )
 from backend.models.constants import (
-    THEME_REPO, USECASE_REPO, PHASE_DEFINITIONS
+    THEME_REPO, USECASE_REPO, PHASE_DEFINITIONS, get_phases_for_usecase
 )
 
 __all__ = [
@@ -27,5 +27,5 @@ __all__ = [
     "PrepareSynthesisRequest", "PrepareSynthesisResponse",
     "LeaderboardEntry", "LeaderboardResponse",
     # Constants
-    "THEME_REPO", "USECASE_REPO", "PHASE_DEFINITIONS",
+    "THEME_REPO", "USECASE_REPO", "PHASE_DEFINITIONS", "get_phases_for_usecase",
 ]

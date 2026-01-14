@@ -1,0 +1,73 @@
+{
+  "semantic": {
+    "success": {
+      "shadesCompliance": [
+        {
+          "shade": "500",
+          "hex": "#22C55E",
+          "whiteRatio": { "ratio": 3.01, "largeAA": true, "largeAAA": false, "bodyAA": false, "bodyAAA": false },
+          "blackRatio": { "ratio": 6.97, "largeAA": true, "largeAAA": true, "bodyAA": true, "bodyAAA": false },
+          "overallCompliance": "AA Large"
+        },
+        {
+          "shade": "900",
+          "hex": "#14532D",
+          "whiteRatio": { "ratio": 11.5, "largeAA": true, "largeAAA": true, "bodyAA": true, "bodyAAA": true },
+          "blackRatio": { "ratio": 1.82, "largeAA": false, "largeAAA": false, "bodyAA": false, "bodyAAA": false },
+          "overallCompliance": "AAA"
+        }
+      ]
+    },
+    "error": {
+      "shadesCompliance": [
+        {
+          "shade": "600",
+          "hex": "#DC2626",
+          "whiteRatio": { "ratio": 4.58, "largeAA": true, "largeAAA": true, "bodyAA": true, "bodyAAA": false },
+          "blackRatio": { "ratio": 4.58, "largeAA": true, "largeAAA": true, "bodyAA": true, "bodyAAA": false },
+          "overallCompliance": "AA"
+        }
+      ]
+    },
+    "warning": {
+      "shadesCompliance": [
+        {
+          "shade": "400",
+          "hex": "#FACC15",
+          "whiteRatio": { "ratio": 1.63, "largeAA": false, "largeAAA": false, "bodyAA": false, "bodyAAA": false },
+          "blackRatio": { "ratio": 12.8, "largeAA": true, "largeAAA": true, "bodyAA": true, "bodyAAA": true },
+          "overallCompliance": "AAA on Black"
+        }
+      ]
+    },
+    "information": {
+      "shadesCompliance": [
+        {
+          "shade": "600",
+          "hex": "#2563EB",
+          "whiteRatio": { "ratio": 4.63, "largeAA": true, "largeAAA": true, "bodyAA": true, "bodyAAA": false },
+          "blackRatio": { "ratio": 4.54, "largeAA": true, "largeAAA": true, "bodyAA": true, "bodyAAA": false },
+          "overallCompliance": "AA"
+        }
+      ]
+    },
+    "neutrals": {
+      "shadesCompliance": [
+        {
+          "shade": "500",
+          "hex": "#737373",
+          "whiteRatio": { "ratio": 4.6, "largeAA": true, "largeAAA": true, "bodyAA": true, "bodyAAA": false },
+          "blackRatio": { "ratio": 4.56, "largeAA": true, "largeAAA": true, "bodyAA": true, "bodyAAA": false },
+          "overallCompliance": "AA"
+        },
+        {
+          "shade": "950",
+          "hex": "#0A0A0A",
+          "whiteRatio": { "ratio": 19.3, "largeAA": true, "largeAAA": true, "bodyAA": true, "bodyAAA": true },
+          "blackRatio": { "ratio": 1.08, "largeAA": false, "largeAAA": false, "bodyAA": false, "bodyAAA": false },
+          "overallCompliance": "AAA"
+        }
+      ]
+    }
+  }
+}

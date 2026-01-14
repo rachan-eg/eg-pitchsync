@@ -13,7 +13,7 @@ from backend.models import (
     InitRequest, InitResponse,
     StartPhaseRequest, StartPhaseResponse,
     SubmitPhaseRequest, SubmitPhaseResponse,
-    THEME_REPO, USECASE_REPO, PHASE_DEFINITIONS
+    THEME_REPO, USECASE_REPO, PHASE_DEFINITIONS, get_phases_for_usecase
 )
 from backend.services import (
     create_session, get_session, update_session,
@@ -55,7 +55,7 @@ async def init_session(req: InitRequest):
                 session_id=existing.session_id,
                 usecase=existing.usecase,
                 theme=existing.theme_palette,
-                phases=PHASE_DEFINITIONS,
+                phases=get_phases_for_usecase(existing_usecase_id),
                 scoring_info={
                     "max_ai_points": settings.AI_QUALITY_MAX_POINTS,
                     "retry_penalty": settings.RETRY_PENALTY_POINTS,
@@ -120,7 +120,7 @@ async def init_session(req: InitRequest):
         session_id=session.session_id,
         usecase=usecase,
         theme=theme,
-        phases=PHASE_DEFINITIONS,
+        phases=get_phases_for_usecase(usecase.get('id')),
         scoring_info={
             "max_ai_points": settings.AI_QUALITY_MAX_POINTS,
             "retry_penalty": settings.RETRY_PENALTY_POINTS,
@@ -177,7 +177,10 @@ async def start_phase(req: StartPhaseRequest):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    phase_def = PHASE_DEFINITIONS.get(req.phase_number)
+    usecase_id = session.usecase.get('id') if isinstance(session.usecase, dict) else None
+    phases_repo = get_phases_for_usecase(usecase_id)
+    
+    phase_def = phases_repo.get(req.phase_number)
     if not phase_def:
         raise HTTPException(status_code=400, detail="Invalid phase number")
     
@@ -259,7 +262,10 @@ async def submit_phase(req: SubmitPhaseRequest):
     # Find phase config
     phase_def = None
     phase_number = session.current_phase
-    for num, pdef in PHASE_DEFINITIONS.items():
+    usecase_id = session.usecase.get('id') if isinstance(session.usecase, dict) else None
+    phases_repo = get_phases_for_usecase(usecase_id)
+    
+    for num, pdef in phases_repo.items():
         if pdef["name"] == req.phase_name:
             phase_def = pdef
             phase_number = num
@@ -379,6 +385,7 @@ async def submit_phase(req: SubmitPhaseRequest):
         end_time=end_time,
         token_count=tokens,
         phase_number=phase_number,
+        phase_def=phase_def, # Pass current phase config
         hint_penalty=total_hint_penalty,
         input_tokens=in_tokens,
         output_tokens=out_tokens
@@ -411,7 +418,7 @@ async def submit_phase(req: SubmitPhaseRequest):
     session.extra_ai_tokens += (in_tokens + out_tokens) # Also accumulate in extra_ai_tokens
     
     # Check if final phase
-    is_final = phase_number >= len(PHASE_DEFINITIONS)
+    is_final = phase_number >= len(phases_repo)
     can_proceed = passed and not is_final
     
     # Prep next phase if applicable

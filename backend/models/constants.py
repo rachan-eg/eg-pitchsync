@@ -62,17 +62,27 @@ for uc in _raw_usecases:
 
 
 # =============================================================================
-# PHASE DEFINITIONS
+# PHASE DEFINITIONS (Dynamic & Per-Usecase)
 # =============================================================================
 
-# JSON keys are strings ("1", "2"), but the app expects integer keys (1, 2)
-_raw_phases = load_vault_data("phases.json")
-PHASE_DEFINITIONS: Dict[int, Dict[str, Any]] = {}
+def get_phases_for_usecase(usecase_id: str) -> Dict[int, Dict[str, Any]]:
+    """Loads phase definitions for a specific usecase from the vault/phases directory."""
+    filename = f"phases/{usecase_id}.json"
+    raw_phases = load_vault_data(filename)
+    
+    # If not found or empty, fallback to legacy/construction
+    if not raw_phases:
+        raw_phases = load_vault_data("phases/construction_ai_deviation.json")
+    
+    phases_map: Dict[int, Dict[str, Any]] = {}
+    if isinstance(raw_phases, dict):
+        for k, v in raw_phases.items():
+            try:
+                phases_map[int(k)] = v
+            except ValueError:
+                pass
+    return phases_map
 
-if isinstance(_raw_phases, dict):
-    for k, v in _raw_phases.items():
-        try:
-            PHASE_DEFINITIONS[int(k)] = v
-        except ValueError:
-            pass # Ignore non-integer keys if any
+# Load default set for global fallback tracking
+PHASE_DEFINITIONS: Dict[int, Dict[str, Any]] = get_phases_for_usecase("construction_ai_deviation")
 
