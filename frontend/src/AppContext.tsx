@@ -73,6 +73,7 @@ interface AppContextType {
     phaseResult: SubmitPhaseResponse | null;
     setPhaseResult: (result: SubmitPhaseResponse | null) => void;
     currentPhaseResponses: PhaseResponse[];
+    setCurrentPhaseResponses: (responses: PhaseResponse[]) => void;
     elapsedSeconds: number;
 
     // Prompt & Image State
@@ -188,6 +189,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                         parsedSession.is_complete || false
                     );
                     setHighestUnlockedPhase(unlocked);
+
+                    // CRITICAL FIX: Hydrate currentPhaseResponses from session data
+                    // This ensures answers are visible immediately on refresh/resume
+                    if (parsedSession.phases) {
+                        const currentPhaseNum = parsedSession.current_phase;
+                        const config = parsedConfig; // Use the config we just loaded
+                        const phaseDef = config[currentPhaseNum];
+
+                        if (phaseDef) {
+                            const phaseName = phaseDef.name;
+                            const phaseData = parsedSession.phases[phaseName];
+                            if (phaseData && phaseData.responses) {
+                                setCurrentPhaseResponses(phaseData.responses);
+                            }
+                        } else {
+                            // Fallback: search by phase_id string if needed, or loosely
+                            // But usually phases are indexed by number in config
+                            const pData = Object.values(parsedSession.phases).find((p: any) => p.phase_id === `phase_${currentPhaseNum}`);
+                            if (pData && (pData as any).responses) {
+                                setCurrentPhaseResponses((pData as any).responses);
+                            }
+                        }
+                    }
+
                 } catch (e) {
                     console.error("Failed to hydrate session", e);
                     localStorage.clear();
@@ -214,7 +239,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         let interval: ReturnType<typeof setInterval>;
         const isWarRoom = location.pathname === '/war-room';
 
-        if (session && phaseStartTime && !phaseResult && !loading && isWarRoom) {
+        // Check if current phase is already completed
+        const currentPhaseNum = session?.current_phase;
+        const phaseName = currentPhaseNum ? phaseConfig[currentPhaseNum]?.name : null;
+        const isPhaseComplete = phaseName && session?.phases[phaseName]?.status === 'passed';
+
+        if (session && phaseStartTime && !phaseResult && !loading && isWarRoom && !isPhaseComplete) {
             interval = setInterval(() => {
                 // Only tick if the document is visible
                 if (document.visibilityState === 'visible') {
@@ -354,6 +384,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 setElapsedSeconds(Math.floor(elapsedMs / 1000));
             }
 
+            // CRITICAL FIX: Set current responses if resuming
+            if (isResumedSession && data.phase_data) {
+                const currentPhaseNum = data.current_phase || 1;
+                const phaseConfig = data.phases;
+                const phaseDef = phaseConfig[currentPhaseNum];
+                if (phaseDef) {
+                    const phaseName = phaseDef.name;
+                    const phaseData = data.phase_data[phaseName];
+                    if (phaseData && phaseData.responses) {
+                        setCurrentPhaseResponses(phaseData.responses);
+                    }
+                }
+            }
+
             console.log(`Session ${isResumedSession ? 'resumed' : 'created'}:`, {
                 phase_scores: data.phase_scores,
                 current_phase: data.current_phase,
@@ -398,7 +442,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     phase_number: phaseNum,
                     // Send current phase's elapsed time so server can save it
                     leaving_phase_number: leavingPhaseNum !== phaseNum ? leavingPhaseNum : null,
-                    leaving_phase_elapsed_seconds: leavingPhaseNum !== phaseNum ? leavingElapsed : null
+                    leaving_phase_elapsed_seconds: leavingPhaseNum !== phaseNum ? leavingElapsed : null,
+                    leaving_phase_responses: leavingPhaseNum !== phaseNum ? currentPhaseResponses : null
                 })
             });
 
@@ -660,6 +705,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         phaseResult,
         setPhaseResult,
         currentPhaseResponses,
+        setCurrentPhaseResponses,
         elapsedSeconds,
 
         // Prompt & Image

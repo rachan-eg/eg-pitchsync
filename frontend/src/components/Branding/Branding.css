@@ -1,0 +1,93 @@
+.branding-overlay {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: fixed;
+    bottom: 2.5rem;
+    right: 3rem;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    animation: fadeIn 0.8s ease forwards 0.5s;
+}
+
+/* Scaling for overlay mode */
+.branding-overlay .branding-logo-wrapper {
+    width: 44px;
+    height: 44px;
+}
+
+.branding-overlay .powered-by {
+    font-size: 0.75rem;
+}
+
+.branding-overlay .brand-text {
+    font-size: 0.95rem;
+}
+
+.branding-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.branding-logo-wrapper {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.branding-logo-svg {
+    width: 100%;
+    height: 100%;
+    color: var(--text-primary);
+}
+
+.branding-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    line-height: 1;
+}
+
+.powered-by {
+    font-size: 0.5rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.brand-text {
+    font-size: 0.65rem;
+    color: var(--text-primary);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--text-primary), var(--primary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .branding-overlay {
+        bottom: 1rem;
+        right: 1.25rem;
+    }
+}

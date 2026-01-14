@@ -13,7 +13,7 @@
                 "criteria": "Operational problem specificity, financial impact clarity, customer role identification, problem cascade connection, scenario realism",
                 "hint_text": "Describe the daily operational struggles field workers and quality inspectors face. Quantify the financial impact when defects are discovered late. Identify specific customer roles affected (Quality Managers, Site Supervisors, Workers). Show how missed defects cascade into safety hazards and rework costs. Connect to real scenarios customers experience regularly.",
                 "ideal_answer": "Construction teams face critical challenges where field workers discover cracks, leaks, or structural deviations but lack expertise to diagnose severity or root causes on-site. Quality inspectors spread thin across multiple locations miss early warning signs during rushed manual walkthroughs. Workers wait hours or days for expert consultations while defects worsen, causing work stoppages and schedule disruptions. These operational failures cascade into financial devastation. CFOs absorb massive rework costs when defects are caught late, liability claims from safety incidents, and warranty disputes with clients. Delayed remediation transforms minor issues into structural failures requiring expensive emergency repairs, while documentation gaps create compliance nightmares and litigation exposure.",
-                "hint_penalty": 50
+                "hint_penalty": 25
             },
             {
                 "id": "q1_2",
@@ -21,7 +21,7 @@
                 "criteria": "Current solution identification, original purpose acknowledgment, inadequacy explanation, customer frustration articulation, need versus availability gap",
                 "hint_text": "Name specific tools or approaches customers currently rely on. Explain what these solutions were designed to do originally. Describe why they don't work in today's fast-paced construction environment. Show the gap between what customers need and what's available. Focus on customer frustration, not just technical limitations.",
                 "ideal_answer": "Customers rely on experienced inspectors conducting periodic manual walkthroughs that catch defects only after significant progression. Workers take photos and wait for offsite experts to review them hours later when context is lost. Quality checklists provide generic guidelines without defect-specific diagnostic help. Training programs teach theoretical knowledge but workers forget details when faced with real anomalies onsite. These approaches frustrate teams because they depend on scarce expertise being physically present or remotely available. Customers need instant intelligent diagnosis at the moment defects are discovered, but current solutions force workers into guesswork or costly delays waiting for expert validation, turning small issues into big problems.",
-                "hint_penalty": 50
+                "hint_penalty": 25
             },
             {
                 "id": "q1_3",
@@ -29,7 +29,7 @@
                 "criteria": "Customer-friendly explanation, alternative contrast clarity, experience description, outcome difference emphasis, analogy effectiveness",
                 "hint_text": "Explain your core approach in terms customers understand. Contrast with how alternatives work (without technical jargon). Describe the customer experience using your solution. Show the outcome difference customers will notice. Use analogies that resonate with construction professionals.",
                 "ideal_answer": "Our solution acts like having an expert construction engineer in every worker's pocket, instantly diagnosing defects from smartphone photos taken onsite. While traditional approaches require waiting for inspectors or sending photos for remote review, we provide immediate analysis showing defect type, severity level, root cause explanation, and step-by-step remediation guidance. Workers experience the difference instantly—discovering a crack means pointing their phone, receiving diagnosis within seconds, and knowing exactly how to fix it with material specifications included. Think of it as upgrading from a specialist call and wait, to having that specialist standing beside you always. The outcome customers notice is catching defects early when fixes are simple and inexpensive, preventing small issues from becoming structural disasters.",
-                "hint_penalty": 50
+                "hint_penalty": 25
             }
         ]
     },
@@ -47,7 +47,7 @@
                 "criteria": "Data source customer familiarity, diagnostic transformation explanation, signal identification clarity, quality impact acknowledgment, security reassurance",
                 "hint_text": "Identify data customers already have in their systems. Explain how this data becomes diagnostic intelligence. Describe what visual patterns or signals indicate specific defects. Show how image quality affects diagnosis accuracy for customers. Address customer concerns about data security and ownership.",
                 "ideal_answer": "Our solution uses smartphone photos workers capture showing visible defects—cracks, leaks, surface irregularities, structural deviations. This visual data becomes diagnostic intelligence by recognizing patterns AI learned from thousands of documented construction defects across materials and conditions. Visual signals include crack width and propagation patterns, moisture stain characteristics, concrete spalling indicators, and material stress signatures. Better photo quality with proper lighting and angles delivers more accurate diagnosis helping customers act confidently. Customer project photos remain completely secure with encryption and strict access controls, with full ownership and transparency. Images are analyzed instantly onsite without requiring cloud uploads unless workers choose to save documentation automatically.",
-                "hint_penalty": 50
+                "hint_penalty": 25
             },
             {
                 "id": "q2_2",
@@ -55,7 +55,7 @@
                 "criteria": "Role-specific interaction clarity, existing tool integration emphasis, adoption ease demonstration, scenario realism, value illustration",
                 "hint_text": "Describe where customers see insights (mobile app, dashboards, reports). Explain how different roles use the solution differently. Show how it fits within tools they already use. Address the learning curve and adoption ease. Illustrate a typical scenario from discovery to resolution.",
                 "ideal_answer": "Field workers open mobile app, point camera at discovered defect, and receive instant diagnosis screen showing defect type highlighted visually, severity rating with color coding, root cause explanation in plain language, and remediation steps with material specifications. Quality managers access dashboard showing all detected defects across sites with status tracking and compliance documentation generated automatically. The solution integrates with Procore and PlanGrid, syncing defect records and photos directly into existing quality management workflows. Typical scenario: worker notices foundation crack during pour, scans it immediately, sees diagnosis indicating minor shrinkage versus structural concern, follows guided fix steps, and documents resolution—all within minutes instead of halting work waiting for inspector consultation.",
-                "hint_penalty": 50
+                "hint_penalty": 25
             },
             {
                 "id": "q2_3",
@@ -63,7 +63,7 @@
                 "criteria": "Accuracy transparency, reliability assurance, explanation clarity, support emphasis, realistic expectation setting",
                 "hint_text": "Address diagnosis accuracy and what happens with uncertain cases. Explain system reliability and performance in field conditions. Describe transparency in how diagnoses are made. Show support customers receive when they need help. Build confidence without overpromising perfection.",
                 "ideal_answer": "Customers trust our solution through transparent confidence scoring showing diagnosis certainty for each detected defect, helping workers decide when expert validation is needed. We design for high accuracy while clearly flagging uncertain cases for human review—customers appreciate knowing when AI is confident versus when specialist consultation is recommended. Mobile app works reliably in offline field conditions with diagnoses processed locally, syncing documentation when connectivity returns. Diagnoses include visual explanations highlighting exactly what the AI detected in photos, not mysterious verdicts. Dedicated support team provides rapid assistance when workers encounter unfamiliar defect types. Trust builds as workers validate diagnoses against actual outcomes, seeing consistent accuracy across diverse defect scenarios over time.",
-                "hint_penalty": 50
+                "hint_penalty": 25
             }
         ]
     },
@@ -81,7 +81,7 @@
                 "criteria": "Customer metric relevance, timeline realism, immediate and ongoing value balance, calculation logic clarity, non-financial benefit inclusion",
                 "hint_text": "Describe returns in terms customers measure (rework costs avoided, faster resolutions). Provide realistic timelines for when customers see results. Show both immediate and ongoing value accumulation. Explain the ROI calculation from customer's finance perspective. Include non-financial benefits that matter to decision-makers.",
                 "ideal_answer": "Customers achieve immediate returns as early defect detection prevents expensive late-stage rework and structural failures. Financial returns appear through drastically reduced rework costs when defects are caught and fixed while still minor, eliminated emergency repair expenses from undetected issues progressing to failures, and reduced liability exposure from safety incidents. ROI calculation is straightforward—measure rework and remediation costs avoided through early detection versus subscription fees. Single prevented structural failure often justifies annual investment. Beyond direct financial returns, customers gain improved worker confidence and empowerment through instant expertise access, faster project completion without quality delays, enhanced safety records from early hazard identification, and stronger client relationships through superior quality documentation and fewer warranty claims.",
-                "hint_penalty": 50
+                "hint_penalty": 25
             },
             {
                 "id": "q3_2",
@@ -89,7 +89,7 @@
                 "criteria": "Scenario specificity, stakeholder outcome variety, before/after clarity, business objective connection, credibility",
                 "hint_text": "Describe specific customer scenarios before and after implementation. Include metrics that matter to different stakeholder roles. Show both avoided problems and improved performance. Reference customer types and project characteristics. Connect outcomes to business objectives beyond the specific project.",
                 "ideal_answer": "Regional commercial contractor implemented our solution across residential high-rise project experiencing quality control challenges with limited inspection staff. Before implementation, workers discovered defects but waited hours for inspector availability while issues progressed. Within first weeks, workers independently diagnosed concrete curing cracks, waterproofing membrane defects, and rebar placement deviations using instant mobile scanning. Early interventions prevented significant rework that would have required breaking finished surfaces. Quality manager reported inspection efficiency improved dramatically with workers resolving minor issues independently before escalation. Safety director noted hazard identification improved as workers confidently flagged structural concerns early. Project completed with fewer punch-list items and enhanced client satisfaction. Firm now differentiates on superior quality documentation and proactive defect management capabilities.",
-                "hint_penalty": 50
+                "hint_penalty": 25
             },
             {
                 "id": "q3_3",
@@ -97,7 +97,7 @@
                 "criteria": "Decision criteria accuracy, positioning clarity, implementation realism, pricing context appropriateness, expansion pathway logic",
                 "hint_text": "Explain what customers evaluate when comparing solutions. Describe your positioning on their most important criteria. Show the path from initial interest to measurable value. Address pricing in context of value delivered. Illustrate how early wins lead to expanded adoption.",
                 "ideal_answer": "Customers evaluate solutions on diagnosis accuracy in real field conditions and ease of use for workers with varying technical skill levels. They choose us because we deliver both—proven diagnostic reliability and intuitive smartphone-based operation requiring minimal training. Getting started involves focused pilot on active project site where quality challenges are visible. Workers receive brief orientation showing how to capture effective photos and interpret diagnosis screens, then use solution immediately on actual defects encountered daily. Quick wins where workers independently resolve issues that previously required inspector visits build confidence rapidly. Subscription pricing scales with active user count, representing fraction of typical rework costs avoided monthly. Early success with frontline workers creates organic adoption as teams share diagnosis results, expanding naturally from pilot sites to company-wide quality management transformation.",
-                "hint_penalty": 50
+                "hint_penalty": 25
             }
         ]
     }

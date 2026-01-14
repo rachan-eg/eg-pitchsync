@@ -189,9 +189,31 @@ async def start_phase(req: StartPhaseRequest):
         session.phase_elapsed_seconds = {}
     
     # STEP 1: Save the leaving phase's elapsed time (pause the old timer)
-    if req.leaving_phase_number is not None and req.leaving_phase_elapsed_seconds is not None:
+    if req.leaving_phase_number is not None:
         leaving_key = f"phase_{req.leaving_phase_number}"
-        session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
+        if req.leaving_phase_elapsed_seconds is not None:
+            session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
+        
+        # Save draft responses for the leaving phase
+        if req.leaving_phase_responses:
+            leaving_phase_def = phases_repo.get(req.leaving_phase_number)
+            if leaving_phase_def:
+                l_name = leaving_phase_def["name"]
+                leaving_pdata = session.phases.get(l_name)
+                
+                if not leaving_pdata:
+                    # Create new draft entry
+                    from backend.models import PhaseData, PhaseStatus
+                    leaving_pdata = PhaseData(
+                        phase_id=leaving_phase_def.get("id"),
+                        status=PhaseStatus.IN_PROGRESS,
+                        responses=req.leaving_phase_responses
+                    )
+                    session.phases[l_name] = leaving_pdata
+                elif leaving_pdata.status != "passed":
+                    # Update existing entry if not passed (don't overwrite passed data with drafts)
+                    leaving_pdata.responses = req.leaving_phase_responses
+                    session.phases[l_name] = leaving_pdata
     
     # STEP 2: Get or initialize the target phase's data
     key = f"phase_{req.phase_number}"
@@ -305,8 +327,8 @@ async def submit_phase(req: SubmitPhaseRequest):
     # Check for redundant submission (identical answers to a previously passed phase)
     existing_phase = session.phases.get(req.phase_name)
     if existing_phase and existing_phase.status == "passed":
-        current_answers = [r.a for r in req.responses]
-        existing_answers = [r.a for r in existing_phase.responses]
+        current_answers = [(r.a, r.hint_used) for r in req.responses]
+        existing_answers = [(r.a, r.hint_used) for r in existing_phase.responses]
         if current_answers == existing_answers:
             # Re-calculate timing if it's a resume-and-submit, but usually we just keep the points
             # To be safe and fast, we return the existing result data

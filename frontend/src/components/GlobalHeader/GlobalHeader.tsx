@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../../AppContext';
 import type { SessionState } from '../../types';
+import { Branding } from '../Branding/Branding';
 import './GlobalHeader.css';
 
 interface GlobalHeaderProps {
@@ -11,7 +12,6 @@ interface GlobalHeaderProps {
 }
 
 const Icons = {
-
     Trophy: () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /></svg>
     ),
@@ -39,7 +39,6 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
         return null;
     }
 
-
     const getScoreTier = (score: number): { label: string; className: string } => {
         if (score >= 900) return { label: 'S', className: 'header-tier-badge--s' };
         if (score >= 800) return { label: 'A', className: 'header-tier-badge--a' };
@@ -48,14 +47,15 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
         return { label: 'D', className: 'header-tier-badge--default' };
     };
 
-    const tier = getScoreTier(session.total_score);
+    const tier = session ? getScoreTier(session.total_score) : null;
 
     const handleLogoClick = () => {
         resetToStart();
         navigate('/');
     };
 
-    const handleViewLeaderboard = () => {
+    const handleViewLeaderboard = (e?: React.MouseEvent) => {
+        e?.preventDefault();
         fetchLeaderboard();
         navigate('/leaderboard');
     };
@@ -90,15 +90,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
                 );
 
             case '/curate':
-                return (
-                    <div className="header-left-content">
-                        <button onClick={() => navigate('/war-room')} className="header-nav-button">
-                            <Icons.ArrowLeft />
-                            <span className="header-nav-button__text">Phases</span>
-                        </button>
-                        <span className="header-section-label">Prompt Curation</span>
-                    </div>
-                );
+                return null;
 
             case '/reveal':
                 return (
@@ -116,16 +108,19 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
     };
 
     const renderCenterContent = () => {
-        return <div className="global-header__center" />;
+        return <div className="global-header__center">{leftContent}</div>;
     };
 
     const renderRightContent = () => {
+        if (!session) return null;
         return (
             <div className="global-header__right">
                 <div className="header-score-group">
-                    <div className={`header-tier-badge ${tier.className}`}>
-                        {tier.label}
-                    </div>
+                    {tier && (
+                        <div className={`header-tier-badge ${tier.className}`}>
+                            {tier.label}
+                        </div>
+                    )}
                     <div className="header-score-info">
                         <div className="header-score-value">
                             {session.total_score.toFixed(0)}
@@ -147,6 +142,10 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
         );
     };
 
+    const leftContent = renderLeftContent();
+    const centerContent = renderCenterContent();
+    const rightContent = renderRightContent();
+
     return (
         <header className="global-header glass-panel">
             <div className="global-header__container">
@@ -158,13 +157,12 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
                         <span className="text-gradient">PITCH</span>
                         <span className="text-white">-SYNC</span>
                     </button>
-                    <div className="global-header__divider" />
-                    {renderLeftContent()}
+                    <Branding isInline className="header-branding" />
                 </div>
 
-                {renderCenterContent()}
+                {centerContent}
 
-                {renderRightContent()}
+                {rightContent}
             </div>
         </header>
     );

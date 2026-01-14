@@ -51,6 +51,68 @@
 /* -----------------------------------------------------------------------------
    TWO-COLUMN LAYOUT
    ----------------------------------------------------------------------------- */
+.curate-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    margin-bottom: 0.5rem;
+}
+
+.curate-header__left,
+.curate-header__header-right {
+    flex: 1;
+}
+
+.curate-header__right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.curate-back-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s;
+}
+
+.curate-back-btn:hover {
+    transform: none;
+}
+
+.curate-header__title-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.curate-header__title {
+    font-size: 1.1rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fff 0%, #888 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.curate-header__subtitle {
+    font-size: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-primary, #8b5cf6);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 0.15rem;
+}
+
 .prompt-curation__columns {
     flex: 1;
     display: grid;

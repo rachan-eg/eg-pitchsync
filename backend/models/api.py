@@ -47,6 +47,7 @@ class StartPhaseRequest(BaseModel):
     # When switching phases, save the elapsed time of the phase we're leaving
     leaving_phase_number: Optional[int] = None
     leaving_phase_elapsed_seconds: Optional[float] = None
+    leaving_phase_responses: Optional[List[PhaseResponse]] = None
 
 
 class StartPhaseResponse(BaseModel):

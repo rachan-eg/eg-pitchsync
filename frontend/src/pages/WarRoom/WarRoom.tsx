@@ -64,7 +64,9 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                     {Object.entries(phaseConfig).map(([num, phase]) => {
                         const phaseNum = parseInt(num);
                         const isActive = session.current_phase === phaseNum;
-                        const isCompleted = !!session.phase_scores[phase.name] || session.current_phase > phaseNum;
+                        // Score check must be strictly ignoring undefined, as 0 is a valid score
+                        const hasScore = session.phase_scores[phase.name] !== undefined;
+                        const isCompleted = hasScore || session.current_phase > phaseNum;
                         const isLocked = phaseNum > highestUnlockedPhase;
 
                         return (
@@ -83,7 +85,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                                     <div className="war-room__phase-name">{phase.name}</div>
                                 </div>
                                 {
-                                    isCompleted && session.phase_scores[phase.name] && (
+                                    isCompleted && session.phase_scores[phase.name] !== undefined && (
                                         <div className="war-room__phase-score">
                                             {Math.round(session.phase_scores[phase.name])}
                                             <div className="war-room__phase-score-unit">PTS</div>

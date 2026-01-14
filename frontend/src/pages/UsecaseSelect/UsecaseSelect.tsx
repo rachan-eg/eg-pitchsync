@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../AppContext';
 import { getApiUrl } from '../../utils';
 import type { UseCase, Theme } from '../../types';
+import { Branding } from '../../components/Branding/Branding';
 import './UsecaseSelect.css';
 
 const Icons = {
@@ -185,6 +186,7 @@ export const UsecaseSelect: React.FC = () => {
                     </button>
                 </div>
             </div>
+            <Branding />
         </div>
     );
 };

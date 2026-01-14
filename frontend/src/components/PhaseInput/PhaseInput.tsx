@@ -37,11 +37,12 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     isSubmitting,
     initialResponses = []
 }) => {
-    const { submitPhase, elapsedSeconds, totalTokens, scoringInfo, session, phaseConfig } = useApp();
+    const { submitPhase, elapsedSeconds, totalTokens, scoringInfo, session, phaseConfig, setCurrentPhaseResponses } = useApp();
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<string[]>([]);
     const [originalAnswers, setOriginalAnswers] = useState<string[]>([]);
     const [hintsUsed, setHintsUsed] = useState<boolean[]>([]);
+    const [originalHintsUsed, setOriginalHintsUsed] = useState<boolean[]>([]);
     const [isEditing, setIsEditing] = useState(true);
     const [hintModalOpen, setHintModalOpen] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -61,13 +62,29 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         setAnswers(initialAnsw);
         setOriginalAnswers([...initialAnsw]);
         setHintsUsed(initialHints);
+        setOriginalHintsUsed([...initialHints]);
         setCurrentQuestionIndex(0);
+
+
     }, [phase, initialResponses]);
 
     const handleChange = (val: string) => {
         const newAnswers = [...answers];
         newAnswers[currentQuestionIndex] = val;
         setAnswers(newAnswers);
+
+        // SYNC TO CONTEXT FOR PERSISTENCE
+        const currentResponses = phase.questions.map((q: any, i: number) => {
+            const questionText = typeof q === 'string' ? q : q.text || q.question;
+            const question_id = typeof q === 'string' ? q : q.id;
+            return {
+                q: questionText,
+                a: newAnswers[i] || '',
+                question_id,
+                hint_used: hintsUsed[i] || false
+            };
+        });
+        setCurrentPhaseResponses(currentResponses);
     };
 
     const handleNext = useCallback(() => {
@@ -85,7 +102,9 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     }, [currentQuestionIndex]);
 
     const allAnswered = answers.every(a => a.trim().length >= 100);
-    const anyChanges = answers.some((a, i) => originalAnswers[i] !== undefined && a !== originalAnswers[i]);
+    const anyChanges =
+        answers.some((a, i) => originalAnswers[i] !== undefined && a !== originalAnswers[i]) ||
+        hintsUsed.some((h, i) => originalHintsUsed[i] !== undefined && h !== originalHintsUsed[i]);
 
     const handleSubmit = async () => {
         const responses = phase.questions.map((q: any, i: number) => {
@@ -116,6 +135,19 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         newHints[currentQuestionIndex] = true;
         setHintsUsed(newHints);
         setHintModalOpen(false);
+
+        // SYNC TO CONTEXT
+        const currentResponses = phase.questions.map((q: any, i: number) => {
+            const questionText = typeof q === 'string' ? q : q.text || q.question;
+            const question_id = typeof q === 'string' ? q : q.id;
+            return {
+                q: questionText,
+                a: answers[i] || '',
+                question_id,
+                hint_used: newHints[i] || false
+            };
+        });
+        setCurrentPhaseResponses(currentResponses);
     };
 
     const formatTime = (s: number) => {
@@ -406,9 +438,11 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                         <div className={`pi-char-value ${elapsedSeconds > timeLimit ? 'pi-char-value--warn' : ''}`} style={{ fontSize: '1.5rem', textAlign: 'center', margin: '0.5rem 0' }}>
                             {formatTime(elapsedSeconds)}
                         </div>
-                        <div className="pi-status-tag" style={{ justifyContent: 'center' }}>
-                            {elapsedSeconds > timeLimit ? 'OVERTIME DETECTED' : 'OPERATIONAL WINDOW'}
-                        </div>
+                        {elapsedSeconds > timeLimit && (
+                            <div className="pi-status-tag" style={{ justifyContent: 'center' }}>
+                                OVERTIME DETECTED
+                            </div>
+                        )}
                     </div>
                 </div>
 

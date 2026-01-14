@@ -18,6 +18,7 @@ import { ErrorModal } from './components/ErrorModal/ErrorModal';
 import { PhaseFeedback } from './components/PhaseFeedback/PhaseFeedback';
 import { PhaseInput } from './components/PhaseInput/PhaseInput';
 
+
 // =============================================================================
 // PAGE WRAPPERS (Connect pages to context and routing)
 // =============================================================================
@@ -191,6 +192,7 @@ const AppLayout: React.FC = () => {
 
     // War room needs absolute no scroll on the outer container
     const isWarRoom = location.pathname === '/war-room';
+
 
     return (
         <div className="flex flex-col relative h-full w-full">

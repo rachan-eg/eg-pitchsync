@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../AppContext';
+import { Branding } from '../../components/Branding/Branding';
 import './TeamInput.css';
 
 interface TeamInputProps {
@@ -112,6 +113,7 @@ export const TeamInput: React.FC<TeamInputProps> = ({ usecaseTitle, loading, err
                     <p>Team identity will be logged on global ranks</p>
                 </div>
             </div>
+            <Branding />
         </div>
     );
 };
