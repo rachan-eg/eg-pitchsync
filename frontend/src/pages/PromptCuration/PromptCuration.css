@@ -799,6 +799,50 @@
     border-radius: 2px;
 }
 
+/* -----------------------------------------------------------------------------
+   AI TOOLS PROMPT BUTTONS
+   ----------------------------------------------------------------------------- */
+.curate-tools-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.curate-provider-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.curate-provider-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.curate-provider-btn--gemini:hover {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.15);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.curate-provider-btn--chatgpt:hover {
+    border-color: #10a37f;
+    background: rgba(16, 163, 127, 0.15);
+    box-shadow: 0 4px 12px rgba(16, 163, 127, 0.2);
+}
+
 .curate-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.25);
 }
