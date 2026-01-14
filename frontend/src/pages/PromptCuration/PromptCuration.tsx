@@ -64,7 +64,7 @@ const Icons = {
     ),
     Zap: () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-    )
+    ),
 };
 
 // =============================================================================
@@ -207,9 +207,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
     };
 
     // Calculate penalties (clamp negative values to 0 for backwards compat with old speed bonus data)
-    const timePenalty = Math.max(0, Object.values(session.phases).reduce((acc, p) => acc + (p.metrics?.time_penalty || 0), 0));
-    const hintPenalty = Object.values(session.phases).reduce((acc, p) => acc + (p.metrics?.hint_penalty || 0), 0);
-    const efficiencyBonus = Object.values(session.phases).reduce((acc, p) => acc + (p.metrics?.efficiency_bonus || 0), 0);
+
 
     return (
         <div className="prompt-curation war-room-bg">
@@ -361,21 +359,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                 </div>
                             </div>
 
-                            <div className="curate-analytics__penalties">
-                                <div className="curate-analytics__penalty-header">Modifier Breakdown</div>
-                                <div className="curate-analytics__penalty-item">
-                                    <span className="curate-analytics__penalty-name">Time Penalty</span>
-                                    <span className="curate-analytics__penalty-val curate-analytics__penalty-val--negative">-{Math.round(timePenalty)} PTS</span>
-                                </div>
-                                <div className="curate-analytics__penalty-item">
-                                    <span className="curate-analytics__penalty-name">Hint Usage</span>
-                                    <span className="curate-analytics__penalty-val curate-analytics__penalty-val--negative">-{Math.round(hintPenalty)} PTS</span>
-                                </div>
-                                <div className="curate-analytics__penalty-item">
-                                    <span className="curate-analytics__penalty-name">Efficiency Bonus</span>
-                                    <span className="curate-analytics__penalty-val curate-analytics__penalty-val--positive">+{Math.round(efficiencyBonus)} PTS</span>
-                                </div>
-                            </div>
+
                         </div>
 
                         {/* Actions (Upload + Finalize) */}
@@ -383,8 +367,16 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                             <div className="curate-card curate-upload">
                                 <div className="curate-upload__label">Upload Pitch Visual</div>
                                 <p className="curate-upload__instruction">
-                                    Copy the prompt above and generate your image using any AI tool (ChatGPT, Gemini, etc.), then upload the result here.
+                                    Copy the prompt above and generate your image using an AI tool, then upload the result here.
                                 </p>
+                                <div className="curate-tools-row">
+                                    <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" className="curate-provider-btn curate-provider-btn--gemini">
+                                        Open Gemini
+                                    </a>
+                                    <a href="https://chat.openai.com/" target="_blank" rel="noopener noreferrer" className="curate-provider-btn curate-provider-btn--chatgpt">
+                                        Open ChatGPT
+                                    </a>
+                                </div>
                                 <input
                                     type="file"
                                     id="pitch-visual-upload"
