@@ -91,7 +91,7 @@ interface AppContextType {
     totalTokens: { payload: number; ai: number; total: number };
 
     // Actions
-    initSession: (teamId: string) => Promise<{ success: boolean; isResumed: boolean; isComplete: boolean }>;
+    initSession: (teamId: string) => Promise<{ success: boolean; isResumed: boolean; isComplete: boolean; currentPhase: number }>;
     startPhase: (phaseNum: number) => Promise<void>;
     submitPhase: (responses: PhaseResponse[]) => Promise<void>;
     handleFeedbackAction: (action: 'CONTINUE' | 'RETRY') => Promise<{ navigateTo?: string }>;
@@ -338,8 +338,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     }, []);
 
-    const initSession = useCallback(async (teamId: string): Promise<{ success: boolean; isResumed: boolean; isComplete: boolean }> => {
-        if (!selectedUsecase || !selectedTheme) return { success: false, isResumed: false, isComplete: false };
+    const initSession = useCallback(async (teamId: string): Promise<{ success: boolean; isResumed: boolean; isComplete: boolean; currentPhase: number }> => {
+        if (!selectedUsecase || !selectedTheme) return { success: false, isResumed: false, isComplete: false, currentPhase: 1 };
 
         setLoading(true);
         setError(null);
@@ -441,12 +441,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return {
                 success: true,
                 isResumed: isResumedSession,
-                isComplete: data.is_complete || false
+                isComplete: data.is_complete || false,
+                currentPhase: data.current_phase || 1
             };
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');
             setLoading(false);
-            return { success: false, isResumed: false, isComplete: false };
+            return { success: false, isResumed: false, isComplete: false, currentPhase: 1 };
         }
     }, [selectedUsecase, selectedTheme]);
 
@@ -490,8 +491,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 // Timer will resume from where we left off
                 const localStartTime = Date.now() - (accumulatedSeconds * 1000);
 
-                // Update session first
-                setSession(prev => prev ? { ...prev, current_phase: phaseNum } : null);
+                // Update session first, including any draft responses
+                setSession(prev => {
+                    if (!prev) return null;
+
+                    // If we have previous responses, save them to the phases for localStorage fallback
+                    const updatedPhases = { ...prev.phases };
+                    if (data.previous_responses && data.previous_responses.length > 0 && data.phase_name) {
+                        // Update or create the phase entry with draft responses
+                        const existingPhase = updatedPhases[data.phase_name];
+                        if (existingPhase) {
+                            // Only update responses if the phase isn't already passed (don't overwrite passed data)
+                            if (existingPhase.status !== 'passed') {
+                                updatedPhases[data.phase_name] = {
+                                    ...existingPhase,
+                                    responses: data.previous_responses
+                                };
+                            }
+                        } else {
+                            // Create new draft entry
+                            updatedPhases[data.phase_name] = {
+                                phase_id: data.phase_id,
+                                status: 'in_progress' as any,
+                                responses: data.previous_responses,
+                                metrics: {} as any,
+                                feedback: '',
+                                rationale: '',
+                                strengths: [],
+                                improvements: []
+                            };
+                        }
+                    }
+
+                    return { ...prev, current_phase: phaseNum, phases: updatedPhases };
+                });
                 setCurrentPhaseResponses(data.previous_responses || []);
                 setIsReEditingPhase(false); // Reset re-editing flag when changing phases
 

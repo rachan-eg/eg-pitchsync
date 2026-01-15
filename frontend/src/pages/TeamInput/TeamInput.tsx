@@ -24,7 +24,7 @@ const Icons = {
 
 export const TeamInput: React.FC<TeamInputProps> = ({ usecaseTitle, loading, error }) => {
     const navigate = useNavigate();
-    const { initSession } = useApp();
+    const { initSession, startPhase } = useApp();
     const [teamId, setTeamId] = React.useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +32,16 @@ export const TeamInput: React.FC<TeamInputProps> = ({ usecaseTitle, loading, err
         if (teamId.trim()) {
             const result = await initSession(teamId.trim());
             if (result.success) {
-                if (result.isResumed || result.isComplete) {
+                if (result.isResumed) {
+                    // FIX: When resuming, call startPhase to properly load the current phase's
+                    // responses and timer from the backend. This ensures phase data isn't lost.
+                    // The session object returned by initSession includes current_phase, but
+                    // we need to access it through the context after init completes.
+                    // We pass the current_phase from the result context.
+                    await startPhase(result.currentPhase || 1);
+                    navigate('/war-room');
+                } else if (result.isComplete) {
+                    // For completed sessions, go directly to reveal or curate
                     navigate('/war-room');
                 } else {
                     navigate('/mission');
