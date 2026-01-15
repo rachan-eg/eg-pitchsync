@@ -81,7 +81,7 @@
     color: var(--primary);
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    font-family: 'JetBrains Mono', monospace;
+
 }
 
 .pi-header__max {
@@ -121,7 +121,7 @@
 .pi-question-num {
     color: #000;
     background: var(--primary);
-    font-family: 'JetBrains Mono', monospace;
+
     font-weight: 900;
     font-size: 0.85rem;
     width: 32px;
@@ -231,7 +231,6 @@
     line-height: 1.8;
     resize: none;
     outline: none;
-    font-family: 'Inter', sans-serif;
     transition: all 0.3s ease;
     box-sizing: border-box;
     width: calc(100% - var(--space-md) * 2);
@@ -313,7 +312,7 @@
 }
 
 .pi-char-value {
-    font-family: 'JetBrains Mono', monospace;
+
     font-size: 1rem;
     font-weight: 700;
     color: var(--text-secondary);
@@ -439,33 +438,48 @@
     }
 }
 
-.pi-intel-card {
+.pi-sidebar-section {
     background: var(--bg-card);
+    backdrop-filter: blur(var(--glass-blur));
     border: 1px solid var(--border-light);
     border-radius: var(--radius-lg);
-    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.pi-intel-header {
+.pi-sidebar-section:hover {
+    border-color: var(--border-glow);
+}
+
+.pi-sidebar-header {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border-light);
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.35rem;
-    border-bottom: 1px solid var(--border-light);
+    background: rgba(255, 255, 255, 0.02);
 }
 
-.pi-intel-icon {
+.pi-sidebar-icon {
     color: var(--primary);
+    display: flex;
+    align-items: center;
 }
 
-.pi-intel-title {
+.pi-sidebar-title {
     font-size: 0.7rem;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.15em;
     color: var(--text-muted);
 }
+
+.pi-sidebar-content {
+    padding: 0.75rem;
+}
+
 
 .pi-list {
     list-style: none;
@@ -548,7 +562,7 @@
 }
 
 .pi-scoring-val {
-    font-family: 'JetBrains Mono', monospace;
+
     font-size: 0.7rem;
     font-weight: 800;
     color: var(--primary);
@@ -564,7 +578,7 @@
     font-size: 0.55rem;
     opacity: 0.5;
     margin-left: 4px;
-    font-family: 'JetBrains Mono', monospace;
+
     font-weight: 500;
     white-space: nowrap;
 }
@@ -580,18 +594,76 @@
     font-size: 0.85rem;
 }
 
-.pi-scoring-item--total {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border-light);
-    font-weight: 700;
+.pi-attempts-list {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
+
+.pi-attempt-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0.5rem;
+    background: rgba(255, 255, 255, 0.01);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+}
+
+.pi-simple-clock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    color: var(--text-muted);
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.pi-simple-clock:hover {
+    border-color: var(--border-glow);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.pi-simple-clock svg {
+    width: 18px;
+    height: 18px;
+    opacity: 0.8;
+}
+
+.pi-simple-timer-group {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+}
+
+.pi-simple-timer {
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    font-family: 'JetBrains Mono', monospace;
+    /* Re-adding mono just for the timer digits for stability */
+}
+
+.pi-simple-limit {
+    font-size: 0.9rem;
+    font-weight: 700;
+    opacity: 0.5;
+}
+
+
+
 
 .pi-status-grid {
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 0.5rem 1.5rem;
-    font-family: 'JetBrains Mono', monospace;
+
 }
 
 .pi-status-label {

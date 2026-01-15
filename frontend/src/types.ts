@@ -85,6 +85,7 @@ export interface PhaseData {
     rationale: string | null;
     strengths: string[];
     improvements: string[];
+    history?: PhaseMetrics[];
 }
 
 export interface FinalOutput {

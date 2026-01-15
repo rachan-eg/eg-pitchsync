@@ -406,14 +406,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             if (data.current_phase_started_at) {
                 // Robust Timer Sync (Resume)
-                const serverStartTime = new Date(data.current_phase_started_at).getTime();
-                const serverNow = data.current_server_time ? new Date(data.current_server_time).getTime() : Date.now();
+                const currentPhaseNum = data.current_phase || 1;
+                const phaseConfig = data.phases;
+                const phaseDef = phaseConfig[currentPhaseNum];
 
-                const elapsedMs = Math.max(0, serverNow - serverStartTime);
-                const localStartTime = Date.now() - elapsedMs;
+                let isComplete = false;
+                let storedDuration = 0;
 
-                setPhaseStartTime(localStartTime);
-                setElapsedSeconds(Math.floor(elapsedMs / 1000));
+                if (phaseDef) {
+                    const phaseName = phaseDef.name;
+                    const phaseData = data.phase_data?.[phaseName];
+                    if (phaseData && phaseData.status === 'passed') {
+                        isComplete = true;
+                        storedDuration = phaseData.metrics?.duration_seconds || 0;
+                    }
+                }
+
+                if (isComplete) {
+                    setElapsedSeconds(Math.round(storedDuration));
+                    setPhaseStartTime(null); // Timer stopped
+                } else {
+                    const serverStartTime = new Date(data.current_phase_started_at).getTime();
+                    const serverNow = data.current_server_time ? new Date(data.current_server_time).getTime() : Date.now();
+
+                    const elapsedMs = Math.max(0, serverNow - serverStartTime);
+                    const localStartTime = Date.now() - elapsedMs;
+
+                    setPhaseStartTime(localStartTime);
+                    setElapsedSeconds(Math.floor(elapsedMs / 1000));
+                }
             }
 
             // CRITICAL FIX: Set current responses if resuming
