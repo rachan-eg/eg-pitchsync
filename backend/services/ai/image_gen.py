@@ -43,7 +43,6 @@ def get_logos_for_usecase(usecase: Dict[str, Any] = None) -> List[Path]:
             # Check for auto-discovered logos in usecase assets
             if "assets" in usecase and "logos" in usecase["assets"]:
                 for logo_url in usecase["assets"]["logos"]:
-                    # Convert URL path (/vault/...) to filesystem path
                     # URL format: /vault/{usecase_id}/logo/filename.png
                     if logo_url.startswith("/vault/"):
                         relative_path = logo_url[7:]  # Remove "/vault/" prefix
