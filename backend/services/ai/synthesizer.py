@@ -11,77 +11,65 @@ from pathlib import Path
 from backend.services.ai.client import get_client
 from backend.services.ai.image_gen import generate_image
 
-# Asset paths
+# Asset paths - Vault root contains usecase folders with their own assets
 BASE_DIR = Path(__file__).parent.parent.parent
-VAULT_ASSETS_DIR = BASE_DIR / "vault" / "assets"
-COMMON_PALETTE_DIR = VAULT_ASSETS_DIR / "colour_pallete"
+VAULT_ROOT = BASE_DIR / "vault"
 
-def _load_brand_colors(usecase: Dict[str, Any] = None) -> str:
-    """Load and extract key brand colors from palette files in a concise format."""
+def _load_brand_colors(usecase: Dict[str, Any] = None, theme: Dict[str, Any] = None) -> str:
+    """
+    Load and extract brand colors from the usecase's theme.
+    
+    The vault structure provides colors in theme.json:
+      vault/{usecase_id}/theme.json
+    
+    The theme object (passed from session) contains a 'colors' dict with:
+      - primary: Main brand color
+      - secondary: Accent color  
+      - bg: Background color
+      - success/error/warning: Semantic colors
+    """
     colors = []
     
-    # Identify palette paths based on usecase
-    palette_paths = []
-    if usecase and "assets" in usecase and "palettes" in usecase["assets"]:
+    # Priority 1: Use colors from the theme object (already loaded in session)
+    if theme and isinstance(theme, dict):
+        theme_colors = theme.get("colors", {})
+        if theme_colors:
+            if theme_colors.get("primary"):
+                colors.append(f"Primary: {theme_colors['primary']}")
+            if theme_colors.get("secondary"):
+                colors.append(f"Secondary: {theme_colors['secondary']}")
+            if theme_colors.get("bg"):
+                colors.append(f"Background: {theme_colors['bg']}")
+            if theme_colors.get("success"):
+                colors.append(f"Success: {theme_colors['success']}")
+            if theme_colors.get("error"):
+                colors.append(f"Error: {theme_colors['error']}")
+            if theme_colors.get("warning"):
+                colors.append(f"Warning: {theme_colors['warning']}")
+    
+    # Priority 2: Load from usecase's theme.json file
+    if not colors and usecase:
         usecase_id = usecase.get("id")
         if usecase_id:
-            for p in usecase["assets"]["palettes"]:
-                palette_paths.append(VAULT_ASSETS_DIR / usecase_id / p)
+            theme_file = VAULT_ROOT / usecase_id / "theme.json"
+            if theme_file.exists():
+                try:
+                    with open(theme_file, encoding="utf-8") as f:
+                        theme_data = json.load(f)
+                        theme_colors = theme_data.get("colors", {})
+                        if theme_colors.get("primary"):
+                            colors.append(f"Primary: {theme_colors['primary']}")
+                        if theme_colors.get("secondary"):
+                            colors.append(f"Secondary: {theme_colors['secondary']}")
+                        if theme_colors.get("bg"):
+                            colors.append(f"Background: {theme_colors['bg']}")
+                except Exception as e:
+                    print(f"WARNING: Could not load theme colors from {theme_file}: {e}")
     
-    # Fallback to common if no paths found
-    if not palette_paths:
-        palette_paths = [
-            COMMON_PALETTE_DIR / "organe-color-palette.json",
-            COMMON_PALETTE_DIR / "semantic-color-palette.json"
-        ]
-    
-    try:
-        for path in palette_paths:
-            if not path.exists():
-                continue
-                
-            with open(path) as f:
-                data = json.load(f)
-                
-                # Try to extract "orange" or "primary" keys
-                if "orange" in data:
-                    primary = data["orange"].get("primaryColor", "#BA5400")
-                    dark = data["orange"].get("primaryColorDark", "#D26D2B")
-                    colors.append(f"Primary Orange: {primary}, {dark}")
-                elif "primary" in data:
-                    # Generic primary color if defined differently
-                    p_data = data["primary"]
-                    if isinstance(p_data, dict):
-                        primary = p_data.get("color") or p_data.get("primaryColor") or "#BA5400"
-                    else:
-                        primary = str(p_data)
-                    colors.append(f"Primary Color: {primary}")
-                elif "primarySection" in data:
-                    # Support for medical-brand.json structure
-                    p_sect = data["primarySection"]
-                    primary = p_sect.get("primaryColor", "#008B8B")
-                    dark = p_sect.get("primaryColorDark", "#005D5D")
-                    colors.append(f"Primary Color: {primary}, Dark: {dark}")
-                elif "primaryColor" in data:
-                    colors.append(f"Primary Color: {data['primaryColor']}")
-                
-                # Extract key semantic colors
-                if "success" in data:
-                    success_500 = next((s["color"] for s in data["success"].get("shadesCompliance", []) if s["name"] == "success-500"), "#00855B")
-                    colors.append(f"Success Green: {success_500}")
-                if "error" in data:
-                    error_500 = next((s["color"] for s in data["error"].get("shadesCompliance", []) if s["name"] == "error-500"), "#D93539")
-                    colors.append(f"Alert Red: {error_500}")
-                if "warning" in data:
-                    warning_500 = next((s["color"] for s in data["warning"].get("shadesCompliance", []) if s["name"] == "warning-500"), "#956D00")
-                    colors.append(f"Warning Amber: {warning_500}")
-    except Exception as e:
-        print(f"WARNING: Could not load brand colors: {e}")
-        return "Brand Orange (#BA5400), Corporate White, Dark Background (#0A0A0F)"
-    
+    # Fallback: Default brand colors
     if colors:
         return " | ".join(colors)
-    return "Brand Orange (#BA5400), Corporate White, Dark Background (#0A0A0F)"
+    return "Primary Orange (#BA5400), Corporate White, Dark Background (#0A0A0F)"
 
 
 # Default colors for fallback
@@ -391,7 +379,7 @@ PRODUCT: "{usecase_title}"
 DOMAIN: {usecase_domain}
 
 === BRAND COLOR PALETTE ===
-{_load_brand_colors(usecase)}
+{_load_brand_colors(usecase, theme)}
 (Use these for headers, diagrams, and highlights)
 
 === CREATIVE DIRECTION (DENSE INFOGRAPHIC STYLE) ===

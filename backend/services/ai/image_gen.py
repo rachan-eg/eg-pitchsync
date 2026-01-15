@@ -13,26 +13,64 @@ from backend.config import settings, GENERATED_DIR
 
 from typing import Dict, Any, List
 
-# Asset paths
+# Asset paths - Vault root contains usecase folders with their own assets
 BASE_DIR = Path(__file__).parent.parent.parent
-VAULT_ASSETS_DIR = BASE_DIR / "vault" / "assets"
-COMMON_LOGO_DIR = VAULT_ASSETS_DIR / "logo"
+VAULT_ROOT = BASE_DIR / "vault"
 
 def get_logos_for_usecase(usecase: Dict[str, Any] = None) -> List[Path]:
-    """Identify logo paths based on usecase or fallback to legacy."""
+    """
+    Identify logo paths based on usecase's vault folder.
+    
+    The vault structure is hierarchical:
+      vault/
+        {usecase_id}/
+          logo/
+            *.png
+          usecase.json
+          theme.json
+          phases.json
+    
+    The usecase object contains auto-discovered assets with URL paths like:
+      "/vault/{usecase_id}/logo/filename.png"
+    
+    We convert these to filesystem paths for image processing.
+    """
     logos = []
-    if usecase and "assets" in usecase and "logos" in usecase["assets"]:
+    
+    if usecase:
         usecase_id = usecase.get("id")
         if usecase_id:
-            for l in usecase["assets"]["logos"]:
-                logos.append(VAULT_ASSETS_DIR / usecase_id / l)
+            # Check for auto-discovered logos in usecase assets
+            if "assets" in usecase and "logos" in usecase["assets"]:
+                for logo_url in usecase["assets"]["logos"]:
+                    # Convert URL path (/vault/...) to filesystem path
+                    # URL format: /vault/{usecase_id}/logo/filename.png
+                    if logo_url.startswith("/vault/"):
+                        relative_path = logo_url[7:]  # Remove "/vault/" prefix
+                        logos.append(VAULT_ROOT / relative_path)
+                    else:
+                        # Direct filename - assume it's in the logo folder
+                        logos.append(VAULT_ROOT / usecase_id / "logo" / logo_url)
+            else:
+                # No assets discovered, try to find logos in the usecase's logo folder
+                logo_dir = VAULT_ROOT / usecase_id / "logo"
+                if logo_dir.exists():
+                    for logo_file in logo_dir.iterdir():
+                        if logo_file.suffix.lower() in ['.png', '.jpg', '.jpeg', '.svg', '.webp']:
+                            logos.append(logo_file)
     
-    # Fallback to common if no paths found or usecase not provided
+    # Fallback: Use logos from the first available usecase if none found
     if not logos:
-        logos = [
-            COMMON_LOGO_DIR / "EGDK logo.png",
-            COMMON_LOGO_DIR / "Construction.png"
-        ]
+        for usecase_dir in VAULT_ROOT.iterdir():
+            if usecase_dir.is_dir():
+                logo_dir = usecase_dir / "logo"
+                if logo_dir.exists():
+                    for logo_file in logo_dir.iterdir():
+                        if logo_file.suffix.lower() in ['.png', '.jpg', '.jpeg', '.svg', '.webp']:
+                            logos.append(logo_file)
+                    if logos:
+                        break  # Found logos, stop searching
+    
     return logos
 
 # Default logos for backward compatibility if needed

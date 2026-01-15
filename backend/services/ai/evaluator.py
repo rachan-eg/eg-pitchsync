@@ -1,6 +1,10 @@
 """
 AI Evaluator Service
 Phase evaluation with rigorous criteria-based scoring.
+
+Uses a two-agent system:
+1. Red Team Agent: Hostile analysis to find flaws
+2. Lead Partner Agent: Final scoring decision
 """
 
 import json
@@ -9,6 +13,11 @@ from typing import Dict, Any, List, Optional
 from fastapi import HTTPException
 
 from backend.services.ai.client import get_client
+from backend.models.ai_responses import (
+    RedTeamReport,
+    LeadPartnerVerdict,
+    parse_ai_response
+)
 
 
 def evaluate_phase(
@@ -162,19 +171,10 @@ Return PURE JSON.
         max_tokens=1000
     )
     
-    # Simple extraction (assuming cooperative model)
-    try:
-        import re
-        response_text = raw_response.strip()
-        json_match = re.search(r'(\{.*\})', response_text, re.DOTALL)
-        if json_match:
-            data = json.loads(json_match.group(1), strict=False)
-        else:
-            data = {"report": response_text, "fatal_flaws": [], "buzzword_count": 0}
-            
-        return {"report": data.get("report", ""), "usage": usage}
-    except (json.JSONDecodeError, KeyError, TypeError):
-        return {"report": "Red Team analysis inconclusive.", "usage": usage}
+    # Parse using Pydantic model for type safety
+    parsed = parse_ai_response(raw_response, RedTeamReport)
+    
+    return {"report": parsed.report, "usage": usage}
 
 
 def _run_lead_partner_agent(client, prompt: str, red_team_report: str) -> Dict[str, Any]:
@@ -231,33 +231,14 @@ Return PURE JSON.
         max_tokens=2000
     )
     
-    # Robust extraction for the final result
-    import re
-    response_text = raw_response.strip()
-    json_match = re.search(r'(\{.*\})', response_text, re.DOTALL)
+    # Parse using Pydantic model for type safety and validation
+    parsed = parse_ai_response(raw_response, LeadPartnerVerdict)
     
-    if json_match:
-        json_str = json_match.group(1).strip()
-    else:
-        json_str = "{}" # Fail safely
-        
-    try:
-        result = json.loads(json_str, strict=False)
-        result.setdefault("score", 0.0)
-        result.setdefault("feedback", "Evaluation failed.")
-        result.setdefault("rationale", "System error.")
-        result.setdefault("strengths", [])
-        result.setdefault("improvements", [])
-        
-        result["score"] = max(0.0, min(1.0, float(result["score"])))
-        result["usage"] = usage
-        return result
-    except Exception:
-        return {
-            "score": 0.0,
-            "rationale": "Evaluation Processing Error",
-            "feedback": "Could not parse final decision.",
-            "strengths": [],
-            "improvements": [],
-            "usage": usage
-        }
+    return {
+        "score": parsed.score,
+        "rationale": parsed.rationale,
+        "feedback": parsed.feedback,
+        "strengths": parsed.strengths,
+        "improvements": parsed.improvements,
+        "usage": usage
+    }
