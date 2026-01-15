@@ -133,6 +133,9 @@ class LeaderboardEntry(BaseModel):
     usecase: str
     phases_completed: int
     total_tokens: int = 0
+    total_retries: int = 0
+    total_duration_seconds: float = 0.0
+    phase_scores: Dict[str, float] = {}
     is_complete: bool
 
 

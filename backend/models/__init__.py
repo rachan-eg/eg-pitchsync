@@ -12,7 +12,12 @@ from backend.models.api import (
     LeaderboardEntry, LeaderboardResponse
 )
 from backend.models.constants import (
-    THEME_REPO, USECASE_REPO, PHASE_DEFINITIONS, get_phases_for_usecase
+    THEME_REPO, USECASE_REPO, PHASE_DEFINITIONS, get_phases_for_usecase,
+    validate_vault
+)
+from backend.models.ai_responses import (
+    RedTeamReport, LeadPartnerVerdict, ImagePromptSpec, PitchNarrative,
+    parse_ai_response
 )
 
 __all__ = [
@@ -28,4 +33,9 @@ __all__ = [
     "LeaderboardEntry", "LeaderboardResponse",
     # Constants
     "THEME_REPO", "USECASE_REPO", "PHASE_DEFINITIONS", "get_phases_for_usecase",
+    "validate_vault",
+    # AI Response Models
+    "RedTeamReport", "LeadPartnerVerdict", "ImagePromptSpec", "PitchNarrative",
+    "parse_ai_response",
 ]
+

@@ -2,11 +2,20 @@
 Constants and Repository Data
 Theme palettes, use cases, and phase definitions.
 Now loaded dynamically from the Vault (JSON files).
+
+Vault Structure:
+  vault/
+    {usecase_id}/
+      usecase.json    (required) - Usecase metadata
+      theme.json      (required) - Theme and colors
+      phases.json     (required) - Phase definitions with questions
+      logo/           (optional) - Logo assets
+        *.png, *.jpg, etc.
 """
 
 import json
 import os
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 
 # =============================================================================
 # VAULT LOADING LOGIC (Hierarchical)
@@ -16,6 +25,88 @@ def get_vault_root() -> str:
     """Returns the absolute path to the vault directory."""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     return os.path.abspath(os.path.join(current_dir, "..", "vault"))
+
+
+def validate_vault() -> Tuple[bool, List[str]]:
+    """
+    Validates the vault structure and contents on startup.
+    
+    Returns:
+        Tuple of (is_valid, list_of_errors)
+    """
+    vault_root = get_vault_root()
+    errors = []
+    
+    if not os.path.exists(vault_root):
+        return False, [f"CRITICAL: Vault root not found at {vault_root}"]
+    
+    required_files = ["usecase.json", "theme.json", "phases.json"]
+    usecase_dirs = []
+    
+    for item in os.listdir(vault_root):
+        item_path = os.path.join(vault_root, item)
+        if not os.path.isdir(item_path):
+            continue
+            
+        usecase_dirs.append(item)
+        
+        # Check required files
+        for req_file in required_files:
+            file_path = os.path.join(item_path, req_file)
+            if not os.path.exists(file_path):
+                errors.append(f"Missing {req_file} in vault/{item}/")
+                continue
+            
+            # Validate JSON syntax
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    
+                # Validate required fields based on file type
+                if req_file == "usecase.json":
+                    if not data.get("title"):
+                        errors.append(f"vault/{item}/usecase.json: Missing 'title' field")
+                elif req_file == "theme.json":
+                    if not data.get("colors"):
+                        errors.append(f"vault/{item}/theme.json: Missing 'colors' object")
+                elif req_file == "phases.json":
+                    if not data or not isinstance(data, dict):
+                        errors.append(f"vault/{item}/phases.json: Must be a non-empty object")
+                    else:
+                        # Validate each phase has required fields
+                        for phase_num, phase_data in data.items():
+                            if not phase_data.get("name"):
+                                errors.append(f"vault/{item}/phases.json: Phase {phase_num} missing 'name'")
+                            if not phase_data.get("questions"):
+                                errors.append(f"vault/{item}/phases.json: Phase {phase_num} missing 'questions'")
+                                
+            except json.JSONDecodeError as e:
+                errors.append(f"Invalid JSON in vault/{item}/{req_file}: {e}")
+            except Exception as e:
+                errors.append(f"Error reading vault/{item}/{req_file}: {e}")
+    
+    if not usecase_dirs:
+        errors.append("No usecase directories found in vault")
+    
+    is_valid = len(errors) == 0
+    return is_valid, errors
+
+
+def _run_vault_validation():
+    """Run vault validation and print results."""
+    is_valid, errors = validate_vault()
+    
+    if is_valid:
+        print(f"✅ Vault validation passed. Found {len(os.listdir(get_vault_root()))} usecase(s).")
+    else:
+        print("⚠️  VAULT VALIDATION WARNINGS:")
+        for error in errors:
+            print(f"   - {error}")
+        print("   Some features may not work correctly.\n")
+
+
+# Run validation on module import
+_run_vault_validation()
 
 def discover_usecases() -> List[Dict[str, Any]]:
     """Scans the vault directory for use-case folders and loads their data."""

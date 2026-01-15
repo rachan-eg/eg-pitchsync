@@ -71,7 +71,7 @@ export const getFullUrl = (path: string): string => {
     // 5. Special handling for static vs api
     const isStaticAsset = normalizedPath.startsWith('/generated/') ||
         normalizedPath.startsWith('/assets/') ||
-        normalizedPath.startsWith('/backend-assets/');
+        normalizedPath.startsWith('/vault/');
 
     if (isStaticAsset) {
         // Static assets should be root-relative for Nginx to handle them correctly

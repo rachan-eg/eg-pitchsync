@@ -236,6 +236,9 @@ export interface LeaderboardEntry {
     usecase: string;
     phases_completed: number;
     total_tokens: number;
+    total_retries: number;
+    total_duration_seconds: number;
+    phase_scores: Record<string, number>;
     is_complete: boolean;
 }
 

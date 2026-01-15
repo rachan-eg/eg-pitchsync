@@ -54,6 +54,9 @@ async def get_leaderboard():
         if total_tokens == 0 and len(session.phases) > 0:
             total_tokens = sum(p.metrics.tokens_used for p in session.phases.values())
         
+        total_retries = sum(p.metrics.retries for p in session.phases.values())
+        total_duration = sum(p.metrics.duration_seconds for p in session.phases.values())
+
         usecase_title = (
             session.usecase.get('title', 'Unknown')
             if isinstance(session.usecase, dict)
@@ -66,6 +69,9 @@ async def get_leaderboard():
             usecase=usecase_title,
             phases_completed=len(session.phases),
             total_tokens=total_tokens,
+            total_retries=total_retries,
+            total_duration_seconds=total_duration,
+            phase_scores=session.phase_scores or {},
             is_complete=session.is_complete
         ))
     

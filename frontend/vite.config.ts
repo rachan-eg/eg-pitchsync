@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/backend-assets': {
+      '/vault': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
