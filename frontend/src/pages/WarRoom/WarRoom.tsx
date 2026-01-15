@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../../AppContext';
 import type { SessionState, PhaseDefinition } from '../../types';
 import './WarRoom.css';
@@ -37,6 +37,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
 }) => {
     const { totalTokens, startPhase, loading } = useApp();
     const navigate = useNavigate();
+    const location = useLocation();
 
     if (!session) {
         return (
@@ -64,7 +65,9 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                     {Object.entries(phaseConfig).map(([num, phase]) => {
                         const phaseNum = parseInt(num);
                         const isActive = session.current_phase === phaseNum;
-                        const isCompleted = !!session.phase_scores[phase.name] || session.current_phase > phaseNum;
+                        // Score check must be strictly ignoring undefined, as 0 is a valid score
+                        const hasScore = session.phase_scores[phase.name] !== undefined;
+                        const isCompleted = hasScore || session.current_phase > phaseNum;
                         const isLocked = phaseNum > highestUnlockedPhase;
 
                         return (
@@ -83,7 +86,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                                     <div className="war-room__phase-name">{phase.name}</div>
                                 </div>
                                 {
-                                    isCompleted && session.phase_scores[phase.name] && (
+                                    isCompleted && session.phase_scores[phase.name] !== undefined && (
                                         <div className="war-room__phase-score">
                                             {Math.round(session.phase_scores[phase.name])}
                                             <div className="war-room__phase-score-unit">PTS</div>
@@ -96,37 +99,57 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                         );
                     })}
 
-                    {/* Image Curation Phase Button */}
+                    {/* Phase Evaluation / Curation Buttons */}
                     {(() => {
                         const totalPhases = Object.keys(phaseConfig).length;
                         const isCurationUnlocked = highestUnlockedPhase > totalPhases;
-                        const isActive = window.location.pathname === '/curate';
+                        const isRevealUnlocked = session.is_complete || !!session.final_output?.image_url;
+
+                        const isCurateActive = location.pathname === '/curate';
+                        const isRevealActive = location.pathname === '/reveal';
 
                         return (
-                            <button
-                                key="curate"
-                                disabled={!isCurationUnlocked}
-                                onClick={() => {
-                                    if (session?.final_output?.image_url) {
-                                        navigate('/reveal');
-                                    } else {
-                                        navigate('/curate');
-                                    }
-                                }}
-                                className={`war-room__phase-btn war-room__phase-btn--final ${isActive ? 'war-room__phase-btn--active' : ''} ${isCurationUnlocked ? 'war-room__phase-btn--completed' : ''}`}
-                                style={{ marginTop: '1rem', borderTop: '1px solid var(--border-light)' }}
-                                title={!isCurationUnlocked ? 'Locked: Complete all phases to unlock' : 'Visualize Pitch'}
-                            >
-                                <div className="war-room__phase-num">
-                                    <Icons.Sparkles />
-                                </div>
-                                <div className="war-room__phase-info">
-                                    <div className="war-room__phase-label">Phase Final</div>
-                                    <div className="war-room__phase-name">Vision Curation</div>
-                                </div>
-                                {!isCurationUnlocked && <Icons.Lock />}
-                                {isActive && <div className="war-room__phase-active-indicator" />}
-                            </button>
+                            <>
+                                {/* Image Curation Phase */}
+                                <button
+                                    key="curate"
+                                    disabled={!isCurationUnlocked}
+                                    onClick={() => navigate('/curate')}
+                                    className={`war-room__phase-btn war-room__phase-btn--final ${isCurateActive ? 'war-room__phase-btn--active' : ''} ${isCurationUnlocked ? 'war-room__phase-btn--completed' : ''}`}
+                                    style={{ marginTop: '1rem', borderTop: '1px solid var(--border-light)' }}
+                                    title={!isCurationUnlocked ? 'Locked: Complete all phases to unlock' : 'Visualize Pitch'}
+                                >
+                                    <div className="war-room__phase-num">
+                                        <Icons.Sparkles />
+                                    </div>
+                                    <div className="war-room__phase-info">
+                                        <div className="war-room__phase-label">Phase Final</div>
+                                        <div className="war-room__phase-name">Vision Curation</div>
+                                    </div>
+                                    {!isCurationUnlocked && <Icons.Lock />}
+                                    {isCurateActive && <div className="war-room__phase-active-indicator" />}
+                                </button>
+
+                                {/* Final Reveal Phase */}
+                                <button
+                                    key="reveal"
+                                    disabled={!isRevealUnlocked}
+                                    onClick={() => navigate('/reveal')}
+                                    className={`war-room__phase-btn ${isRevealActive ? 'war-room__phase-btn--active' : ''} ${session.is_complete ? 'war-room__phase-btn--completed' : ''}`}
+                                    style={{ borderColor: isRevealUnlocked ? 'rgba(139, 92, 246, 0.3)' : undefined, opacity: isRevealUnlocked ? 1 : 0.6 }}
+                                    title={!isRevealUnlocked ? 'Locked: Submit your final pitch to unlock' : 'Mission Completion'}
+                                >
+                                    <div className="war-room__phase-num" style={{ background: isRevealUnlocked ? 'rgba(139, 92, 246, 0.2)' : undefined, color: isRevealUnlocked ? 'var(--primary)' : undefined }}>
+                                        <Icons.Terminal />
+                                    </div>
+                                    <div className="war-room__phase-info">
+                                        <div className="war-room__phase-label">Phase Reveal</div>
+                                        <div className="war-room__phase-name">Final Validation</div>
+                                    </div>
+                                    {!isRevealUnlocked && <Icons.Lock />}
+                                    {isRevealActive && <div className="war-room__phase-active-indicator" />}
+                                </button>
+                            </>
                         );
                     })()}
                 </nav>

@@ -115,7 +115,7 @@
 .full-screen-overlay {
   position: fixed;
   inset: 0;
-  z-index: var(--z-overlay);
+  z-index: 2000;
   background: var(--bg-dark);
 }
 

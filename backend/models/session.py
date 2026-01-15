@@ -54,6 +54,7 @@ class PhaseData(BaseModel):
     rationale: Optional[str] = None
     strengths: List[str] = []
     improvements: List[str] = []
+    history: List[PhaseMetric] = []
 
 
 class FinalOutput(BaseModel):

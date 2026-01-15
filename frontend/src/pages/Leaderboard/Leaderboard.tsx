@@ -182,7 +182,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                                                 </div>
                                             ) : (
                                                 <div className="leaderboard__status-badge leaderboard__status-badge--progress">
-                                                    P{entry.phases_completed}/03
+                                                    Phase {entry.phases_completed}
                                                 </div>
                                             )}
                                         </div>

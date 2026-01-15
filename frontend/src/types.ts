@@ -85,6 +85,7 @@ export interface PhaseData {
     rationale: string | null;
     strengths: string[];
     improvements: string[];
+    history?: PhaseMetrics[];
 }
 
 export interface FinalOutput {
@@ -151,6 +152,9 @@ export interface InitResponse {
 export interface StartPhaseRequest {
     session_id: string;
     phase_number: number;
+    leaving_phase_number?: number | null;
+    leaving_phase_elapsed_seconds?: number | null;
+    leaving_phase_responses?: PhaseResponse[] | null;
 }
 
 export interface StartPhaseResponse {

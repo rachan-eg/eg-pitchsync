@@ -37,14 +37,16 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     isSubmitting,
     initialResponses = []
 }) => {
-    const { submitPhase, elapsedSeconds, totalTokens, scoringInfo, session, phaseConfig } = useApp();
+    const { submitPhase, elapsedSeconds, scoringInfo, session, phaseConfig, setCurrentPhaseResponses } = useApp();
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<string[]>([]);
     const [originalAnswers, setOriginalAnswers] = useState<string[]>([]);
     const [hintsUsed, setHintsUsed] = useState<boolean[]>([]);
+    const [originalHintsUsed, setOriginalHintsUsed] = useState<boolean[]>([]);
     const [isEditing, setIsEditing] = useState(true);
     const [hintModalOpen, setHintModalOpen] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const lastPhaseIdRef = useRef<string | null>(null);
 
     // Initialize or sync answers and hints
     useEffect(() => {
@@ -59,15 +61,35 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
             return prev?.hint_used || false;
         });
         setAnswers(initialAnsw);
-        setOriginalAnswers([...initialAnsw]);
         setHintsUsed(initialHints);
-        setCurrentQuestionIndex(0);
+
+        // Only reset originals and question index if phase changes
+        const currentId = phase.id || phase.name;
+        if (currentId !== lastPhaseIdRef.current) {
+            setOriginalAnswers([...initialAnsw]);
+            setOriginalHintsUsed([...initialHints]);
+            setCurrentQuestionIndex(0);
+            lastPhaseIdRef.current = currentId;
+        }
     }, [phase, initialResponses]);
 
     const handleChange = (val: string) => {
         const newAnswers = [...answers];
         newAnswers[currentQuestionIndex] = val;
         setAnswers(newAnswers);
+
+        // SYNC TO CONTEXT FOR PERSISTENCE
+        const currentResponses = phase.questions.map((q: any, i: number) => {
+            const questionText = typeof q === 'string' ? q : q.text || q.question;
+            const question_id = typeof q === 'string' ? q : q.id;
+            return {
+                q: questionText,
+                a: newAnswers[i] || '',
+                question_id,
+                hint_used: hintsUsed[i] || false
+            };
+        });
+        setCurrentPhaseResponses(currentResponses);
     };
 
     const handleNext = useCallback(() => {
@@ -85,7 +107,9 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     }, [currentQuestionIndex]);
 
     const allAnswered = answers.every(a => a.trim().length >= 100);
-    const anyChanges = answers.some((a, i) => originalAnswers[i] !== undefined && a !== originalAnswers[i]);
+    const anyChanges =
+        answers.some((a, i) => originalAnswers[i] !== undefined && a !== originalAnswers[i]) ||
+        hintsUsed.some((h, i) => originalHintsUsed[i] !== undefined && h !== originalHintsUsed[i]);
 
     const handleSubmit = async () => {
         const responses = phase.questions.map((q: any, i: number) => {
@@ -116,6 +140,19 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         newHints[currentQuestionIndex] = true;
         setHintsUsed(newHints);
         setHintModalOpen(false);
+
+        // SYNC TO CONTEXT
+        const currentResponses = phase.questions.map((q: any, i: number) => {
+            const questionText = typeof q === 'string' ? q : q.text || q.question;
+            const question_id = typeof q === 'string' ? q : q.id;
+            return {
+                q: questionText,
+                a: answers[i] || '',
+                question_id,
+                hint_used: newHints[i] || false
+            };
+        });
+        setCurrentPhaseResponses(currentResponses);
     };
 
     const formatTime = (s: number) => {
@@ -288,27 +325,46 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
             {/* Intelligence Sidebar */}
             <aside className="pi-sidebar">
-                <div className="pi-intel-card">
-                    <div className="pi-intel-header">
-                        <div className="pi-intel-icon"><Icons.Target /></div>
-                        <h3 className="pi-intel-title">Mission Objectives</h3>
+                {/* MISSION CLOCK (Simplified) */}
+                <div className="pi-simple-clock">
+                    <Icons.Clock />
+                    <div className="pi-simple-timer-group">
+                        <span className={`pi-simple-timer ${elapsedSeconds > timeLimit ? 'text-danger' : 'text-secondary'}`}>
+                            {formatTime(elapsedSeconds)}
+                        </span>
+                        {/* <span className="pi-simple-limit">/ {formatTime(timeLimit)}</span> */}
                     </div>
-                    <ul className="pi-list">
-                        <li className="pi-list-item pi-list-item--active">
-                            <span className="pi-intel-content">
-                                {typeof currentQuestion === 'string' ? 'Strategic Clarity' : (currentQuestion.criteria || 'Analytical Depth')}
-                            </span>
-                        </li>
-                    </ul>
                 </div>
 
-                <div className="pi-intel-card">
-                    <div className="pi-intel-header">
-                        <div className="pi-intel-icon"><Icons.Cpu /></div>
-                        <h3 className="pi-intel-title">AI Evaluation Focus</h3>
+                {/* MISSION OBJECTIVES */}
+                <div className="pi-sidebar-section">
+                    <div className="pi-sidebar-header">
+                        <div className="pi-sidebar-icon"><Icons.Target /></div>
+                        <h3 className="pi-sidebar-title">Strategic Metrics</h3>
                     </div>
-                    <div className="pi-intel-content">
+                    <div className="pi-sidebar-content">
+                        <ul className="pi-list">
+                            <li className="pi-list-item pi-list-item--active">
+                                <span className="pi-intel-content">
+                                    {typeof currentQuestion === 'string' ? 'Strategic Clarity' : (currentQuestion.criteria || 'Analytical Depth')}
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                {/* EVALUATION FOCUS */}
+                <div className="pi-sidebar-section">
+                    <div className="pi-sidebar-header">
+                        <div className="pi-sidebar-icon"><Icons.Cpu /></div>
+                        <h3 className="pi-sidebar-title">Evaluation Focus</h3>
+                    </div>
+                    <div className="pi-sidebar-content">
                         <div className="pi-scoring-item">
+                            <span>
+                                Time Penalty
+                                <span className="pi-scoring-rule">(-10/10m)</span>
+                            </span>
                             {(() => {
                                 const pName = phaseConfig[phaseNumber]?.name;
                                 const existing = session?.phases[pName];
@@ -316,22 +372,17 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 const timeVal = useRecorded ? (existing.metrics.duration_seconds) : elapsedSeconds;
 
                                 return (
-                                    <>
-                                        <span>
-                                            Time Penalty
-                                            <span className="pi-scoring-rule">(-10 / 10 MINS)</span>
-                                        </span>
-                                        <span className="pi-scoring-val" style={{ color: timeVal > timeLimit ? 'var(--danger)' : 'var(--text-muted)' }}>
-                                            {timeVal > timeLimit ? '-' : ''}
-                                            {timeVal > timeLimit
-                                                ? Math.min((scoringInfo?.time_penalty_max || 90), Math.ceil((timeVal - timeLimit) / 600) * 10)
-                                                : 0
-                                            } PTS
-                                        </span>
-                                    </>
+                                    <span className="pi-scoring-val" style={{ color: timeVal > timeLimit ? 'var(--danger)' : 'var(--text-muted)' }}>
+                                        {timeVal > timeLimit ? '-' : ''}
+                                        {timeVal > timeLimit
+                                            ? Math.min((scoringInfo?.time_penalty_max || 90), Math.ceil((timeVal - timeLimit) / 600) * 10)
+                                            : 0
+                                        } PTS
+                                    </span>
                                 );
                             })()}
                         </div>
+
                         <div className="pi-scoring-item">
                             <span>Hint Penalty</span>
                             <span className="pi-scoring-val" style={{ color: 'var(--danger)' }}>
@@ -343,75 +394,46 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 }, 0)} PTS
                             </span>
                         </div>
-                        <div className={`pi-scoring-item ${(() => {
+
+                        <div className="pi-scoring-item">
+                            <span>Retries</span>
+                            {(() => {
+                                const pName = phaseConfig[phaseNumber]?.name;
+                                const existing = session?.phases[pName];
+                                const history = existing?.history || [];
+                                const rCount = existing ? (existing.metrics.retries || 0) : history.length;
+
+                                return (
+                                    <span className="pi-scoring-val" style={{ color: rCount > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                                        {rCount} <span style={{ fontSize: '0.8em', opacity: 0.7 }}>/ 3</span>
+                                    </span>
+                                );
+                            })()}
+                        </div>
+
+                        {/* RETRIES LIST */}
+                        {(() => {
                             const pName = phaseConfig[phaseNumber]?.name;
                             const existing = session?.phases[pName];
-                            const isRetryState = existing && (existing.status === 'failed' || anyChanges);
-                            return isRetryState ? 'pi-scoring-item--timer' : '';
-                        })()}`}>
-                            <span>
-                                Retry Penalty
-                                {(() => {
-                                    const pName = phaseConfig[phaseNumber]?.name;
-                                    const existing = session?.phases[pName];
-                                    const rCount = existing
-                                        ? ((existing.status === 'passed' && !anyChanges) ? (existing.metrics.retries || 0) : (existing.metrics.retries || 0) + 1)
-                                        : 0;
-                                    return (
-                                        <span className="pi-scoring-rule" style={{ color: rCount > 0 ? 'var(--danger)' : 'inherit' }}>
-                                            ({rCount} {rCount === 1 ? 'RETRY' : 'RETRIES'})
-                                        </span>
-                                    );
-                                })()}
-                            </span>
-                            <span className="pi-scoring-val" style={{
-                                background: (() => {
-                                    const pName = phaseConfig[phaseNumber]?.name;
-                                    const existing = session?.phases[pName];
-                                    const isRetryState = existing && (existing.status === 'failed' || anyChanges);
-                                    return isRetryState ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255, 255, 255, 0.05)';
-                                })(),
-                                color: (() => {
-                                    const pName = phaseConfig[phaseNumber]?.name;
-                                    const existing = session?.phases[pName];
-                                    const rCount = existing
-                                        ? ((existing.status === 'passed' && !anyChanges) ? (existing.metrics.retries || 0) : (existing.metrics.retries || 0) + 1)
-                                        : 0;
-                                    return rCount > 0 ? 'var(--danger)' : 'var(--text-muted)';
-                                })()
-                            }}>
-                                -{(() => {
-                                    const pName = phaseConfig[phaseNumber]?.name;
-                                    const existing = session?.phases[pName];
-                                    const rCount = existing
-                                        ? ((existing.status === 'passed' && !anyChanges) ? (existing.metrics.retries || 0) : (existing.metrics.retries || 0) + 1)
-                                        : 0;
-                                    return rCount * (scoringInfo?.retry_penalty || 10);
-                                })()} PTS
-                            </span>
-                        </div>
-                        <div className="pi-scoring-item">
-                            <span>Token In/Out</span>
-                            <span className="pi-scoring-val">{totalTokens.payload + totalTokens.ai}</span>
-                        </div>
+                            const history = existing?.history || [];
+
+                            if (history.length > 0) {
+                                return (
+                                    <div className="pi-attempts-list">
+                                        <div className="pi-scoring-separator" style={{ margin: '0.5rem 0', borderTop: '1px dashed var(--border-light)', opacity: 0.5 }} />
+                                        {history.map((h, idx) => (
+                                            <div key={idx} className="pi-attempt-item">
+                                                <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>Retry #{idx + 1}</span>
+                                                <span className="pi-scoring-val" style={{ background: 'transparent', padding: 0 }}>{Math.round(h.weighted_score)} PTS</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
                     </div>
                 </div>
-
-                <div className="pi-intel-card">
-                    <div className="pi-intel-header">
-                        <div className="pi-intel-icon"><Icons.Clock /></div>
-                        <h3 className="pi-intel-title">Operation Timer</h3>
-                    </div>
-                    <div className="pi-intel-content">
-                        <div className={`pi-char-value ${elapsedSeconds > timeLimit ? 'pi-char-value--warn' : ''}`} style={{ fontSize: '1.5rem', textAlign: 'center', margin: '0.5rem 0' }}>
-                            {formatTime(elapsedSeconds)}
-                        </div>
-                        <div className="pi-status-tag" style={{ justifyContent: 'center' }}>
-                            {elapsedSeconds > timeLimit ? 'OVERTIME DETECTED' : 'OPERATIONAL WINDOW'}
-                        </div>
-                    </div>
-                </div>
-
             </aside>
 
             {/* Hint Modal */}

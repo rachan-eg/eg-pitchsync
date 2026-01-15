@@ -190,9 +190,31 @@ async def start_phase(req: StartPhaseRequest):
         session.phase_elapsed_seconds = {}
     
     # STEP 1: Save the leaving phase's elapsed time (pause the old timer)
-    if req.leaving_phase_number is not None and req.leaving_phase_elapsed_seconds is not None:
+    if req.leaving_phase_number is not None:
         leaving_key = f"phase_{req.leaving_phase_number}"
-        session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
+        if req.leaving_phase_elapsed_seconds is not None:
+            session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
+        
+        # Save draft responses for the leaving phase
+        if req.leaving_phase_responses:
+            leaving_phase_def = phases_repo.get(req.leaving_phase_number)
+            if leaving_phase_def:
+                l_name = leaving_phase_def["name"]
+                leaving_pdata = session.phases.get(l_name)
+                
+                if not leaving_pdata:
+                    # Create new draft entry
+                    from backend.models import PhaseData, PhaseStatus
+                    leaving_pdata = PhaseData(
+                        phase_id=leaving_phase_def.get("id"),
+                        status=PhaseStatus.IN_PROGRESS,
+                        responses=req.leaving_phase_responses
+                    )
+                    session.phases[l_name] = leaving_pdata
+                elif leaving_pdata.status != "passed":
+                    # Update existing entry if not passed (don't overwrite passed data with drafts)
+                    leaving_pdata.responses = req.leaving_phase_responses
+                    session.phases[l_name] = leaving_pdata
     
     # STEP 2: Get or initialize the target phase's data
     key = f"phase_{req.phase_number}"
@@ -205,14 +227,15 @@ async def start_phase(req: StartPhaseRequest):
         if session.phases[phase_name].status == PhaseStatus.FAILED:
             is_retry = True
     
-    # Record start time if this is the first time entering this phase
-    if is_retry or key not in session.phase_start_times:
-        start_time = datetime.now(timezone.utc)
-        session.phase_start_times[key] = start_time
-        # Reset elapsed time on fresh start or retry
+    # Record start time for this session segment
+    # We ALWAYS reset start_time to now() when entering/re-entering a phase
+    # to ensure we don't count time spent away from the phase.
+    start_time = datetime.now(timezone.utc)
+    session.phase_start_times[key] = start_time
+    
+    if is_retry or key not in session.phase_elapsed_seconds:
+        # Reset elapsed time on unique fresh start or retry
         session.phase_elapsed_seconds[key] = 0.0
-    else:
-        start_time = session.phase_start_times[key]
     
     # STEP 3: Get accumulated elapsed seconds for this phase (resume)
     accumulated_seconds = session.phase_elapsed_seconds.get(key, 0.0)
@@ -306,8 +329,8 @@ async def submit_phase(req: SubmitPhaseRequest):
     # Check for redundant submission (identical answers to a previously passed phase)
     existing_phase = session.phases.get(req.phase_name)
     if existing_phase and existing_phase.status == "passed":
-        current_answers = [r.a for r in req.responses]
-        existing_answers = [r.a for r in existing_phase.responses]
+        current_answers = [(r.a, r.hint_used) for r in req.responses]
+        existing_answers = [(r.a, r.hint_used) for r in existing_phase.responses]
         if current_answers == existing_answers:
             # Re-calculate timing if it's a resume-and-submit, but usually we just keep the points
             # To be safe and fast, we return the existing result data
@@ -359,6 +382,10 @@ async def submit_phase(req: SubmitPhaseRequest):
             previous_feedback=prev_feedback
         )
     
+    # Post-evaluation check for max retries
+    if retries > settings.MAX_RETRIES:
+        raise HTTPException(status_code=400, detail=f"Maximum retries ({settings.MAX_RETRIES}) exceeded for this phase.")
+
     # Calculate Hint Penalty
     total_hint_penalty = 0.0
     # Assuming responses are in the same order as phase_def["questions"]
@@ -398,6 +425,18 @@ async def submit_phase(req: SubmitPhaseRequest):
         passed = True
         eval_result['feedback'] += " (Forced proceed enabled in settings)"
     
+    # Preserve/Update history
+    history = []
+    if existing_phase:
+         # Copy existing history
+         history = list(existing_phase.history)
+         # If keeping track of attempts, add the current state of the phase *before* this new submission overwrites it
+         # But wait, existing_phase is the PREVIOUS state. Yes.
+         # Only add if it was a real attempt (has metrics)
+         if existing_phase.status != PhaseStatus.PENDING and existing_phase.metrics.ai_score > 0:
+             # We want to store the metrics of the ATTEMPT.
+             history.append(existing_phase.metrics)
+
     # Update phase data
     phase_data = PhaseData(
         phase_id=phase_def.get("id", f"phase_{phase_number}"),
@@ -407,7 +446,8 @@ async def submit_phase(req: SubmitPhaseRequest):
         feedback=eval_result['feedback'],
         rationale=eval_result['rationale'],
         strengths=eval_result.get('strengths', []),
-        improvements=eval_result.get('improvements', [])
+        improvements=eval_result.get('improvements', []),
+        history=history
     )
     session.phases[req.phase_name] = phase_data
     

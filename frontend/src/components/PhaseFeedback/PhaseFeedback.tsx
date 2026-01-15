@@ -82,6 +82,51 @@ export const PhaseFeedback: React.FC<PhaseFeedbackProps> = ({
                     </div>
                 </div>
 
+                {/* Scoring Audit Trail */}
+                <div className="phase-feedback__audit animate-fadeIn">
+                    <div className="phase-feedback__audit-track">
+                        <div className="phase-feedback__audit-item">
+                            <div className="phase-feedback__audit-label">BASE AI QUALITY</div>
+                            <div className="phase-feedback__audit-value">{result.metrics.ai_quality_points.toFixed(0)}</div>
+                        </div>
+
+                        {result.metrics.hint_penalty > 0 && (
+                            <div className="phase-feedback__audit-item phase-feedback__audit-item--penalty">
+                                <div className="phase-feedback__audit-label">HINT PENALTY</div>
+                                <div className="phase-feedback__audit-value">-{result.metrics.hint_penalty.toFixed(0)}</div>
+                            </div>
+                        )}
+
+                        {result.metrics.time_penalty > 0 && (
+                            <div className="phase-feedback__audit-item phase-feedback__audit-item--penalty">
+                                <div className="phase-feedback__audit-label">TIME OVERAGE</div>
+                                <div className="phase-feedback__audit-value">-{result.metrics.time_penalty.toFixed(0)}</div>
+                            </div>
+                        )}
+
+                        {result.metrics.retry_penalty > 0 && (
+                            <div className="phase-feedback__audit-item phase-feedback__audit-item--penalty">
+                                <div className="phase-feedback__audit-label">RETRY TAX</div>
+                                <div className="phase-feedback__audit-value">-{result.metrics.retry_penalty.toFixed(0)}</div>
+                            </div>
+                        )}
+
+                        {result.metrics.efficiency_bonus > 0 && (
+                            <div className="phase-feedback__audit-item phase-feedback__audit-item--bonus">
+                                <div className="phase-feedback__audit-label">TOKEN BONUS</div>
+                                <div className="phase-feedback__audit-value">+{result.metrics.efficiency_bonus.toFixed(0)}</div>
+                            </div>
+                        )}
+
+                        <div className="phase-feedback__audit-separator" />
+
+                        <div className="phase-feedback__audit-item phase-feedback__audit-item--result">
+                            <div className="phase-feedback__audit-label">WEIGHTED ({(result.metrics.phase_weight * 100).toFixed(0)}%)</div>
+                            <div className="phase-feedback__audit-value">{result.phase_score.toFixed(0)}</div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Body */}
                 <div className="phase-feedback__body custom-scrollbar">
                     <div className="phase-feedback__grid">

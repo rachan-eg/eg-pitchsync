@@ -114,14 +114,10 @@ You are looking for "Signal", not "Noise".
 
 """
 
-    if previous_feedback:
-        prompt += f"""
-=== RETRY CONTEXT (CRITICAL) ===
-The team strictly FAILED the previous attempt.
-Previous Judge Remarks: "{previous_feedback}"
-TASK: Verify if they have FUNDAMENTALLY fixed the issue, or just applied "lipstick on a pig".
-If they ignored the feedback, penalize heavily.
-"""
+    # NOTE: We intentionally ignore previous_feedback here.
+    # The user wants every retry to be evaluated as a "first attempt" (fresh eyes),
+    # without the bias of previous failure.
+    # Scoring penalties (time/hints) are applied separately in the scoring engine.
 
     return prompt
 
@@ -256,7 +252,7 @@ Return PURE JSON.
         result["score"] = max(0.0, min(1.0, float(result["score"])))
         result["usage"] = usage
         return result
-    except:
+    except Exception:
         return {
             "score": 0.0,
             "rationale": "Evaluation Processing Error",

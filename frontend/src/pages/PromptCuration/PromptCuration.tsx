@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../AppContext';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
 import type { Theme, SessionState } from '../../types';
 import './PromptCuration.css';
 
@@ -32,10 +30,6 @@ interface PromptCurationProps {
     isLoading: boolean;
 }
 
-const REF_IMAGES = [
-    '/backend-assets/Image_refernces/image.png',
-    '/backend-assets/Image_refernces/image%20copy.png'
-];
 
 // =============================================================================
 // ICONS
@@ -65,6 +59,9 @@ const Icons = {
     Zap: () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
     ),
+    ArrowLeft: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
+    )
 };
 
 // =============================================================================
@@ -145,24 +142,6 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
         }
     };
 
-    const handleDownloadImages = async () => {
-        try {
-            const zip = new JSZip();
-            const folder = zip.folder("reference-images");
-            const imagePromises = REF_IMAGES.map(async (path, i) => {
-                const response = await fetch(path);
-                if (!response.ok) throw new Error(`Failed to fetch ${path}`);
-                const blob = await response.blob();
-                const filename = path.split('/').pop() || `reference-${i}.png`;
-                folder?.file(filename, blob);
-            });
-            await Promise.all(imagePromises);
-            const content = await zip.generateAsync({ type: "blob" });
-            saveAs(content, "style-references.zip");
-        } catch (e) {
-            console.error("Failed to zip images", e);
-        }
-    };
 
     const handleCopy = async () => {
         try {
@@ -174,7 +153,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
         }
     };
 
-    const handleKeyPress = (e: React.KeyboardEvent) => {
+    const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleRegenerate();
@@ -232,6 +211,20 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
             {/* Main Content */}
             <div className="prompt-curation__main">
+                {/* Header */}
+                <header className="curate-header animate-slideUp">
+                    <div className="curate-header__left">
+                        <button className="curate-back-btn btn-secondary" onClick={() => navigate('/war-room')}>
+                            <Icons.ArrowLeft /> BACK TO PHASES
+                        </button>
+                    </div>
+                    <div className="curate-header__title-group">
+                        <span className="curate-header__subtitle">Synthesis</span>
+                        <h1 className="curate-header__title">Prompt Curation</h1>
+                    </div>
+                    <div className="curate-header__right" />
+                </header>
+
                 <div className="prompt-curation__columns">
 
                     {/* LEFT COLUMN */}
@@ -258,25 +251,6 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                             />
                         </div>
 
-                        {/* References Row */}
-                        <div className="curate-card curate-refs">
-                            <div className="curate-refs__label-group">
-                                <div className="curate-refs__label">Style Refs</div>
-                                <button onClick={handleDownloadImages} className="curate-btn-icon">
-                                    <Icons.Download /> ZIP
-                                </button>
-                            </div>
-                            {REF_IMAGES.map((img, i) => (
-                                <img
-                                    key={i}
-                                    src={img}
-                                    alt={`Ref ${i}`}
-                                    className="curate-refs__img"
-                                    onClick={() => window.open(img, '_blank')}
-                                    title="Click to view full size"
-                                />
-                            ))}
-                        </div>
 
                         {/* Refine Input */}
                         <div className="curate-card curate-refine">
@@ -285,7 +259,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                     type="text"
                                     value={additionalNotes}
                                     onChange={(e) => setAdditionalNotes(e.target.value)}
-                                    onKeyPress={handleKeyPress}
+                                    onKeyDown={handleKeyDown}
                                     placeholder="Refine: 'cinematic', 'neon glow', 'abstract'..."
                                     className="curate-refine__input"
                                     disabled={isRegenerating}

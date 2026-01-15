@@ -4,6 +4,7 @@ Final pitch generation endpoint.
 """
 
 import json
+import hashlib
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, File, UploadFile, Form
 
@@ -83,12 +84,6 @@ async def curate_prompt(req: PrepareSynthesisRequest):
     session = get_session(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    import hashlib # Added import for hashlib
-    
-    session = get_session(req.session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-    
     # Calculate current answers hash to see if regeneration is actually needed
     all_answers = []
     # Sort phases to ensure consistent hash
@@ -99,8 +94,11 @@ async def curate_prompt(req: PrepareSynthesisRequest):
     
     current_hash = hashlib.md5("|".join(all_answers).encode()).hexdigest()
     
-    # If answers haven't changed and we already have a curated prompt, reuse it
-    if session.answers_hash == current_hash and session.final_output.image_prompt:
+    # Bypass cache if additional_notes are provided (regeneration requested)
+    # OR if answers have changed
+    has_refinements = hasattr(req, 'additional_notes') and req.additional_notes
+    
+    if session.answers_hash == current_hash and session.final_output.image_prompt and not has_refinements:
         # Ensure the cached prompt is a JSON string if it was stored as such
         cached_prompt_str = session.final_output.image_prompt
         if isinstance(cached_prompt_str, dict): # If it was stored as a dict for some reason
@@ -117,11 +115,12 @@ async def curate_prompt(req: PrepareSynthesisRequest):
 
     # Otherwise, generate new prompt
     # generate_customer_image_prompt returns (Dict, Dict)
+    additional_notes = getattr(req, 'additional_notes', None)
     curated_prompt_struct, usage = generate_customer_image_prompt(
         usecase=session.usecase,
         all_phases_data=session.phases,
         theme=session.theme_palette,
-        additional_notes=req.additional_notes  # Pass refinement notes
+        additional_notes=additional_notes
     )
     
     # Store as JSON string (The "Manifest")

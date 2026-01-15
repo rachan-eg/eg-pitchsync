@@ -44,7 +44,7 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
     if hasattr(db_session, 'phase_elapsed_seconds_json') and db_session.phase_elapsed_seconds_json:
         try:
             phase_elapsed_seconds = json.loads(db_session.phase_elapsed_seconds_json, strict=False)
-        except:
+        except Exception:
             phase_elapsed_seconds = {}
     
     # Load uploaded_images (with backwards compat)
