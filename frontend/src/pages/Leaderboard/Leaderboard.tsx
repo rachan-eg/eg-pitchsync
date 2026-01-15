@@ -26,13 +26,72 @@ const Icons = {
     )
 };
 
+type LeaderboardTrack = 'ELITE' | 'LEGENDS' | 'MINIMALIST' | 'BLITZ' | 'PHASES';
+
 export const Leaderboard: React.FC<LeaderboardProps> = ({
     entries,
     currentTeamId
 }) => {
     const navigate = useNavigate();
-    const topThree = entries.slice(0, 3);
-    const others = entries.slice(3);
+    const [track, setTrack] = React.useState<LeaderboardTrack>('ELITE');
+
+    // Filter and Sort based on track
+    const processedEntries = React.useMemo(() => {
+        let result = [...entries];
+
+        if (track === 'LEGENDS') {
+            result = result.filter(e => e.total_retries === 0);
+            result.sort((a, b) => b.score - a.score || a.total_tokens - b.total_tokens);
+        } else if (track === 'MINIMALIST') {
+            result.sort((a, b) => a.total_tokens - b.total_tokens || b.score - a.score);
+        } else if (track === 'BLITZ') {
+            result.sort((a, b) => a.total_duration_seconds - b.total_duration_seconds || b.score - a.score);
+        } else {
+            result.sort((a, b) => b.score - a.score || a.total_tokens - b.total_tokens);
+        }
+
+        return result.map((e, idx) => ({ ...e, displayRank: idx + 1 }));
+    }, [entries, track]);
+
+    const phaseRankings = React.useMemo(() => {
+        if (track !== 'PHASES') return null;
+
+        const getSorted = (phaseKey: string) => {
+            return [...entries]
+                .filter(e => e.phase_scores && e.phase_scores[phaseKey] !== undefined)
+                .sort((a, b) => (b.phase_scores[phaseKey] || 0) - (a.phase_scores[phaseKey] || 0))
+                .slice(0, 10);
+        };
+
+        return {
+            p1: getSorted('1'),
+            p2: getSorted('2'),
+            p3: getSorted('3')
+        };
+    }, [entries, track]);
+
+    const topThree = processedEntries.slice(0, 3);
+    const others = processedEntries.slice(3);
+
+    const getTrackDescription = () => {
+        switch (track) {
+            case 'ELITE': return "The highest overall mission efficacy scores.";
+            case 'LEGENDS': return "Perfect records: Teams with zero tactical retries.";
+            case 'MINIMALIST': return "Payload efficiency: Lowest total token expenditure.";
+            case 'PHASES': return "Inter-phase performance analysis: Top tactical execution per sector.";
+            case 'BLITZ': return "Strategic pace: Fastest mission completion times.";
+        }
+    };
+
+    const getDetailHeader = () => {
+        switch (track) {
+            case 'ELITE': return 'Tactical Retries';
+            case 'LEGENDS': return 'Payload (Tokens)';
+            case 'MINIMALIST': return 'Payload (Tokens)';
+            case 'BLITZ': return 'Assessment Score';
+            default: return 'Detail';
+        }
+    };
 
     const getRankClass = (rank: number) => {
         if (rank === 1) return 'leaderboard__row-rank--1';
@@ -42,19 +101,21 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     };
 
     const handleBack = () => {
-        navigate(-1); // Go back to previous page
+        navigate(-1);
+    };
+
+    const formatDuration = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
     return (
         <div className="leaderboard">
-
             <div className="leaderboard__container animate-fadeIn">
                 {/* Header */}
                 <div className="leaderboard__header">
-                    <button
-                        onClick={handleBack}
-                        className="leaderboard__back-btn btn-secondary"
-                    >
+                    <button onClick={handleBack} className="leaderboard__back-btn btn-secondary">
                         <Icons.ChevronLeft />
                         <span>Return to Ops</span>
                     </button>
@@ -66,91 +127,148 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                             <span className="leaderboard__title-icon"><Icons.Zap /></span>
                         </div>
                         <p className="leaderboard__subtitle">
-                            Global Efficiency Leaderboard • {entries.length} Active Missions
+                            Global Tactical Assessment • {entries.length} Measured Missions
                         </p>
                     </div>
-
                     <div className="leaderboard__spacer" />
                 </div>
 
-                {/* Podium Section (Top 3) */}
-                {topThree.length > 0 && (
+                {/* TRACK SELECTOR */}
+                <div className="leaderboard__tracks-section">
+                    <div className="leaderboard__tracks">
+                        <button
+                            className={`leaderboard__track-btn ${track === 'ELITE' ? 'leaderboard__track-btn--active' : ''}`}
+                            onClick={() => setTrack('ELITE')}
+                        >
+                            <Icons.Trophy /> Elite Score
+                        </button>
+                        <button
+                            className={`leaderboard__track-btn ${track === 'LEGENDS' ? 'leaderboard__track-btn--active' : ''}`}
+                            onClick={() => setTrack('LEGENDS')}
+                        >
+                            <Icons.Check /> No-Retry Legends
+                        </button>
+                        <button
+                            className={`leaderboard__track-btn ${track === 'MINIMALIST' ? 'leaderboard__track-btn--active' : ''}`}
+                            onClick={() => setTrack('MINIMALIST')}
+                        >
+                            <Icons.Activity /> Minimalist
+                        </button>
+                        <button
+                            className={`leaderboard__track-btn ${track === 'BLITZ' ? 'leaderboard__track-btn--active' : ''}`}
+                            onClick={() => setTrack('BLITZ')}
+                        >
+                            <Icons.Zap /> Strategic Speed
+                        </button>
+                        <button
+                            className={`leaderboard__track-btn ${track === 'PHASES' ? 'leaderboard__track-btn--active' : ''}`}
+                            onClick={() => setTrack('PHASES')}
+                        >
+                            <Icons.Activity /> Tactical Breakdown
+                        </button>
+                    </div>
+                    <p className="leaderboard__track-desc">{getTrackDescription()}</p>
+                </div>
+
+                {/* Podium Section (Top 3) - Only for non-phase view */}
+                {track !== 'PHASES' && topThree.length > 0 && (
                     <div className="leaderboard__podium">
                         {/* 2nd Place */}
                         {topThree[1] && (
                             <div className="leaderboard__podium-card leaderboard__podium-card--2 glass-card animate-slideUp stagger-1">
-                                <div className="leaderboard__podium-icon">
-                                    <Icons.Trophy />
-                                </div>
-                                <div className="leaderboard__podium-rank">Current 2nd</div>
+                                <div className="leaderboard__podium-icon"><Icons.Trophy /></div>
+                                <div className="leaderboard__podium-rank">2nd Division</div>
                                 <div className="leaderboard__podium-team">{topThree[1].team_id}</div>
                                 <div className="leaderboard__podium-usecase">{topThree[1].usecase}</div>
-                                <div className="leaderboard__podium-score leaderboard__podium-score--2">{topThree[1].score.toFixed(0)}</div>
-                                <div className="leaderboard__podium-meta">{topThree[1].total_tokens} TOKENS</div>
+                                <div className="leaderboard__podium-score leaderboard__podium-score--2">{track === 'BLITZ' ? formatDuration(topThree[1].total_duration_seconds) : topThree[1].score.toFixed(0)}</div>
+                                <div className="leaderboard__podium-meta">{track === 'MINIMALIST' ? `${topThree[1].total_tokens} TOKENS` : `${topThree[1].total_retries} RETRIES`}</div>
                             </div>
                         )}
 
                         {/* 1st Place */}
                         {topThree[0] && (
                             <div className="leaderboard__podium-card leaderboard__podium-card--1 glass-card animate-reveal-up">
-                                <div className="leaderboard__podium-icon leaderboard__podium-icon--1">
-                                    <Icons.Trophy />
-                                </div>
+                                <div className="leaderboard__podium-icon leaderboard__podium-icon--1"><Icons.Trophy /></div>
                                 <div className="leaderboard__podium-badge">
-                                    <Icons.Trophy /> Current Leader
+                                    <Icons.Trophy /> {track === 'ELITE' ? 'Apex Leader' : track === 'LEGENDS' ? 'Perfect Record' : track === 'MINIMALIST' ? 'Token Master' : 'Speed Demon'}
                                 </div>
                                 <div className="leaderboard__podium-team leaderboard__podium-team--1">{topThree[0].team_id}</div>
                                 <div className="leaderboard__podium-usecase leaderboard__podium-usecase--1">{topThree[0].usecase}</div>
-                                <div className="leaderboard__podium-score leaderboard__podium-score--1">{topThree[0].score.toFixed(0)}</div>
-                                <div className="leaderboard__podium-meta leaderboard__podium-meta--1">{topThree[0].total_tokens} TOKENS</div>
+                                <div className="leaderboard__podium-score leaderboard__podium-score--1">{track === 'BLITZ' ? formatDuration(topThree[0].total_duration_seconds) : topThree[0].score.toFixed(0)}</div>
+                                <div className="leaderboard__podium-meta leaderboard__podium-meta--1">{track === 'MINIMALIST' ? `${topThree[0].total_tokens} TOKENS` : `${topThree[0].total_retries} RETRIES`}</div>
                             </div>
                         )}
 
                         {/* 3rd Place */}
                         {topThree[2] && (
                             <div className="leaderboard__podium-card leaderboard__podium-card--3 glass-card animate-slideUp stagger-2">
-                                <div className="leaderboard__podium-icon">
-                                    <Icons.Trophy />
-                                </div>
-                                <div className="leaderboard__podium-rank">Current 3rd</div>
+                                <div className="leaderboard__podium-icon"><Icons.Trophy /></div>
+                                <div className="leaderboard__podium-rank">3rd Division</div>
                                 <div className="leaderboard__podium-team">{topThree[2].team_id}</div>
                                 <div className="leaderboard__podium-usecase">{topThree[2].usecase}</div>
-                                <div className="leaderboard__podium-score leaderboard__podium-score--3">{topThree[2].score.toFixed(0)}</div>
-                                <div className="leaderboard__podium-meta">{topThree[2].total_tokens} TOKENS</div>
+                                <div className="leaderboard__podium-score leaderboard__podium-score--3">{track === 'BLITZ' ? formatDuration(topThree[2].total_duration_seconds) : topThree[2].score.toFixed(0)}</div>
+                                <div className="leaderboard__podium-meta">{track === 'MINIMALIST' ? `${topThree[2].total_tokens} TOKENS` : `${topThree[2].total_retries} RETRIES`}</div>
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* Remaining List */}
+                {/* Main Content Area */}
                 <div className="leaderboard__list glass-panel animate-fadeIn stagger-3">
-                    <div className="leaderboard__list-header">
-                        <div className="leaderboard__list-header-pos">Pos</div>
-                        <div>Operational Entity</div>
-                        <div className="leaderboard__list-header-tokens">Strategic Payload</div>
-                        <div className="leaderboard__list-header-score">Efficiency</div>
-                        <div className="leaderboard__list-header-status">Status</div>
-                    </div>
+                    {track !== 'PHASES' && (
+                        <div className="leaderboard__list-header">
+                            <div className="leaderboard__list-header-pos">Pos</div>
+                            <div>Operational Entity</div>
+                            <div className="leaderboard__list-header-tokens">{getDetailHeader()}</div>
+                            <div className="leaderboard__list-header-score">{track === 'BLITZ' ? 'Execution Time' : 'Efficiency Score'}</div>
+                            <div className="leaderboard__list-header-status">Status</div>
+                        </div>
+                    )}
 
-                    {entries.length === 0 ? (
+                    {track === 'PHASES' && phaseRankings ? (
+                        <div className="leaderboard__phase-columns">
+                            {[
+                                { title: 'Sector 01: Strategy', data: phaseRankings.p1, key: '1' },
+                                { title: 'Sector 02: Execution', data: phaseRankings.p2, key: '2' },
+                                { title: 'Sector 03: Growth', data: phaseRankings.p3, key: '3' }
+                            ].map((col) => (
+                                <div key={col.key} className="leaderboard__phase-col">
+                                    <div className="leaderboard__phase-col-header">{col.title}</div>
+                                    <div className="leaderboard__phase-col-list">
+                                        {col.data.length === 0 ? (
+                                            <div className="leaderboard__phase-col-empty">No secure data available</div>
+                                        ) : (
+                                            col.data.map((entry, idx) => (
+                                                <div key={entry.team_id} className={`leaderboard__phase-row ${entry.team_id === currentTeamId ? 'leaderboard__phase-row--current' : ''}`}>
+                                                    <span className="leaderboard__phase-row-rank">{(idx + 1).toString().padStart(2, '0')}</span>
+                                                    <span className="leaderboard__phase-row-team">{entry.team_id}</span>
+                                                    <span className="leaderboard__phase-row-score">{(entry.phase_scores[col.key] || 0).toFixed(0)}</span>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : processedEntries.length === 0 ? (
                         <div className="leaderboard__empty">
                             <div className="leaderboard__empty-icon"><Icons.Trophy /></div>
-                            <h3 className="leaderboard__empty-title">No Combat Data Detected</h3>
-                            <p className="leaderboard__empty-text">Awaiting the first team to deploy for assessment.</p>
+                            <h3 className="leaderboard__empty-title">Sector Quiet</h3>
+                            <p className="leaderboard__empty-text">No teams found matching these tactical criteria.</p>
                         </div>
                     ) : (
                         <div className="leaderboard__list-body custom-scrollbar">
-                            {others.map((entry) => {
+                            {(track === 'ELITE' || track === 'LEGENDS' || track === 'MINIMALIST' || track === 'BLITZ' ? others : processedEntries).map((entry) => {
                                 const isCurrentTeam = entry.team_id === currentTeamId;
-                                const isTopThree = entry.rank <= 3;
+                                const isTopThree = entry.displayRank <= 3 && track !== 'PHASES';
 
                                 return (
                                     <div
                                         key={entry.team_id}
                                         className={`leaderboard__row ${isCurrentTeam ? 'leaderboard__row--current' : ''}`}
                                     >
-                                        <div className={`leaderboard__row-rank ${getRankClass(entry.rank)}`}>
-                                            {entry.rank.toString().padStart(2, '0')}
+                                        <div className={`leaderboard__row-rank ${getRankClass(entry.displayRank)}`}>
+                                            {entry.displayRank.toString().padStart(2, '0')}
                                         </div>
 
                                         <div className="leaderboard__row-info">
@@ -158,27 +276,31 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                                                 <span className="leaderboard__row-team">{entry.team_id}</span>
                                                 {isCurrentTeam && (
                                                     <span className="leaderboard__current-badge">
-                                                        <Icons.Activity /> Current Entity
+                                                        <Icons.Activity /> Team
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="leaderboard__row-usecase">
-                                                {entry.usecase}
-                                            </div>
+                                            <div className="leaderboard__row-usecase">{entry.usecase}</div>
                                         </div>
 
                                         <div className="leaderboard__row-tokens">
-                                            {entry.total_tokens} <span className="leaderboard__row-tokens-unit">tk</span>
+                                            {track === 'MINIMALIST' || track === 'LEGENDS' ? (
+                                                <>{entry.total_tokens.toLocaleString()} <span className="leaderboard__row-tokens-unit">tk</span></>
+                                            ) : track === 'BLITZ' ? (
+                                                <>{entry.score.toFixed(0)} <span className="leaderboard__row-tokens-unit">pts</span></>
+                                            ) : (
+                                                <>{entry.total_retries} <span className="leaderboard__row-tokens-unit">retries</span></>
+                                            )}
                                         </div>
 
                                         <div className={`leaderboard__row-score ${isTopThree ? 'leaderboard__row-score--top' : 'leaderboard__row-score--default'}`}>
-                                            {entry.score.toFixed(0)}
+                                            {track === 'BLITZ' ? formatDuration(entry.total_duration_seconds) : entry.score.toFixed(0)}
                                         </div>
 
                                         <div className="leaderboard__row-status">
                                             {entry.is_complete ? (
                                                 <div className="leaderboard__status-badge leaderboard__status-badge--complete">
-                                                    <Icons.Check /> Finalized
+                                                    <Icons.Check /> Complete
                                                 </div>
                                             ) : (
                                                 <div className="leaderboard__status-badge leaderboard__status-badge--progress">
@@ -195,12 +317,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
                 {/* Footer */}
                 <div className="leaderboard__footer">
-                    <p className="leaderboard__footer-text">
-                        Encrypted Data Link • War-Room-v2.0.0
-                    </p>
-                    <p className="leaderboard__footer-time">
-                        System time: {new Date().toLocaleTimeString()}
-                    </p>
+                    <p className="leaderboard__footer-text">Encrypted Data Link • Tactical-v2.1.0</p>
+                    <p className="leaderboard__footer-time">Sync: {new Date().toLocaleTimeString()}</p>
                 </div>
             </div>
         </div>
