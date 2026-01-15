@@ -13,8 +13,8 @@ Thank you for your interest in contributing! This document provides guidelines a
 
 #### 1. Clone and Configure
 ```bash
-git clone <repo-url>
-cd gum
+git clone https://github.com/rachan-eg/eg-pitchsync.git
+cd eg-pitchsync
 
 # Copy environment template and fill in your credentials
 cp .env.example .env
