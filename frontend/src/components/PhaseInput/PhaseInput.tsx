@@ -396,7 +396,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                         </div>
 
                         <div className="pi-scoring-item">
-                            <span>Attempts</span>
+                            <span>Retries</span>
                             {(() => {
                                 const pName = phaseConfig[phaseNumber]?.name;
                                 const existing = session?.phases[pName];
@@ -411,7 +411,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             })()}
                         </div>
 
-                        {/* ATTEMPTS LIST */}
+                        {/* RETRIES LIST */}
                         {(() => {
                             const pName = phaseConfig[phaseNumber]?.name;
                             const existing = session?.phases[pName];
@@ -423,7 +423,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                         <div className="pi-scoring-separator" style={{ margin: '0.5rem 0', borderTop: '1px dashed var(--border-light)', opacity: 0.5 }} />
                                         {history.map((h, idx) => (
                                             <div key={idx} className="pi-attempt-item">
-                                                <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>Attempt #{idx + 1}</span>
+                                                <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>Retry #{idx + 1}</span>
                                                 <span className="pi-scoring-val" style={{ background: 'transparent', padding: 0 }}>{Math.round(h.weighted_score)} PTS</span>
                                             </div>
                                         ))}

@@ -123,11 +123,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [phaseResult, setPhaseResult] = useState<SubmitPhaseResponse | null>(null);
     const [currentPhaseResponses, setCurrentPhaseResponsesInternal] = useState<PhaseResponse[]>([]);
     const [highestUnlockedPhase, setHighestUnlockedPhase] = useState(1);
-    const [isReEditingPhase, setIsReEditingPhase] = useState(false);
 
-    // Timer State
-    const [elapsedSeconds, setElapsedSeconds] = useState(0);
-    const [phaseStartTime, setPhaseStartTime] = useState<number | null>(null);
+    // Timer State (Revamped - Simple & Reliable)
+    // timerState: 'STOPPED' | 'RUNNING' | 'PAUSED'
+    // - STOPPED: Timer is not active (phase complete or not started)
+    // - RUNNING: Timer is actively counting
+    // - PAUSED: Timer is paused (e.g., viewing feedback, loading)
+    const [timerState, setTimerState] = useState<'STOPPED' | 'RUNNING' | 'PAUSED'>('STOPPED');
+    const [timerBaseSeconds, setTimerBaseSeconds] = useState(0); // Accumulated seconds before current run
+    const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null); // When current run started (Date.now())
+    const [elapsedSeconds, setElapsedSeconds] = useState(0); // Display value = timerBaseSeconds + current run
+
 
     // Prompt & Image State
     const [curatedPrompt, setCuratedPrompt] = useState('');
@@ -235,57 +241,108 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     }, [session, phaseConfig, scoringInfo]);
 
-    // Timer logic - runs when in phase and no result shown
+    // =========================================================================
+    // TIMER CONTROL FUNCTIONS (New Simplified Architecture)
+    // =========================================================================
+    const startTimer = useCallback((baseSeconds: number = 0) => {
+        setTimerBaseSeconds(baseSeconds);
+        setTimerStartedAt(Date.now());
+        setElapsedSeconds(baseSeconds);
+        setTimerState('RUNNING');
+    }, []);
+
+    const pauseTimer = useCallback(() => {
+        if (timerState === 'RUNNING' && timerStartedAt) {
+            // Save current elapsed to base before pausing
+            const currentRun = Math.floor((Date.now() - timerStartedAt) / 1000);
+            setTimerBaseSeconds(prev => prev + currentRun);
+            setTimerStartedAt(null);
+        }
+        setTimerState('PAUSED');
+    }, [timerState, timerStartedAt]);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const resumeTimer = useCallback(() => {
+        if (timerState === 'PAUSED') {
+            setTimerStartedAt(Date.now());
+            setTimerState('RUNNING');
+        }
+    }, [timerState]);
+
+    const stopTimer = useCallback((finalSeconds?: number) => {
+        if (finalSeconds !== undefined) {
+            setElapsedSeconds(finalSeconds);
+            setTimerBaseSeconds(finalSeconds);
+        } else if (timerStartedAt) {
+            const currentRun = Math.floor((Date.now() - timerStartedAt) / 1000);
+            const total = timerBaseSeconds + currentRun;
+            setElapsedSeconds(total);
+            setTimerBaseSeconds(total);
+        }
+        setTimerStartedAt(null);
+        setTimerState('STOPPED');
+    }, [timerStartedAt, timerBaseSeconds]);
+
+    // Timer tick effect - simple and reliable
     useEffect(() => {
         let interval: ReturnType<typeof setInterval>;
-        const isWarRoom = location.pathname === '/war-room';
 
-        // Check if current phase is already completed
-        const currentPhaseNum = session?.current_phase;
-        const phaseName = currentPhaseNum ? phaseConfig[currentPhaseNum]?.name : null;
-        const isPhaseComplete = phaseName && session?.phases[phaseName]?.status === 'passed';
-
-        // Timer runs if: phase not complete OR user is re-editing a completed phase
-        const shouldTimerRun = !isPhaseComplete || isReEditingPhase;
-
-        if (session && phaseStartTime && !phaseResult && !loading && isWarRoom && shouldTimerRun) {
+        if (timerState === 'RUNNING' && timerStartedAt) {
             interval = setInterval(() => {
-                // Only tick if the document is visible
+                // Only tick if document is visible
                 if (document.visibilityState === 'visible') {
-                    setElapsedSeconds(Math.floor((Date.now() - phaseStartTime) / 1000));
+                    const currentRun = Math.floor((Date.now() - timerStartedAt) / 1000);
+                    setElapsedSeconds(timerBaseSeconds + currentRun);
                 }
             }, 1000);
         }
-        return () => clearInterval(interval);
-    }, [session, phaseStartTime, phaseResult, loading, location.pathname, isReEditingPhase, phaseConfig]);
 
-    // Wrapper for setCurrentPhaseResponses that detects re-editing of completed phases
+        return () => clearInterval(interval);
+    }, [timerState, timerStartedAt, timerBaseSeconds]);
+
+    // Pause timer when leaving war-room
+    useEffect(() => {
+        const isWarRoom = location.pathname === '/war-room';
+        if (!isWarRoom && timerState === 'RUNNING') {
+            pauseTimer();
+        }
+    }, [location.pathname, timerState, pauseTimer]);
+
+    // Pause timer when showing results or loading
+    useEffect(() => {
+        if ((phaseResult || loading) && timerState === 'RUNNING') {
+            pauseTimer();
+        }
+    }, [phaseResult, loading, timerState, pauseTimer]);
+
+    // Wrapper for setCurrentPhaseResponses - manages timer for editing completed phases
     const setCurrentPhaseResponses = useCallback((responses: PhaseResponse[]) => {
-        // Check if current phase is completed
+        // Check if current phase is completed (passed)
         const currentPhaseNum = session?.current_phase;
         const phaseName = currentPhaseNum ? phaseConfig[currentPhaseNum]?.name : null;
-        const isPhaseComplete = phaseName && session?.phases[phaseName]?.status === 'passed';
+        const phaseData = phaseName ? session?.phases[phaseName] : null;
+        const isPhasePassed = phaseData?.status === 'passed';
 
-        // If phase is complete and responses are changing, set re-editing flag and restart timer
-        if (isPhaseComplete && !isReEditingPhase) {
-            // Check if responses actually changed
-            const existingResponses = session?.phases[phaseName]?.responses || [];
+        if (isPhasePassed) {
+            const existingResponses = phaseData?.responses || [];
             const hasChanges = responses.some((r, i) => {
                 const existing = existingResponses[i];
                 return existing && (r.a !== existing.a || r.hint_used !== existing.hint_used);
             });
 
-            if (hasChanges) {
-                setIsReEditingPhase(true);
-                // Restart timer from current elapsed time
-                if (!phaseStartTime) {
-                    setPhaseStartTime(Date.now() - (elapsedSeconds * 1000));
-                }
+            if (hasChanges && timerState === 'STOPPED') {
+                // User started editing a completed phase - START the timer from stored duration
+                const storedDuration = phaseData?.metrics?.duration_seconds || 0;
+                startTimer(Math.round(storedDuration));
+            } else if (!hasChanges && timerState === 'RUNNING') {
+                // User reverted changes back to original - STOP the timer and show stored duration
+                const storedDuration = phaseData?.metrics?.duration_seconds || 0;
+                stopTimer(Math.round(storedDuration));
             }
         }
 
         setCurrentPhaseResponsesInternal(responses);
-    }, [session, phaseConfig, isReEditingPhase, phaseStartTime, elapsedSeconds]);
+    }, [session, phaseConfig, timerState, startTimer, stopTimer]);
 
     // Fetch leaderboard periodically
     useEffect(() => {
@@ -405,10 +462,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setHighestUnlockedPhase(unlocked);
 
             if (data.current_phase_started_at) {
-                // Robust Timer Sync (Resume)
+                // Timer Sync (Resume) - Using new simplified timer
                 const currentPhaseNum = data.current_phase || 1;
-                const phaseConfig = data.phases;
-                const phaseDef = phaseConfig[currentPhaseNum];
+                const resumePhaseConfig = data.phases;
+                const phaseDef = resumePhaseConfig[currentPhaseNum];
 
                 let isComplete = false;
                 let storedDuration = 0;
@@ -423,17 +480,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 }
 
                 if (isComplete) {
-                    setElapsedSeconds(Math.round(storedDuration));
-                    setPhaseStartTime(null); // Timer stopped
+                    // Phase is complete - stop timer and show stored duration
+                    stopTimer(Math.round(storedDuration));
                 } else {
+                    // Phase in progress - calculate elapsed and start timer
                     const serverStartTime = new Date(data.current_phase_started_at).getTime();
                     const serverNow = data.current_server_time ? new Date(data.current_server_time).getTime() : Date.now();
-
-                    const elapsedMs = Math.max(0, serverNow - serverStartTime);
-                    const localStartTime = Date.now() - elapsedMs;
-
-                    setPhaseStartTime(localStartTime);
-                    setElapsedSeconds(Math.floor(elapsedMs / 1000));
+                    const elapsedSecs = Math.max(0, Math.floor((serverNow - serverStartTime) / 1000));
+                    startTimer(elapsedSecs);
                 }
             }
 
@@ -475,13 +529,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const startPhase = useCallback(async (phaseNum: number) => {
         if (!session) return;
 
-        // Capture current phase's elapsed time BEFORE clearing state
+        // Capture current phase's elapsed time BEFORE pausing
         const leavingPhaseNum = session.current_phase;
         const leavingElapsed = elapsedSeconds;
 
-        // IMMEDIATELY stop the current timer by clearing phaseStartTime
-        // This prevents the old phase's timer from continuing to tick
-        setPhaseStartTime(null);
+        // IMMEDIATELY pause the current timer
+        pauseTimer();
 
         // Clear previous phase result when switching phases
         setPhaseResult(null);
@@ -504,14 +557,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (res.ok) {
                 const data: StartPhaseResponse = await res.json();
 
-                // Use the accumulated elapsed_seconds from the server (pause/resume)
-                // This is the total time spent on this phase across all sessions
-                const accumulatedSeconds = data.elapsed_seconds ?? 0;
-
-                // Set local start time based on accumulated time
-                // Timer will resume from where we left off
-                const localStartTime = Date.now() - (accumulatedSeconds * 1000);
-
                 // Update session first, including any draft responses
                 setSession(prev => {
                     if (!prev) return null;
@@ -522,7 +567,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                         // Update or create the phase entry with draft responses
                         const existingPhase = updatedPhases[data.phase_name];
                         if (existingPhase) {
-                            // Only update responses if the phase isn't already passed (don't overwrite passed data)
+                            // Only update responses if the phase isn't already passed
                             if (existingPhase.status !== 'passed') {
                                 updatedPhases[data.phase_name] = {
                                     ...existingPhase,
@@ -547,17 +592,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     return { ...prev, current_phase: phaseNum, phases: updatedPhases };
                 });
                 setCurrentPhaseResponses(data.previous_responses || []);
-                setIsReEditingPhase(false); // Reset re-editing flag when changing phases
 
-                // Set elapsed BEFORE phaseStartTime to avoid a flicker
-                setElapsedSeconds(accumulatedSeconds);
-                // Now start the timer from the accumulated point
-                setPhaseStartTime(localStartTime);
+                // CHECK: Is this phase already completed (passed)?
+                // If so, show stored duration and keep timer STOPPED
+                // Timer will only start when user makes changes (handled separately)
+                const phaseData = session?.phases[data.phase_name];
+                const isPhasePassed = phaseData?.status === 'passed';
+
+                if (isPhasePassed) {
+                    // Phase is completed - show stored duration, timer STOPPED
+                    const storedDuration = phaseData?.metrics?.duration_seconds || 0;
+                    stopTimer(Math.round(storedDuration));
+                } else {
+                    // Phase is in progress - start timer from accumulated point
+                    const accumulatedSeconds = data.elapsed_seconds ?? 0;
+                    startTimer(accumulatedSeconds);
+                }
             }
         } catch (e) {
             console.error("Failed to start phase", e);
         }
-    }, [session, elapsedSeconds, currentPhaseResponses]);
+    }, [session, elapsedSeconds, currentPhaseResponses, pauseTimer, startTimer, stopTimer]);
 
     const submitPhase = useCallback(async (responses: PhaseResponse[]) => {
         if (!session) return;
@@ -590,6 +645,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     [currentPhaseDef.name]: result.phase_score
                 };
 
+                // Preserve existing history
+                const existingPhase = prev.phases[currentPhaseDef.name];
+                const existingHistory = existingPhase?.history || [];
+                const newHistory = [...existingHistory];
+
+                // Only add to history if there was a REAL retry (responses changed)
+                // Don't add when just clicking "Review Evaluation" (same responses)
+                const existingResponses = existingPhase?.responses || [];
+                const hasChanges = responses.some((r, i) => {
+                    const existing = existingResponses[i];
+                    return !existing || r.a !== existing.a || r.hint_used !== existing.hint_used;
+                });
+
+                // If there was a previous attempt with a valid score AND responses changed, add it to history
+                if (hasChanges && existingPhase?.metrics?.ai_score && existingPhase.metrics.ai_score > 0) {
+                    newHistory.push(existingPhase.metrics);
+                }
+
                 const updatedPhases = {
                     ...prev.phases,
                     [currentPhaseDef.name]: {
@@ -614,7 +687,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                         feedback: result.feedback,
                         rationale: result.rationale,
                         strengths: result.strengths,
-                        improvements: result.improvements
+                        improvements: result.improvements,
+                        history: newHistory
                     }
                 };
 
@@ -636,7 +710,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             setPhaseResult(result);
             setCurrentPhaseResponses(responses);
-            setIsReEditingPhase(false); // Reset re-editing flag after submission
+            // Stop the timer after successful submission
+            stopTimer();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error submitting phase');
         } finally {
@@ -655,7 +730,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (phaseResult.is_final_phase) {
                 setHighestUnlockedPhase(Object.keys(phaseConfig).length + 1);
                 setPhaseResult(null);
-                setPhaseStartTime(null);
+                stopTimer();
                 await curatePrompt();
                 return { navigateTo: '/curate' };
             } else {
@@ -766,7 +841,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setPhaseResult(null);
         setHighestUnlockedPhase(1);
         setElapsedSeconds(0);
-        setPhaseStartTime(null);
+        stopTimer();
         setCuratedPrompt('');
         setGeneratedImageUrl('');
     };
