@@ -100,6 +100,7 @@ interface AppContextType {
     submitPitchImage: (finalPrompt: string, file: File) => Promise<void>;
     resetToStart: () => void;
     fetchLeaderboard: () => Promise<void>;
+    resumeTimer: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -317,6 +318,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Wrapper for setCurrentPhaseResponses - manages timer for editing completed phases
     const setCurrentPhaseResponses = useCallback((responses: PhaseResponse[]) => {
+        // Prevent timer logic from triggering during submission or while result modal is open
+        if (loading || phaseResult) {
+            setCurrentPhaseResponsesInternal(responses);
+            return;
+        }
+
         // Check if current phase is completed (passed)
         const currentPhaseNum = session?.current_phase;
         const phaseName = currentPhaseNum ? phaseConfig[currentPhaseNum]?.name : null;
@@ -342,7 +349,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
 
         setCurrentPhaseResponsesInternal(responses);
-    }, [session, phaseConfig, timerState, startTimer, stopTimer]);
+    }, [session, phaseConfig, timerState, loading, phaseResult, startTimer, stopTimer]);
 
     // Fetch leaderboard periodically
     useEffect(() => {
@@ -617,7 +624,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const submitPhase = useCallback(async (responses: PhaseResponse[]) => {
         if (!session) return;
         setLoading(true);
-
+        pauseTimer(); // Added explicit pause to ensure timer stops visually immediately
         try {
             const currentPhaseDef = phaseConfig[session.current_phase];
             const res = await fetch(getApiUrl('/api/submit-phase'), {
@@ -659,7 +666,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 });
 
                 // If there was a previous attempt with a valid score AND responses changed, add it to history
-                if (hasChanges && existingPhase?.metrics?.ai_score && existingPhase.metrics.ai_score > 0) {
+                // We check if weighted_score is a number to ensure we have a valid previous attempt to store
+                if (hasChanges && existingPhase?.metrics && typeof existingPhase.metrics.weighted_score === 'number') {
                     newHistory.push(existingPhase.metrics);
                 }
 
@@ -714,10 +722,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             stopTimer();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error submitting phase');
+            resumeTimer(); // Resume timer if submission failed so player can fix and retry
         } finally {
             setLoading(false);
         }
-    }, [session, phaseConfig, elapsedSeconds]);
+    }, [session, phaseConfig, elapsedSeconds, pauseTimer, stopTimer]);
 
     const handleFeedbackAction = useCallback(async (action: 'CONTINUE' | 'RETRY'): Promise<{ navigateTo?: string }> => {
         if (!phaseResult || !session) return {};
@@ -894,7 +903,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         regeneratePrompt,
         submitPitchImage,
         resetToStart,
-        fetchLeaderboard
+        fetchLeaderboard,
+        resumeTimer
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

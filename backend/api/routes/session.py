@@ -321,6 +321,10 @@ async def submit_phase(req: SubmitPhaseRequest):
     # Check for retries
     retries, prev_feedback = _get_retry_info(session, req.phase_name)
     
+    # PRE-evaluation check for max retries (saves AI tokens)
+    if retries > settings.MAX_RETRIES:
+        raise HTTPException(status_code=400, detail=f"Maximum retries ({settings.MAX_RETRIES}) exceeded for this phase.")
+    
     # Calculate token count
     total_chars = sum(len(r.a) for r in req.responses)
     tokens = total_chars // 4
@@ -380,10 +384,6 @@ async def submit_phase(req: SubmitPhaseRequest):
             responses=[r.model_dump() for r in req.responses],
             previous_feedback=prev_feedback
         )
-    
-    # Post-evaluation check for max retries
-    if retries > settings.MAX_RETRIES:
-        raise HTTPException(status_code=400, detail=f"Maximum retries ({settings.MAX_RETRIES}) exceeded for this phase.")
 
     # Calculate Hint Penalty
     total_hint_penalty = 0.0
