@@ -256,7 +256,7 @@ Return PURE JSON.
         result["score"] = max(0.0, min(1.0, float(result["score"])))
         result["usage"] = usage
         return result
-    except:
+    except Exception:
         return {
             "score": 0.0,
             "rationale": "Evaluation Processing Error",

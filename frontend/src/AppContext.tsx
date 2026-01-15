@@ -121,8 +121,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Phase State
     const [phaseResult, setPhaseResult] = useState<SubmitPhaseResponse | null>(null);
-    const [currentPhaseResponses, setCurrentPhaseResponses] = useState<PhaseResponse[]>([]);
+    const [currentPhaseResponses, setCurrentPhaseResponsesInternal] = useState<PhaseResponse[]>([]);
     const [highestUnlockedPhase, setHighestUnlockedPhase] = useState(1);
+    const [isReEditingPhase, setIsReEditingPhase] = useState(false);
 
     // Timer State
     const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -244,7 +245,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const phaseName = currentPhaseNum ? phaseConfig[currentPhaseNum]?.name : null;
         const isPhaseComplete = phaseName && session?.phases[phaseName]?.status === 'passed';
 
-        if (session && phaseStartTime && !phaseResult && !loading && isWarRoom && !isPhaseComplete) {
+        // Timer runs if: phase not complete OR user is re-editing a completed phase
+        const shouldTimerRun = !isPhaseComplete || isReEditingPhase;
+
+        if (session && phaseStartTime && !phaseResult && !loading && isWarRoom && shouldTimerRun) {
             interval = setInterval(() => {
                 // Only tick if the document is visible
                 if (document.visibilityState === 'visible') {
@@ -253,7 +257,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }, 1000);
         }
         return () => clearInterval(interval);
-    }, [session, phaseStartTime, phaseResult, loading, location.pathname]);
+    }, [session, phaseStartTime, phaseResult, loading, location.pathname, isReEditingPhase, phaseConfig]);
+
+    // Wrapper for setCurrentPhaseResponses that detects re-editing of completed phases
+    const setCurrentPhaseResponses = useCallback((responses: PhaseResponse[]) => {
+        // Check if current phase is completed
+        const currentPhaseNum = session?.current_phase;
+        const phaseName = currentPhaseNum ? phaseConfig[currentPhaseNum]?.name : null;
+        const isPhaseComplete = phaseName && session?.phases[phaseName]?.status === 'passed';
+
+        // If phase is complete and responses are changing, set re-editing flag and restart timer
+        if (isPhaseComplete && !isReEditingPhase) {
+            // Check if responses actually changed
+            const existingResponses = session?.phases[phaseName]?.responses || [];
+            const hasChanges = responses.some((r, i) => {
+                const existing = existingResponses[i];
+                return existing && (r.a !== existing.a || r.hint_used !== existing.hint_used);
+            });
+
+            if (hasChanges) {
+                setIsReEditingPhase(true);
+                // Restart timer from current elapsed time
+                if (!phaseStartTime) {
+                    setPhaseStartTime(Date.now() - (elapsedSeconds * 1000));
+                }
+            }
+        }
+
+        setCurrentPhaseResponsesInternal(responses);
+    }, [session, phaseConfig, isReEditingPhase, phaseStartTime, elapsedSeconds]);
 
     // Fetch leaderboard periodically
     useEffect(() => {
@@ -461,6 +493,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 // Update session first
                 setSession(prev => prev ? { ...prev, current_phase: phaseNum } : null);
                 setCurrentPhaseResponses(data.previous_responses || []);
+                setIsReEditingPhase(false); // Reset re-editing flag when changing phases
 
                 // Set elapsed BEFORE phaseStartTime to avoid a flicker
                 setElapsedSeconds(accumulatedSeconds);
@@ -470,7 +503,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (e) {
             console.error("Failed to start phase", e);
         }
-    }, [session, elapsedSeconds]);
+    }, [session, elapsedSeconds, currentPhaseResponses]);
 
     const submitPhase = useCallback(async (responses: PhaseResponse[]) => {
         if (!session) return;
@@ -549,6 +582,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             setPhaseResult(result);
             setCurrentPhaseResponses(responses);
+            setIsReEditingPhase(false); // Reset re-editing flag after submission
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error submitting phase');
         } finally {

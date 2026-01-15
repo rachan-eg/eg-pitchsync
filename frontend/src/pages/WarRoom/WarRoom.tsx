@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../../AppContext';
 import type { SessionState, PhaseDefinition } from '../../types';
 import './WarRoom.css';
@@ -37,6 +37,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
 }) => {
     const { totalTokens, startPhase, loading } = useApp();
     const navigate = useNavigate();
+    const location = useLocation();
 
     if (!session) {
         return (
@@ -102,7 +103,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                     {(() => {
                         const totalPhases = Object.keys(phaseConfig).length;
                         const isCurationUnlocked = highestUnlockedPhase > totalPhases;
-                        const isActive = window.location.pathname === '/curate';
+                        const isActive = location.pathname === '/curate';
 
                         return (
                             <button

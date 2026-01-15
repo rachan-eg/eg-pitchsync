@@ -153,7 +153,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
         }
     };
 
-    const handleKeyPress = (e: React.KeyboardEvent) => {
+    const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleRegenerate();
@@ -259,7 +259,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                     type="text"
                                     value={additionalNotes}
                                     onChange={(e) => setAdditionalNotes(e.target.value)}
-                                    onKeyPress={handleKeyPress}
+                                    onKeyDown={handleKeyDown}
                                     placeholder="Refine: 'cinematic', 'neon glow', 'abstract'..."
                                     className="curate-refine__input"
                                     disabled={isRegenerating}

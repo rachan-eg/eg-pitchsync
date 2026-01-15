@@ -46,6 +46,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const [isEditing, setIsEditing] = useState(true);
     const [hintModalOpen, setHintModalOpen] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const lastPhaseIdRef = useRef<string | null>(null);
 
     // Initialize or sync answers and hints
     useEffect(() => {
@@ -60,12 +61,16 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
             return prev?.hint_used || false;
         });
         setAnswers(initialAnsw);
-        setOriginalAnswers([...initialAnsw]);
         setHintsUsed(initialHints);
-        setOriginalHintsUsed([...initialHints]);
-        setCurrentQuestionIndex(0);
 
-
+        // Only reset originals and question index if phase changes
+        const currentId = phase.id || phase.name;
+        if (currentId !== lastPhaseIdRef.current) {
+            setOriginalAnswers([...initialAnsw]);
+            setOriginalHintsUsed([...initialHints]);
+            setCurrentQuestionIndex(0);
+            lastPhaseIdRef.current = currentId;
+        }
     }, [phase, initialResponses]);
 
     const handleChange = (val: string) => {

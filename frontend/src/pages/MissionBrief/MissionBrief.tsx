@@ -91,7 +91,7 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
                             </div>
                             <div className="mission-brief__protocol-item">
                                 <div className="mission-brief__protocol-label">Strategic Costs</div>
-                                <div className="mission-brief__protocol-desc">-50 PTS per retry. Hints incur deductions.</div>
+                                <div className="mission-brief__protocol-desc">-10 PTS per retry. Hints incur deductions (-50 PTS each).</div>
                             </div>
                             <div className="mission-brief__protocol-item">
                                 <div className="mission-brief__protocol-label">Efficiency Bonus</div>
