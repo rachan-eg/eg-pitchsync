@@ -1,0 +1,104 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Customer Problem & Value Proposition",
+        "description": "Define the Customer's Operational and Compliance Pain Points and Your Unique Solution",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "CISO, Chief Compliance Officer, CMIO, General Counsel",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What operational and financial problems are you solving for your customers?",
+                "criteria": "Compliance risk specificity, audit impact clarity, healthcare role identification, regulatory cascade connection, scenario realism",
+                "hint_text": "Describe the compliance and audit risks healthcare organizations face with external AI services. Quantify the impact when hospitals cannot leverage AI due to data sovereignty concerns. Identify specific customer roles affected. Show how opaque external processing cascades into regulatory exposure. Connect to real audit and compliance scenarios.",
+                "ideal_answer": "Healthcare organizations need AI assistance for clinical knowledge access and decision support but cannot use external platforms because data processing happens in opaque black boxes beyond institutional control. Compliance officers cannot demonstrate to auditors exactly how patient information, clinical documents, or internal protocols are handled, logged, or retained when processed externally. Even providers claiming no training on customer data lack transparency into intermediate processing, embeddings storage, or jurisdictional exposure. Organizations face regulatory violation risks from unverifiable external processing, audit failures when unable to prove data isolation, legal exposure from cross-border data access laws, and operational paralysis as AI innovation remains blocked despite competitive pressure and workflow efficiency needs.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What have customers tried that fails to prevent these problems?",
+                "criteria": "External platform limitation identification, opacity problem explanation, control gap articulation, audit requirement clarity, trust deficit description",
+                "hint_text": "Name specific approaches hospitals have attempted with external platforms. Explain why opacity in external processing creates fundamental compliance gaps. Describe the lack of control and visibility that troubles customers. Show the uncertainty around data handling and retention. Focus on compliance and legal team concerns.",
+                "ideal_answer": "Hospitals attempted using managed AI services with contractual assurances about data privacy, but compliance teams cannot verify claims when processing happens in vendor-controlled black boxes. Cloud providers offer data residency options, yet lack transparency into how prompts, embeddings, telemetry, or intermediate representations are logged, cached, or retained. Organizations need complete visibility into data flows for regulatory audits, but external platforms provide no observability into model-level processing or infrastructure handling. These approaches fail because healthcare compliance demands proving data isolation through auditable evidence, not trusting vendor promises about invisible processing occurring beyond institutional boundaries and legal jurisdiction.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why does your solution deliver value that alternatives cannot match?",
+                "criteria": "Transparency emphasis, external opacity contrast clarity, auditability focus, compliance outcome difference, analogy effectiveness",
+                "hint_text": "Explain your core transparency and control approach. Contrast with how external platforms fundamentally lack visibility. Describe the auditable experience customers receive. Show the compliance outcome difference customers notice. Use analogies that resonate with compliance-focused healthcare leaders.",
+                "ideal_answer": "Our solution operates entirely within hospital infrastructure using open-source models, providing complete visibility into every data processing step from prompt ingestion through retrieval to response generation. While external platforms process data in opaque environments customers cannot audit, we provide deterministic control where compliance teams trace exact data flows, verify nothing leaves security boundaries, and demonstrate complete isolation during regulatory reviews. Compliance officers experience the difference—full audit trails showing precisely how patient information was processed, storage locations for all embeddings and logs under institutional control, and provable evidence that sensitive data never crossed external networks. Organizations gain AI productivity benefits while maintaining compliance confidence through transparent, auditable, controllable processing.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Solution Design & Customer Experience",
+        "description": "Explain How Customers Use Your Solution and Experience Its Compliance Benefits",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "CISO, Chief Compliance Officer, IT Infrastructure Directors, Clinical Informatics Leaders",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "What information does your solution use to protect customer projects?",
+                "criteria": "Data boundary clarity, local processing transparency, visibility specificity, auditability emphasis, sovereignty demonstration",
+                "hint_text": "Identify what healthcare data remains completely within institutional boundaries. Explain how processing happens transparently without external dependencies. Describe what visibility customers receive into data handling. Show how complete observability supports compliance requirements. Address customer concerns about data flow transparency.",
+                "ideal_answer": "Our solution uses hospital's clinical knowledge bases, medical protocols, regulatory documents, and policy libraries loaded directly onto institutional servers. All processing happens locally using open-source models deployed on-premise—prompts, embeddings, retrievals, and responses never transmit externally. Customers receive complete visibility through detailed logs showing exact data flows at every processing stage, storage locations for all generated embeddings and cached responses, and network monitoring proving zero external communication. Unlike external platforms where data handling remains invisible, compliance teams audit precisely how patient information moves through the system, verify all artifacts stay within controlled infrastructure, and demonstrate complete data sovereignty during regulatory reviews with documented evidence rather than vendor attestations.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "How do customers interact with your solution in their daily workflows?",
+                "criteria": "Secure access clarity, invisible compliance emphasis, independence demonstration, user confidence building, continuous verification capability",
+                "hint_text": "Describe how clinical staff access the chatbot within secure boundaries. Explain how compliance controls remain invisible to authorized users. Show how it operates independently without external dependencies. Address the confidence users gain from compliant infrastructure. Illustrate how compliance teams continuously verify proper operation.",
+                "ideal_answer": "Clinical staff access chatbot through internal network portals using existing authentication, asking questions about protocols, policies, or clinical guidance naturally. Compliance controls operate invisibly—role-based access ensures staff only query authorized knowledge bases while audit systems log all interactions for regulatory review. System functions completely independently without internet connectivity, processing queries using locally deployed models and internal document repositories. Staff gain confidence asking sensitive questions knowing legal and compliance teams approved transparent architecture. Compliance officers continuously verify proper operation through audit dashboards showing query patterns, data access logs confirming boundary enforcement, and system reports proving all processing stayed within controlled infrastructure without external exposure.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "How do you ensure customers can trust and rely on your solution?",
+                "criteria": "Independent verification emphasis, architectural transparency, oversight demonstration, audit capability description, evidence-based trust",
+                "hint_text": "Address how customers independently verify compliance claims. Explain architectural transparency and data flow visibility. Describe how organizations maintain complete oversight. Show ongoing audit validation capabilities. Build confidence through verifiable evidence.",
+                "ideal_answer": "Customers trust through independent verification where their own audit teams inspect open-source code, trace data flows through transparent architecture, and monitor network traffic confirming local-only processing. We provide complete architectural documentation showing exactly how prompts are processed, where embeddings are stored, and how responses are generated—all within institutional control. Organizations maintain total oversight through administrative access to all system components, ability to inspect any processing stage, and full control over data retention and deletion. Ongoing validation happens through automated compliance monitoring alerting teams to any boundary violations, detailed audit trails supporting regulatory reviews, and penetration testing confirming isolation. Trust builds through independently verifiable evidence customers control, not promises about invisible external processing.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Customer Success & Market Positioning",
+        "description": "Demonstrate Measurable Customer Value and Competitive Differentiation",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "Chief Compliance Officer, CISO, Hospital Administrator, General Counsel",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What financial returns do customers achieve from using your solution?",
+                "criteria": "Regulatory risk emphasis, compliance timeline realism, audit value clarity, violation cost inclusion, strategic benefit articulation",
+                "hint_text": "Describe returns including regulatory risk avoidance. Provide realistic timelines for compliance and operational results. Show both immediate audit value and ongoing productivity gains. Explain ROI including avoided violation costs. Include risk mitigation benefits meaningful to legal and compliance leaders.",
+                "ideal_answer": "Customers achieve immediate compliance value by enabling AI-powered knowledge access without regulatory violation risks that could cost millions in penalties and legal exposure. Financial returns appear through avoided HIPAA violation fines from unverifiable external processing, operational efficiency as clinical staff access institutional knowledge instantly, and competitive advantages deploying AI innovation securely. ROI calculation includes regulatory risk avoidance—single prevented violation often justifies multi-year investment—plus productivity improvements from compliant AI assistance. Beyond direct returns, customers gain board confidence deploying auditable AI infrastructure, regulatory audit advantages through transparent provable compliance, legal risk reduction from complete data sovereignty, and strategic positioning balancing healthcare innovation with absolute regulatory adherence and institutional control.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What measurable outcomes demonstrate how customers succeed with your solution?",
+                "criteria": "Healthcare compliance scenario specificity, stakeholder outcome variety, risk transformation clarity, audit context inclusion, strategic positioning connection",
+                "hint_text": "Describe specific healthcare compliance scenarios before and after implementation. Include metrics meaningful to compliance, legal, and operational stakeholders. Show both risks eliminated and capabilities enabled. Reference regulatory requirements and audit contexts. Connect outcomes to strategic objectives around compliant innovation.",
+                "ideal_answer": "Regional hospital system needed AI-powered clinical knowledge access but legal counsel blocked external platforms due to unverifiable data handling creating audit exposure. Before implementation, staff manually searched protocol databases while compliance officers worried about unauthorized external AI usage they couldn't monitor. Organization deployed on-premise solution where audit teams verified complete transparency through architectural review and data flow inspection. Within weeks, clinical staff accessed institutional knowledge through compliant chatbot while compliance monitoring confirmed boundary enforcement. During regulatory audit, compliance officer presented complete data flow documentation and audit trails proving patient information never left institutional control, receiving auditor commendation. Legal counsel presented solution to board demonstrating competitive AI capabilities achieved without regulatory exposure competitors risked through opaque external platforms.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "Why do customers choose you and how do they get started?",
+                "criteria": "Compliance evaluation accuracy, transparency positioning clarity, validation-first implementation realism, strategic investment context, compliance-driven expansion logic",
+                "hint_text": "Explain what healthcare organizations evaluate from compliance perspective. Describe your positioning on transparency and control requirements. Show the path from compliance validation to operational deployment. Address investment in context of regulatory risk mitigation. Illustrate how compliance approval enables organization-wide adoption.",
+                "ideal_answer": "Healthcare organizations evaluate AI solutions on complete auditability and deterministic control over sensitive data processing. They choose us because only transparent on-premise architecture provides verifiable evidence that patient information and institutional knowledge never leave controlled boundaries, unlike external platforms operating as opaque black boxes. Getting started involves compliance validation where legal, audit, and security teams inspect architecture, verify data flow transparency, and confirm boundary isolation before clinical deployment. Compliance officer and general counsel approval based on verified auditability creates organizational confidence enabling deployment. Investment reflects strategic compliance infrastructure comparable to other critical regulatory systems. Successful compliance validation enables rapid expansion as audit concerns are comprehensively resolved, allowing AI adoption across healthcare workflows previously blocked by regulatory uncertainty.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}
