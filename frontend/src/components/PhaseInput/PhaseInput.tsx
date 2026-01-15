@@ -266,9 +266,11 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                 <footer className="pi-footer">
                     <div className="pi-footer__left">
                         <div className="pi-char-count">
-                            <span className="pi-char-label">Total Chars</span>
+                            <span className="pi-char-label" style={{ color: currentValid ? 'var(--text-muted)' : 'rgba(192, 190, 190, 0.8)' }}>
+                                {currentValid ? 'TOTAL CHARACTERS' : 'MINIMUM CHARACTERS: 100'}
+                            </span>
                             <div className="pi-char-row">
-                                <span className={`pi-char-value ${currentValid ? 'pi-char-value--ok' : ''}`}>
+                                <span className={`pi-char-value ${currentValid ? 'pi-char-value--ok' : 'pi-char-value--warn'}`}>
                                     {currentAnswer.length}
                                 </span>
                             </div>
