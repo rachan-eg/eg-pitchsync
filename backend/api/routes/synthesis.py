@@ -190,10 +190,19 @@ async def submit_pitch_image(
         session.completed_at = datetime.now()
         session.is_complete = True
         
+        # Update upload history (max 3)
+        if not hasattr(session, 'uploaded_images') or session.uploaded_images is None:
+            session.uploaded_images = []
+        
+        if image_url not in session.uploaded_images:
+            session.uploaded_images.append(image_url)
+            session.uploaded_images = session.uploaded_images[-3:]
+        
         update_session(session)
         
         return {
             "image_url": image_url,
+            "uploadedImages": session.uploaded_images, # Include for frontend sync
             "prompt_used": edited_prompt,
             "total_score": int(session.total_score),
             "phase_breakdown": session.phase_scores,

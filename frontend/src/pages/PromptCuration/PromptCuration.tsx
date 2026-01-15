@@ -408,8 +408,12 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                     accept="image/*"
                                     onChange={handleFileChange}
                                     className="curate-upload__input"
+                                    disabled={uploadedImages.length >= 3}
                                 />
-                                <label htmlFor="pitch-visual-upload" className="curate-upload__dropzone">
+                                <label
+                                    htmlFor="pitch-visual-upload"
+                                    className={`curate-upload__dropzone ${uploadedImages.length >= 3 ? 'curate-upload__dropzone--frozen' : ''}`}
+                                >
                                     <div className="curate-upload__icon"><Icons.Upload /></div>
                                     <span className="curate-upload__text">
                                         {selectedFile ? selectedFile.name : "Click to Select Image"}

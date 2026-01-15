@@ -87,6 +87,7 @@ class SessionState(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
     is_complete: bool = False
+    uploaded_images: List[str] = []  # NEW: For persisting multiple pitch visuals
 
     class Config:
         arbitrary_types_allowed = True

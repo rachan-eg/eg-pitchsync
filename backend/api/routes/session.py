@@ -71,6 +71,7 @@ async def init_session(req: InitRequest):
                 extra_ai_tokens=existing.extra_ai_tokens,
                 phase_data={name: p.dict() for name, p in existing.phases.items()},
                 final_output=existing.final_output,
+                uploadedImages=getattr(existing, 'uploaded_images', []),
                 current_server_time=datetime.now(timezone.utc)
             )
         else:

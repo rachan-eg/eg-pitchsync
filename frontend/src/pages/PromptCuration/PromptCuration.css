@@ -514,6 +514,17 @@
     background: rgba(139, 92, 246, 0.1);
 }
 
+.curate-upload__dropzone--frozen {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
+.curate-upload__dropzone--frozen .curate-upload__icon {
+    color: var(--text-muted) !important;
+}
+
 .curate-upload__icon {
     color: var(--accent-primary, #8b5cf6);
 }
@@ -864,7 +875,6 @@
     gap: 1rem;
     padding: 0 1rem;
     overflow-x: auto;
-    margin-bottom: 0.75rem;
 }
 
 .curate-previous__thumbnails {

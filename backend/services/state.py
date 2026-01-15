@@ -47,6 +47,14 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
         except:
             phase_elapsed_seconds = {}
     
+    # Load uploaded_images (with backwards compat)
+    uploaded_images = []
+    if hasattr(db_session, 'uploaded_images_json') and db_session.uploaded_images_json:
+        try:
+            uploaded_images = json.loads(db_session.uploaded_images_json, strict=False)
+        except:
+            uploaded_images = []
+    
     # Convert ISO strings back to datetime objects
     phase_start_times = {}
     for k, v in phase_start_times_dict.items():
@@ -75,6 +83,7 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
         phase_scores=phase_scores,
         phase_start_times=phase_start_times,
         phase_elapsed_seconds=phase_elapsed_seconds,
+        uploaded_images=uploaded_images,
         
         is_complete=db_session.is_complete,
         created_at=db_session.created_at,
@@ -107,6 +116,7 @@ def _domain_to_db(session: SessionState) -> SessionData:
         phase_scores_json=json.dumps(session.phase_scores, default=str),
         phase_start_times_json=json.dumps(session.phase_start_times, default=str),
         phase_elapsed_seconds_json=elapsed_json,
+        uploaded_images_json=json.dumps(getattr(session, 'uploaded_images', []), default=str),
         is_complete=session.is_complete,
         created_at=session.created_at,
         updated_at=datetime.now()
@@ -151,6 +161,7 @@ def update_session(session: SessionState) -> SessionState:
             existing.phase_scores_json = db_row.phase_scores_json
             existing.phase_start_times_json = db_row.phase_start_times_json
             existing.phase_elapsed_seconds_json = db_row.phase_elapsed_seconds_json
+            existing.uploaded_images_json = db_row.uploaded_images_json
             existing.is_complete = db_row.is_complete
             existing.updated_at = datetime.now()
             

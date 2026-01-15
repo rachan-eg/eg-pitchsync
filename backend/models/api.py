@@ -37,6 +37,7 @@ class InitResponse(BaseModel):
     extra_ai_tokens: int = 0
     phase_data: Optional[Dict[str, Any]] = None
     final_output: Optional[FinalOutput] = None
+    uploadedImages: Optional[List[str]] = None  # NEW: For persisting multiple pitch visuals
     current_server_time: Optional[datetime] = None
 
 

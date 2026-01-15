@@ -338,6 +338,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setPhaseConfig(data.phases);
             setScoringInfo(data.scoring_info);
 
+            if (data.uploadedImages && data.uploadedImages.length > 0) {
+                const urls = data.uploadedImages.map(u => getFullUrl(u));
+                setUploadedImages(urls);
+                setActiveRevealImage(urls[urls.length - 1]);
+            }
+
             if (data.final_output) {
                 if (data.final_output.image_prompt) {
                     setCuratedPrompt(data.final_output.image_prompt);
