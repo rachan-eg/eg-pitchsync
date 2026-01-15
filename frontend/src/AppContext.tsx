@@ -659,7 +659,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 });
 
                 // If there was a previous attempt with a valid score AND responses changed, add it to history
-                if (hasChanges && existingPhase?.metrics?.ai_score && existingPhase.metrics.ai_score > 0) {
+                // We check if weighted_score is a number to ensure we have a valid previous attempt to store
+                if (hasChanges && existingPhase?.metrics && typeof existingPhase.metrics.weighted_score === 'number') {
                     newHistory.push(existingPhase.metrics);
                 }
 
