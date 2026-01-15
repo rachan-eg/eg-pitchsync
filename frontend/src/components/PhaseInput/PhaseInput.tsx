@@ -387,14 +387,19 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
                         <div className="pi-scoring-item">
                             <span>Hint Penalty</span>
-                            <span className="pi-scoring-val" style={{ color: 'var(--danger)' }}>
-                                -{hintsUsed.reduce((acc, used, idx) => {
+                            {(() => {
+                                const totalPenalty = hintsUsed.reduce((acc, used, idx) => {
                                     if (!used) return acc;
                                     const q = phase.questions[idx];
                                     const val = typeof q !== 'string' ? (q.hint_penalty || 50) : 50;
                                     return acc + val;
-                                }, 0)} PTS
-                            </span>
+                                }, 0);
+                                return (
+                                    <span className="pi-scoring-val" style={{ color: totalPenalty > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>
+                                        {totalPenalty > 0 ? `-${totalPenalty}` : '0'} PTS
+                                    </span>
+                                );
+                            })()}
                         </div>
 
                         <div className="pi-scoring-item">
@@ -402,12 +407,15 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             {(() => {
                                 const pName = phaseConfig[phaseNumber]?.name;
                                 const existing = session?.phases[pName];
-                                const history = existing?.history || [];
-                                const rCount = existing ? (existing.metrics.retries || 0) : history.length;
+
+                                // Use backend's authoritative metrics.retries value directly.
+                                // This ensures the display matches what the backend will enforce.
+                                // Backend: Initial=0, R1=1, R2=2, R3=3. Blocked at R4 (4 > 3).
+                                const displayRetries = existing?.metrics?.retries || 0;
 
                                 return (
-                                    <span className="pi-scoring-val" style={{ color: rCount > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                                        {rCount} <span style={{ fontSize: '0.8em', opacity: 0.7 }}>/ 3</span>
+                                    <span className="pi-scoring-val" style={{ color: displayRetries > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                                        {displayRetries} <span style={{ fontSize: '0.8em', opacity: 0.7 }}>/ 3</span>
                                     </span>
                                 );
                             })()}
@@ -418,15 +426,29 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             const pName = phaseConfig[phaseNumber]?.name;
                             const existing = session?.phases[pName];
                             const history = existing?.history || [];
+                            const currentMetrics = existing?.metrics;
 
-                            if (history.length > 0) {
+                            // Build complete attempts list: history + current attempt
+                            const allAttempts: Array<{ weighted_score: number; isCurrent?: boolean }> = [
+                                ...history.map(h => ({ weighted_score: h.weighted_score })),
+                            ];
+
+                            // Add current attempt if it has been evaluated
+                            if (currentMetrics && typeof currentMetrics.weighted_score === 'number') {
+                                allAttempts.push({ weighted_score: currentMetrics.weighted_score, isCurrent: true });
+                            }
+
+                            if (allAttempts.length > 0) {
                                 return (
                                     <div className="pi-attempts-list">
                                         <div className="pi-scoring-separator" style={{ margin: '0.5rem 0', borderTop: '1px dashed var(--border-light)', opacity: 0.5 }} />
-                                        {history.map((h, idx) => (
+                                        {allAttempts.map((h, idx) => (
                                             <div key={idx} className="pi-attempt-item">
-                                                <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>Retry #{idx + 1}</span>
-                                                <span className="pi-scoring-val" style={{ background: 'transparent', padding: 0 }}>{Math.round(h.weighted_score)} PTS</span>
+                                                <span style={{ color: h.isCurrent ? 'var(--primary)' : 'var(--text-muted)', fontSize: '0.7rem' }}>
+                                                    {idx === 0 ? 'Initial Attempt' : `Retry #${idx}`}
+                                                    {h.isCurrent && ' (Current)'}
+                                                </span>
+                                                <span className="pi-scoring-val" style={{ background: 'transparent', padding: 0, color: h.isCurrent ? 'var(--primary)' : undefined }}>{Math.round(h.weighted_score)} PTS</span>
                                             </div>
                                         ))}
                                     </div>

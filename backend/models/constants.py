@@ -9,71 +9,104 @@ import os
 from typing import Dict, List, Any
 
 # =============================================================================
-# VAULT LOADING LOGIC
+# VAULT LOADING LOGIC (Hierarchical)
 # =============================================================================
 
-def load_vault_data(filename: str) -> Any:
-    """Loads JSON data from the backend/vault directory."""
-    # Get the absolute path to the vault directory relative to this file
+def get_vault_root() -> str:
+    """Returns the absolute path to the vault directory."""
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    vault_path = os.path.join(current_dir, "..", "vault", filename)
+    return os.path.abspath(os.path.join(current_dir, "..", "vault"))
+
+def discover_usecases() -> List[Dict[str, Any]]:
+    """Scans the vault directory for use-case folders and loads their data."""
+    vault_root = get_vault_root()
+    usecases = []
     
-    try:
-        with open(vault_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        print(f"CRITICAL WARNING: Vault file not found at {vault_path}")
-        return []
-    except json.JSONDecodeError:
-        print(f"CRITICAL WARNING: Invalid JSON in {vault_path}")
+    if not os.path.exists(vault_root):
+        print(f"CRITICAL WARNING: Vault root not found at {vault_root}")
         return []
 
-# =============================================================================
-# THEME REPOSITORY
-# =============================================================================
-
-THEME_REPO: List[Dict[str, Any]] = load_vault_data("themes.json")
-
-# =============================================================================
-# USE CASE REPOSITORY
-# =============================================================================
-
-# Load raw usecases
-_raw_usecases = load_vault_data("usecases.json")
-
-# Process usecases to embed theme data based on theme_id
-USECASE_REPO: List[Dict[str, Any]] = []
-
-# Create a lookup map for themes
-_theme_map = {theme["id"]: theme for theme in THEME_REPO}
-
-for uc in _raw_usecases:
-    # enriching the usecase with the full theme object if found
-    theme_id = uc.get("theme_id")
-    if theme_id and theme_id in _theme_map:
-        # We can either embed it or just ensure it exists.
-        # The frontend/types expects 'theme' might be separate, 
-        # but the request was "keep them separate then logic brings them together".
-        # For the /api/init endpoint, we often return the specific theme.
-        # Let's keep the object clean but fully validated.
-        pass
+    for item in os.listdir(vault_root):
+        item_path = os.path.join(vault_root, item)
+        if os.path.isdir(item_path):
+            usecase_file = os.path.join(item_path, "usecase.json")
+            if os.path.exists(usecase_file):
+                try:
+                    with open(usecase_file, "r", encoding="utf-8") as f:
+                        uc_data = json.load(f)
+                        # Ensure ID matches folder name for predictability
+                        uc_data["id"] = item 
+                        
+                        # Automated Asset Discovery: Logos
+                        logo_dir = os.path.join(item_path, "logo")
+                        logos = []
+                        if os.path.exists(logo_dir):
+                            for logo in os.listdir(logo_dir):
+                                if logo.lower().endswith(('.png', '.jpg', '.jpeg', '.svg', '.webp')):
+                                    # URL path: /vault/<usecase_id>/logo/<filename>
+                                    logos.append(f"/vault/{item}/logo/{logo}")
+                        
+                        uc_data["assets"] = {"logos": logos}
+                        usecases.append(uc_data)
+                except Exception as e:
+                    print(f"Error loading usecase from {item}: {e}")
     
-    USECASE_REPO.append(uc)
+    return usecases
 
+def discover_themes() -> List[Dict[str, Any]]:
+    """Scans the vault directory for themes inside use-case folders."""
+    vault_root = get_vault_root()
+    themes = []
+    
+    for item in os.listdir(vault_root):
+        item_path = os.path.join(vault_root, item)
+        if os.path.isdir(item_path):
+            theme_file = os.path.join(item_path, "theme.json")
+            if os.path.exists(theme_file):
+                try:
+                    with open(theme_file, "r", encoding="utf-8") as f:
+                        theme_data = json.load(f)
+                        # We can either use the ID from file or folder
+                        # Let's ensure it has an ID
+                        if not theme_data.get("id"):
+                            theme_data["id"] = f"{item}_theme"
+                        themes.append(theme_data)
+                except Exception as e:
+                    print(f"Error loading theme from {item}: {e}")
+    
+    return themes
 
 # =============================================================================
-# PHASE DEFINITIONS (Dynamic & Per-Usecase)
+# REPOSITORIES
+# =============================================================================
+
+USECASE_REPO: List[Dict[str, Any]] = discover_usecases()
+THEME_REPO: List[Dict[str, Any]] = discover_themes()
+
+# =============================================================================
+# PHASE DEFINITIONS (Localized)
 # =============================================================================
 
 def get_phases_for_usecase(usecase_id: str) -> Dict[int, Dict[str, Any]]:
-    """Loads phase definitions for a specific usecase from the vault/phases directory."""
-    filename = f"phases/{usecase_id}.json"
-    raw_phases = load_vault_data(filename)
+    """Loads phase definitions from the specific use-case directory."""
+    vault_root = get_vault_root()
+    phase_file = os.path.join(vault_root, usecase_id, "phases.json")
     
-    # If not found or empty, fallback to legacy/construction
-    if not raw_phases:
-        raw_phases = load_vault_data("phases/construction_ai_deviation.json")
-    
+    if not os.path.exists(phase_file):
+        # Fallback to the first available usecase if requested one is missing
+        if USECASE_REPO:
+            fallback_id = USECASE_REPO[0]["id"]
+            phase_file = os.path.join(vault_root, fallback_id, "phases.json")
+        else:
+            return {}
+
+    try:
+        with open(phase_file, "r", encoding="utf-8") as f:
+            raw_phases = json.load(f)
+    except Exception as e:
+        print(f"Error loading phases for {usecase_id}: {e}")
+        return {}
+
     phases_map: Dict[int, Dict[str, Any]] = {}
     if isinstance(raw_phases, dict):
         for k, v in raw_phases.items():
@@ -83,6 +116,6 @@ def get_phases_for_usecase(usecase_id: str) -> Dict[int, Dict[str, Any]]:
                 pass
     return phases_map
 
-# Load default set for global fallback tracking
-PHASE_DEFINITIONS: Dict[int, Dict[str, Any]] = get_phases_for_usecase("construction_ai_deviation")
+# Global fallback for initialization
+PHASE_DEFINITIONS: Dict[int, Dict[str, Any]] = get_phases_for_usecase(USECASE_REPO[0]["id"]) if USECASE_REPO else {}
 
