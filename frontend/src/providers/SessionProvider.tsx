@@ -377,7 +377,22 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                         const existingPhase = updatedPhases[data.phase_name];
                         if (!existingPhase || existingPhase.status !== 'passed') {
                             updatedPhases[data.phase_name] = {
-                                ...(existingPhase || { phase_id: data.phase_id, metrics: {} as any }),
+                                ...(existingPhase || {
+                                    phase_id: data.phase_id,
+                                    metrics: {
+                                        ai_score: 0,
+                                        weighted_score: 0,
+                                        start_time: null,
+                                        end_time: null,
+                                        duration_seconds: 0,
+                                        retries: 0,
+                                        tokens_used: 0,
+                                        time_penalty: 0,
+                                        retry_penalty: 0,
+                                        hint_penalty: 0,
+                                        efficiency_bonus: 0
+                                    } as any
+                                }),
                                 status: 'in_progress' as any,
                                 responses: data.previous_responses,
                                 feedback: existingPhase?.feedback || '',
@@ -450,6 +465,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                             metrics: {
                                 ai_score: result.ai_score,
                                 weighted_score: result.phase_score,
+                                start_time: null,
+                                end_time: null,
                                 duration_seconds: elapsedSeconds,
                                 retries: result.metrics.retries,
                                 tokens_used: result.metrics.tokens_used,
