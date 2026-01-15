@@ -90,7 +90,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
     isLoading
 }) => {
     const navigate = useNavigate();
-    const { regeneratePrompt, submitPitchImage, totalTokens } = useApp();
+    const { regeneratePrompt, submitPitchImage, totalTokens, uploadedImages, setActiveRevealImage } = useApp();
 
     const [editedPrompt, setEditedPrompt] = useState(curatedPrompt);
     const [additionalNotes, setAdditionalNotes] = useState('');
@@ -358,9 +358,34 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                     <div className="curate-analytics__stat-value">{totalTokens.total}</div>
                                 </div>
                             </div>
-
-
                         </div>
+
+                        {/* Previous Inputs Section */}
+                        {uploadedImages.length > 0 && (
+                            <div className="curate-card curate-previous">
+                                <div className="curate-refs__label-group">
+                                    <div className="curate-refs__label">Previous</div>
+                                    <div className="curate-analytics__live" style={{ background: 'rgba(139, 92, 246, 0.2)', borderColor: 'rgba(139, 92, 246, 0.4)', color: '#a78bfa' }}>
+                                        {uploadedImages.length}/3
+                                    </div>
+                                </div>
+                                <div className="curate-previous__thumbnails">
+                                    {uploadedImages.map((img, i) => (
+                                        <img
+                                            key={i}
+                                            src={img}
+                                            alt={`Previous ${i}`}
+                                            className="curate-previous__thumb"
+                                            onClick={() => {
+                                                setActiveRevealImage(img);
+                                                navigate('/reveal');
+                                            }}
+                                            title="Click to view full size"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Actions (Upload + Finalize) */}
                         <div className="curate-actions">
@@ -397,15 +422,16 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
                             <button
                                 onClick={handleSubmitPitch}
-                                disabled={isLoading || !selectedFile || isRegenerating}
-                                className="curate-finalize"
+                                disabled={isLoading || !selectedFile || isRegenerating || uploadedImages.length >= 3}
+                                className={`curate-finalize ${uploadedImages.length >= 3 ? 'curate-finalize--frozen' : ''}`}
+                                data-tooltip={uploadedImages.length >= 3 ? "Max limit reached" : ""}
                             >
                                 {isLoading ? (
                                     <span>Processing...</span>
                                 ) : (
                                     <>
                                         <Icons.Sparkles />
-                                        <span>Upload & Finalize</span>
+                                        <span>{uploadedImages.length >= 3 ? "Max Limit Reached" : "Upload & Finalize"}</span>
                                         <Icons.ChevronRight />
                                     </>
                                 )}

@@ -111,6 +111,7 @@ export interface SessionState {
     is_complete: boolean;
     total_tokens: number;
     extra_ai_tokens?: number;
+    uploadedImages: string[]; // NEW: For persisting multiple pitch visuals
 }
 
 // =============================================================================
@@ -144,6 +145,7 @@ export interface InitResponse {
     phase_data?: Record<string, PhaseData>;
     final_output?: FinalOutput;
     current_server_time?: string;
+    uploadedImages?: string[];
 }
 
 export interface StartPhaseRequest {

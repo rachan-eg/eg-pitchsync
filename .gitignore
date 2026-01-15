@@ -33,3 +33,5 @@ frontend/public/generated/
 # Audit
 AUDIT_REPORT.json
 AUDIT_SUMMARY.md
+
+info.txt

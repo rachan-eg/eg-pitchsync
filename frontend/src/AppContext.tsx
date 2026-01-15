@@ -79,6 +79,9 @@ interface AppContextType {
     curatedPrompt: string;
     setCuratedPrompt: (prompt: string) => void;
     generatedImageUrl: string;
+    uploadedImages: string[];
+    activeRevealImage: string;
+    setActiveRevealImage: (url: string) => void;
 
     // UI State
     loading: boolean;
@@ -130,6 +133,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Prompt & Image State
     const [curatedPrompt, setCuratedPrompt] = useState('');
     const [generatedImageUrl, setGeneratedImageUrl] = useState('');
+    const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+    const [activeRevealImage, setActiveRevealImage] = useState('');
 
     // UI State
     const [loading, setLoading] = useState(false);
@@ -178,6 +183,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     if (parsedSession.final_output) {
                         if (parsedSession.final_output.image_prompt) setCuratedPrompt(parsedSession.final_output.image_prompt);
                         if (parsedSession.final_output.image_url) setGeneratedImageUrl(getFullUrl(parsedSession.final_output.image_url));
+                    }
+
+                    if (parsedSession.uploadedImages) {
+                        const urls = parsedSession.uploadedImages.map((u: string) => getFullUrl(u));
+                        setUploadedImages(urls);
+                        if (urls.length > 0) setActiveRevealImage(urls[urls.length - 1]);
                     }
 
                     // CRITICAL FIX: Always derive highest unlocked phase from phase_scores
@@ -319,7 +330,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 completed_at: null,
                 is_complete: data.is_complete || false,
                 total_tokens: data.total_tokens || 0,
-                extra_ai_tokens: data.extra_ai_tokens || 0
+                extra_ai_tokens: data.extra_ai_tokens || 0,
+                uploadedImages: data.uploadedImages || []
             };
 
             setSession(newSession);
@@ -612,8 +624,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                         image_prompt: promptUsed,
                         generated_at: new Date().toISOString()
                     },
-                    extra_ai_tokens: data.extra_ai_tokens
+                    extra_ai_tokens: data.extra_ai_tokens,
+                    uploadedImages: [...(prev.uploadedImages || []), url].slice(-3)
                 } : null);
+
+                setUploadedImages(prev => [...prev, url].slice(-3));
+                setActiveRevealImage(url);
             }
         } catch (e) {
             console.error("Failed to submit pitch image", e);
@@ -636,6 +652,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setPhaseStartTime(null);
         setCuratedPrompt('');
         setGeneratedImageUrl('');
+        setUploadedImages([]);
+        setActiveRevealImage('');
     };
 
     const totalTokens = React.useMemo(() => calculateTotalTokens(session), [session]);
@@ -666,6 +684,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         curatedPrompt,
         setCuratedPrompt,
         generatedImageUrl,
+        uploadedImages,
+        activeRevealImage,
+        setActiveRevealImage,
 
         // UI
         loading,

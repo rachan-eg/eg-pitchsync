@@ -114,7 +114,7 @@ const PromptCurationPage: React.FC = () => {
 };
 
 const FinalRevealPage: React.FC = () => {
-    const { session, generatedImageUrl } = useApp();
+    const { session, activeRevealImage } = useApp();
 
     if (!session) {
         return <Navigate to="/" replace />;
@@ -123,7 +123,7 @@ const FinalRevealPage: React.FC = () => {
     return (
         <FinalReveal
             session={session}
-            imageUrl={generatedImageUrl}
+            imageUrl={activeRevealImage}
         />
     );
 };
