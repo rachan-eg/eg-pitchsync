@@ -5,7 +5,7 @@ Adapts the SQL row models back to the domain Pydantic models (SessionState).
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Optional, Any, List
 from sqlmodel import select, Session, func
 
@@ -232,14 +232,14 @@ def set_phase_start_time(session_id: str, phase_number: int, overwrite: bool = T
     """Sets the start time for a phase and persists it in the session."""
     session_obj = get_session(session_id)
     if not session_obj:
-        return datetime.now()
+        return datetime.now(timezone.utc)
         
     key = f"phase_{phase_number}"
     
     if not overwrite and key in session_obj.phase_start_times:
         return session_obj.phase_start_times[key]
     
-    start_time = datetime.now()
+    start_time = datetime.now(timezone.utc)
     session_obj.phase_start_times[key] = start_time
     update_session(session_obj)
     return start_time

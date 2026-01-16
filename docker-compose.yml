@@ -41,7 +41,7 @@ services:
       args:
         - VITE_API_URL=/api
     ports:
-      - "80:80"
+      - "8080:80"
     # Removed redundant mount - handled by nginx proxy to backend
     # volumes:
     #   - generated_data:/usr/share/nginx/html/generated

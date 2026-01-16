@@ -412,8 +412,8 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 const displayRetries = existing?.metrics?.retries || 0;
 
                                 return (
-                                    <span className="pi-scoring-val" style={{ color: displayRetries > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                                        {displayRetries} <span style={{ fontSize: '0.8em', opacity: 0.7 }}>/ 3</span>
+                                    <span className="pi-scoring-val" style={{ color: displayRetries > (scoringInfo?.max_retries || 3) ? 'var(--danger)' : (displayRetries > 0 ? 'var(--text-primary)' : 'var(--text-muted)') }}>
+                                        {displayRetries} <span style={{ fontSize: '0.8em', opacity: 0.7 }}>/ {scoringInfo?.max_retries || 3}</span>
                                     </span>
                                 );
                             })()}
@@ -426,31 +426,72 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             const history = existing?.history || [];
                             const currentMetrics = existing?.metrics;
 
-                            // Build complete attempts list: history
-                            const allAttempts: Array<{ weighted_score: number; isCurrent?: boolean }> = [
-                                ...history.map(h => ({ weighted_score: h.weighted_score })),
+                            // 1. Start with history
+                            const allAttempts: Array<{ weighted_score: number; isCurrent?: boolean; label?: string; isDraft?: boolean }> = [
+                                ...history.map((h, i) => ({
+                                    weighted_score: h.weighted_score,
+                                    label: i === 0 ? "INITIAL ATTEMPT" : `RETRY ${i}`,
+                                    isCurrent: false
+                                })),
                             ];
 
-                            // Add current attempt if it has been evaluated AND it's not the same as the last history item
-                            // Backend usually moves current to history on next submission.
-                            // If user is viewing a passed phase, currentMetrics has the score.
-                            if (currentMetrics && typeof currentMetrics.weighted_score === 'number' && currentMetrics.ai_score > 0) {
-                                allAttempts.push({ weighted_score: currentMetrics.weighted_score, isCurrent: true });
+                            const hasEvaluatedCurrent = currentMetrics && (currentMetrics.ai_score > 0 || existing?.status === 'passed' || existing?.status === 'failed');
+
+                            // 2. Add current finalized entry or draft
+                            if (hasEvaluatedCurrent) {
+                                const currentLabel = allAttempts.length === 0 ? "INITIAL ATTEMPT" : `RETRY ${allAttempts.length}`;
+
+                                // Can we add a new draft? (Only if we haven't hit the limit)
+                                const canAddDraft = anyChanges && (allAttempts.length < (scoringInfo?.max_retries || 3));
+
+                                if (canAddDraft) {
+                                    // Previous eval becomes history, new draft is current
+                                    allAttempts.push({
+                                        weighted_score: currentMetrics.weighted_score,
+                                        label: currentLabel,
+                                        isCurrent: false
+                                    });
+                                    allAttempts.push({
+                                        weighted_score: 0,
+                                        label: `RETRY ${allAttempts.length}`,
+                                        isCurrent: true,
+                                        isDraft: true
+                                    });
+                                } else {
+                                    // Highlight the finalized result as current if:
+                                    // - No changes detected
+                                    // - OR we've hit the retry limit (can't draft anymore)
+                                    allAttempts.push({
+                                        weighted_score: currentMetrics.weighted_score,
+                                        label: currentLabel,
+                                        isCurrent: true
+                                    });
+                                }
+                            } else if (allAttempts.length < (scoringInfo?.max_retries || 3) + 1) {
+                                // Fresh phase, no submissions yet - show Initial Draft
+                                allAttempts.push({
+                                    weighted_score: 0,
+                                    label: allAttempts.length === 0 ? "INITIAL ATTEMPT" : `RETRY ${allAttempts.length}`,
+                                    isCurrent: true,
+                                    isDraft: true
+                                });
                             }
 
                             if (allAttempts.length > 0) {
                                 return (
                                     <div className="pi-attempts-log">
                                         <div className="pi-scoring-separator" style={{ margin: '0.75rem 0 0.5rem', borderTop: '1px dashed var(--border-light)', opacity: 0.3 }} />
-                                        <div className="pi-attempts-label">TRIAL HISTORY</div>
+                                        <div className="pi-attempts-label">RETRY HISTORY</div>
                                         <div className="pi-attempts-list custom-scrollbar">
                                             {allAttempts.map((h, idx) => (
-                                                <div key={idx} className={`pi-attempt-item ${h.isCurrent ? 'pi-attempt-item--current' : ''}`}>
+                                                <div key={idx} className={`pi-attempt-item ${h.isCurrent ? 'pi-attempt-item--current' : ''} ${h.isDraft ? 'pi-attempt-item--draft' : ''}`}>
                                                     <div className="pi-attempt-info">
-                                                        <span className="pi-attempt-num">TRIAL {idx + 1}</span>
-                                                        {h.isCurrent && <span className="pi-attempt-tag">CURRENT</span>}
+                                                        <span className="pi-attempt-num">{h.label}</span>
+                                                        {h.isCurrent && <span className="pi-attempt-tag">{h.isDraft ? 'DRAFT' : 'CURRENT'}</span>}
                                                     </div>
-                                                    <span className="pi-attempt-score">{Math.round(h.weighted_score)} PTS</span>
+                                                    <span className="pi-attempt-score">
+                                                        {h.isDraft ? '--' : `${Math.round(h.weighted_score)} PTS`}
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>

@@ -18,6 +18,10 @@
   --secondary: #3b82f6;
   --accent: #f472b6;
 
+  /* Claude Brand Colors */
+  --claude-orange: #D97757;
+  --claude-orange-glow: rgba(217, 119, 87, 0.3);
+
   /* Semantic Colors */
   --success: #10b981;
   --warning: #f59e0b;

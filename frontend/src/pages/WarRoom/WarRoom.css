@@ -81,22 +81,35 @@
 }
 
 .war-room__phase-btn--active {
-    background: rgba(139, 92, 246, 0.15);
-    /* Stronger purple tint */
+    background: rgba(139, 92, 246, 0.25);
     border-color: var(--primary);
-    /* Purple border instead of white */
     box-shadow:
-        0 0 15px rgba(139, 92, 246, 0.25),
-        /* Reduced outer glow */
-        inset 0 0 10px rgba(139, 92, 246, 0.1);
-    /* Subtle inner glow */
+        0 0 20px rgba(139, 92, 246, 0.3),
+        inset 0 0 15px rgba(139, 92, 246, 0.15);
+    transform: translateX(4px);
+    z-index: 2;
 }
 
-/* Remove the old side-bar indicator if the HTML element is removed, or just hide/style it away if it persists.
-   Ideally, we just rely on the main button styles now. */
-.war-room__phase-active-indicator {
-    display: none;
-    /* Hide the left bar indicator as requested */
+.war-room__phase-btn--active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-md);
+    animation: pulse-border 2s infinite;
+    pointer-events: none;
+}
+
+@keyframes pulse-border {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.05, 1.1);
+        opacity: 0;
+    }
 }
 
 .war-room__phase-btn--completed {
@@ -210,17 +223,6 @@
     color: var(--text-muted);
     font-weight: 600;
     margin-top: 1px;
-}
-
-.war-room__phase-active-indicator {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--primary);
-    box-shadow: 2px 0 10px var(--primary-glow);
-    animation: pulse-glow-bar 2s infinite;
 }
 
 .war-room__phase-btn:disabled {
