@@ -16,7 +16,9 @@
   "dependencies": {
     "@types/file-saver": "^2.0.7",
     "file-saver": "^2.0.5",
+    "install": "^0.13.0",
     "jszip": "^3.10.1",
+    "keycloak-js": "^26.0.0",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

@@ -1,10 +1,11 @@
 import React from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AppProvider, useApp } from './AppContext';
+import { useAuth } from './providers';
 
 // Pages
-import { UsecaseSelect } from './pages/UsecaseSelect/UsecaseSelect';
-import { TeamInput } from './pages/TeamInput/TeamInput';
+import { Login } from './pages/Login/Login';
+import { TeamCode } from './pages/TeamCode/TeamCode';
 import { MissionBrief } from './pages/MissionBrief/MissionBrief';
 import { WarRoom } from './pages/WarRoom/WarRoom';
 import { PromptCuration } from './pages/PromptCuration/PromptCuration';
@@ -17,37 +18,109 @@ import { GlobalHeader } from './components/GlobalHeader/GlobalHeader';
 import { ErrorModal } from './components/ErrorModal/ErrorModal';
 import { PhaseFeedback } from './components/PhaseFeedback/PhaseFeedback';
 import { PhaseInput } from './components/PhaseInput/PhaseInput';
+import { AuthLoading } from './components/AuthLoading/AuthLoading';
 
+
+// =============================================================================
+// PROTECTED ROUTE WRAPPER
+// =============================================================================
+
+interface ProtectedRouteProps {
+    children: React.ReactNode;
+    requireAuth?: boolean;
+    requireTeamCode?: boolean;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+    children,
+    requireAuth = true,
+    requireTeamCode = false
+}) => {
+    const { isAuthenticated, isLoading, teamCodeValidated } = useAuth();
+
+    if (isLoading) {
+        return <AuthLoading message="Validating Secure Connection" />;
+    }
+
+    if (requireAuth && !isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (requireTeamCode && !teamCodeValidated) {
+        return <Navigate to="/team-code" replace />;
+    }
+
+    return <>{children}</>;
+};
 
 // =============================================================================
 // PAGE WRAPPERS (Connect pages to context and routing)
 // =============================================================================
 
-const UsecaseSelectPage: React.FC = () => {
-    return <UsecaseSelect />;
-};
+const MissionBriefPage: React.FC = () => {
+    const { session, phaseConfig, initSessionFromTeamCode } = useApp();
+    const { teamCodeInfo, clearTeamCode } = useAuth();
+    const navigate = useNavigate();
+    const [isInitializing, setIsInitializing] = React.useState(false);
+    const [initError, setInitError] = React.useState<string | null>(null);
 
-const TeamInputPage: React.FC = () => {
-    const { selectedUsecase, loading, error } = useApp();
+    // Initialize session from team code info if we don't have a session yet
+    React.useEffect(() => {
+        const initFromTeamCode = async () => {
+            if (!session && teamCodeInfo && !isInitializing) {
+                setIsInitializing(true);
+                setInitError(null);
 
-    if (!selectedUsecase) {
-        return <Navigate to="/" replace />;
+                try {
+                    const result = await initSessionFromTeamCode(
+                        teamCodeInfo.teamName,
+                        teamCodeInfo.usecaseId
+                    );
+
+                    if (!result.success) {
+                        setInitError('Failed to initialize session. Please try again.');
+                    }
+                } catch (err) {
+                    setInitError('An error occurred while starting your session.');
+                } finally {
+                    setIsInitializing(false);
+                }
+            }
+        };
+
+        initFromTeamCode();
+    }, [session, teamCodeInfo, isInitializing, initSessionFromTeamCode]);
+
+    // Show loading while initializing
+    if (isInitializing || (!session && teamCodeInfo)) {
+        return (
+            <div className="flex items-center justify-center h-screen flex-col gap-4">
+                <div className="loading-spinner"></div>
+                <p className="text-white/60">Preparing your mission...</p>
+            </div>
+        );
     }
 
-    return (
-        <TeamInput
-            usecaseTitle={selectedUsecase.title}
-            loading={loading}
-            error={error}
-        />
-    );
-};
-
-const MissionBriefPage: React.FC = () => {
-    const { session, phaseConfig } = useApp();
+    // Show error if initialization failed
+    if (initError) {
+        return (
+            <div className="flex items-center justify-center h-screen flex-col gap-4">
+                <p className="text-red-400">{initError}</p>
+                <button
+                    className="px-4 py-2 bg-white/10 rounded-lg text-white hover:bg-white/20 transition-colors"
+                    onClick={() => {
+                        clearTeamCode();
+                        navigate('/team-code', { replace: true });
+                    }}
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
 
     if (!session) {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/team-code" replace />;
     }
 
     return (
@@ -69,7 +142,7 @@ const WarRoomPage: React.FC = () => {
     } = useApp();
 
     if (!session) {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/login" replace />;
     }
 
     const currentPhase = phaseConfig[session.current_phase];
@@ -99,7 +172,7 @@ const PromptCurationPage: React.FC = () => {
     const { session, curatedPrompt, loading } = useApp();
 
     if (!session) {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/login" replace />;
     }
 
     return (
@@ -120,7 +193,7 @@ const FinalRevealPage: React.FC = () => {
     const { session, activeRevealImage } = useApp();
 
     if (!session) {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/login" replace />;
     }
 
     // Determine the best image URL to show (current selection OR session default)
@@ -138,7 +211,7 @@ const PresentationModePage: React.FC = () => {
     const { session, generatedImageUrl } = useApp();
 
     if (!session) {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/login" replace />;
     }
 
     return (
@@ -163,9 +236,9 @@ const LeaderboardPage: React.FC = () => {
 };
 
 // =============================================================================
-// LAYOUT WITH HEADER
+// LAYOUT WITH HEADER (for game pages)
 // =============================================================================
-const AppLayout: React.FC = () => {
+const GameLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const {
@@ -213,15 +286,13 @@ const AppLayout: React.FC = () => {
                 className={`flex-1 min-h-0 flex flex-col ${isWarRoom ? 'overflow-hidden' : 'overflow-y-auto custom-scrollbar'}`}
             >
                 <Routes>
-                    <Route path="/" element={<UsecaseSelectPage />} />
-                    <Route path="/team" element={<TeamInputPage />} />
                     <Route path="/mission" element={<MissionBriefPage />} />
                     <Route path="/war-room" element={<WarRoomPage />} />
                     <Route path="/curate" element={<PromptCurationPage />} />
                     <Route path="/reveal" element={<FinalRevealPage />} />
                     <Route path="/present" element={<PresentationModePage />} />
                     <Route path="/leaderboard" element={<LeaderboardPage />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
+                    <Route path="*" element={<Navigate to="/mission" replace />} />
                 </Routes>
             </main>
 
@@ -236,7 +307,7 @@ const AppLayout: React.FC = () => {
             )}
 
             {/* Error Modal */}
-            {error && location.pathname !== '/team' && (
+            {error && location.pathname !== '/team-code' && (
                 <ErrorModal
                     message={error}
                     onCallback={() => setError(null)}
@@ -250,10 +321,40 @@ const AppLayout: React.FC = () => {
 // MAIN APP
 // =============================================================================
 const App: React.FC = () => {
+    const { isAuthenticated, teamCodeValidated } = useAuth();
+
     return (
-        <AppProvider>
-            <AppLayout />
-        </AppProvider>
+        <Routes>
+            {/* Public Routes */}
+            <Route
+                path="/login"
+                element={
+                    isAuthenticated ? <Navigate to="/team-code" replace /> : <Login />
+                }
+            />
+
+            {/* Team Code Route (requires auth) */}
+            <Route
+                path="/team-code"
+                element={
+                    <ProtectedRoute requireAuth={true}>
+                        {teamCodeValidated ? <Navigate to="/mission" replace /> : <TeamCode />}
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Game Routes (requires auth + team code) */}
+            <Route
+                path="/*"
+                element={
+                    <ProtectedRoute requireAuth={true} requireTeamCode={true}>
+                        <AppProvider>
+                            <GameLayout />
+                        </AppProvider>
+                    </ProtectedRoute>
+                }
+            />
+        </Routes>
     );
 };
 

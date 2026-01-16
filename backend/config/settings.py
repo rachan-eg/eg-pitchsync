@@ -48,7 +48,7 @@ class Settings:
     APP_NAME = "Pitch-Sync Engine"
     APP_VERSION = "2.0.0"
     DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
-    TEST_MODE = os.environ.get("TEST_MODE", "true").lower() == "true"
+    TEST_MODE = os.environ.get("TEST_MODE", "false").lower() == "true"
     ALLOW_FAIL_PROCEED = os.environ.get("ALLOW_FAIL_PROCEED", "true").lower() == "true"
     
     # Paths
@@ -93,6 +93,12 @@ class Settings:
     AWS_SESSION_TOKEN = os.environ.get("AWS_SESSION_TOKEN") or None
     AWS_REGION = os.environ.get("AWS_REGION", "eu-central-1")
 
+    # Keycloak SSO Configuration
+    KEYCLOAK_SERVER_URL = os.environ.get("KEYCLOAK_SERVER_URL", "")
+    KEYCLOAK_REALM = os.environ.get("KEYCLOAK_REALM", "")
+    KEYCLOAK_CLIENT_ID = os.environ.get("KEYCLOAK_CLIENT_ID", "")
+    KEYCLOAK_CLIENT_SECRET = os.environ.get("KEYCLOAK_CLIENT_SECRET", "")
+
 
 
 settings = Settings()
@@ -101,10 +107,8 @@ settings = Settings()
 # STARTUP VALIDATION (SEC-001)
 # =============================================================================
 # Fail fast if required credentials are missing in production mode
-# Fail fast if required credentials are missing in production mode
 if not settings.DEBUG and not settings.TEST_MODE:
     missing_credentials = []
-    
     # AWS Credentials are now optional to support IAM Roles/Instance Profiles
     # We only check for FLUX_API_KEY which is mandatory
     if not settings.FLUX_API_KEY:

@@ -6,3 +6,5 @@
 export { getApiUrl, getFullUrl } from './api';
 export { getScoreTier, formatTime, getMaxPhaseScore } from './scoring';
 export type { ScoreTier } from './scoring';
+export { keycloakManager, logout, getToken, isAuthenticated } from './keycloakManager';
+

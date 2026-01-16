@@ -6,7 +6,7 @@ import os
 from sqlmodel import SQLModel, Session
 from .engine import engine
 # Must import models here to ensure they are registered with metadata
-from .models import TeamContext, SessionData
+from .models import TeamContext, SessionData, User
 
 def create_db_and_tables():
     """Idempotently create tables and handle basic migrations."""

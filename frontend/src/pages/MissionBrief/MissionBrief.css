@@ -264,16 +264,35 @@
     padding-top: 1rem;
 }
 
+.mission-brief__footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.mission-brief__back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    height: 54px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+}
+
 .mission-brief__launch-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    padding: clamp(1rem, 2.5vh, 1.5rem) clamp(3rem, 8vw, 6rem);
+    padding: 0 4rem;
+    height: 64px;
     background: linear-gradient(135deg, var(--accent-primary, #8b5cf6), #a78bfa);
     border: none;
     border-radius: 12px;
-    font-size: clamp(1rem, 1.1vw, 1.5rem);
+    font-size: clamp(1rem, 1.1vw, 1.35rem);
     font-weight: 800;
     color: #fff;
     text-transform: uppercase;

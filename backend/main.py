@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.config import settings, GENERATED_DIR
 from backend.database.utils import create_db_and_tables
-from backend.api import session_router, synthesis_router, leaderboard_router, admin_router
+from backend.api import session_router, synthesis_router, leaderboard_router, admin_router, auth_router
 from backend.services.state import get_session_count
 
 @asynccontextmanager
@@ -52,6 +52,7 @@ app.include_router(session_router)
 app.include_router(synthesis_router)
 app.include_router(leaderboard_router)
 app.include_router(admin_router)
+app.include_router(auth_router)
 
 
 @app.get("/")
