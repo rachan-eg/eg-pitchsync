@@ -17,7 +17,7 @@ from backend.models.constants import (
 )
 from backend.models.ai_responses import (
     RedTeamReport, LeadPartnerVerdict, ImagePromptSpec, PitchNarrative,
-    parse_ai_response
+    VisualAnalysisResult, parse_ai_response
 )
 
 __all__ = [
@@ -36,6 +36,6 @@ __all__ = [
     "validate_vault",
     # AI Response Models
     "RedTeamReport", "LeadPartnerVerdict", "ImagePromptSpec", "PitchNarrative",
-    "parse_ai_response",
+    "VisualAnalysisResult", "parse_ai_response",
 ]
 

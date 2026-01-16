@@ -185,6 +185,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                 hint_used: hintsUsed[i]
             };
         });
+
         await submitPhase(responses);
     };
 

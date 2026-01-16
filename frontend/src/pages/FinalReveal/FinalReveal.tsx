@@ -144,6 +144,35 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl }) =
                                 </div>
                             </div>
 
+                            {/* Visual Forensics Panel - NEW */}
+                            <div className="final-reveal__panel" style={{ borderColor: 'var(--accent)', background: 'rgba(var(--accent-rgb), 0.03)' }}>
+                                <h3 className="final-reveal__panel-title" style={{ color: 'var(--accent)' }}>Visual Intelligence</h3>
+                                <div className="final-reveal__metrics-group">
+                                    <div className="final-reveal__stat-row">
+                                        <span className="final-reveal__stat-label">VISUAL ALIGNMENT</span>
+                                        <span className="final-reveal__stat-value" style={{
+                                            color: session.final_output.visual_alignment === 'High' ? 'var(--success)' :
+                                                session.final_output.visual_alignment === 'Critical Mismatch' ? 'var(--danger)' : 'var(--warning)'
+                                        }}>
+                                            {session.final_output.visual_alignment || 'N/A'}
+                                        </span>
+                                    </div>
+                                    <div className="final-reveal__stat-row">
+                                        <span className="final-reveal__stat-label">EVIDENCE SCORE</span>
+                                        <span className="final-reveal__stat-value">
+                                            {typeof session.final_output.visual_score === 'number'
+                                                ? Math.round(session.final_output.visual_score * 100)
+                                                : '0'}/100
+                                        </span>
+                                    </div>
+                                    {session.final_output.visual_feedback && (
+                                        <div className="final-reveal__feedback-box" style={{ marginTop: '1rem', fontSize: '0.8rem', opacity: 0.8, fontStyle: 'italic' }}>
+                                            "{session.final_output.visual_feedback}"
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Metrics */}
                             <div className="final-reveal__panel">
                                 <h3 className="final-reveal__panel-title">Efficiency Metrics</h3>

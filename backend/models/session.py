@@ -35,6 +35,9 @@ class PhaseMetric(BaseModel):
     retry_penalty: float = 0.0
     hint_penalty: float = 0.0
     efficiency_bonus: float = 0.0
+    visual_score: float = 0.0
+    visual_feedback: Optional[str] = None
+    visual_alignment: Optional[str] = None
 
 
 class PhaseResponse(BaseModel):
@@ -56,6 +59,7 @@ class PhaseData(BaseModel):
     strengths: List[str] = []
     improvements: List[str] = []
     history: List[PhaseMetric] = []
+    image_data: Optional[str] = None # Base64 encoded image evidence
 
 
 class FinalOutput(BaseModel):
@@ -64,7 +68,12 @@ class FinalOutput(BaseModel):
     customer_pitch: str = ""
     image_prompt: str = ""
     image_url: str = ""
-    generated_at: Optional[datetime] = None
+    generated_at: Optional[str] = None
+    
+    # Standalone Visual Evaluation Metrics
+    visual_score: float = 0.0
+    visual_feedback: str = ""
+    visual_alignment: str = "N/A"
 
 
 class SessionState(BaseModel):

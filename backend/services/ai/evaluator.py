@@ -8,7 +8,10 @@ Uses a two-agent system:
 """
 
 import json
+import io
+import base64
 from typing import Dict, Any, List, Optional
+from PIL import Image
 
 from fastapi import HTTPException
 
@@ -16,6 +19,7 @@ from backend.services.ai.client import get_client
 from backend.models.ai_responses import (
     RedTeamReport,
     LeadPartnerVerdict,
+    VisualAnalysisResult,
     parse_ai_response
 )
 
@@ -24,10 +28,12 @@ def evaluate_phase(
     usecase: Dict[str, Any],
     phase_config: Dict[str, Any],
     responses: List[Dict[str, str]],
-    previous_feedback: Optional[str] = None
+    previous_feedback: Optional[str] = None,
+    image_data: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Evaluate team responses with rigorous, phase-specific criteria using Claude 3.5 Sonnet.
+    Now supports Multi-Modal Visual Analysis.
     """
     client = get_client()
     
@@ -60,6 +66,37 @@ def evaluate_phase(
         # This agent balances the critique with the potential upside.
         final_result = _run_lead_partner_agent(client, prompt, red_team_result["report"])
         
+        # STEP 3: THE VISUAL ANALYST (FORENSICS)
+        # Goal: Evaluate the uploaded evidence (if any) for alignment, depth, and fit.
+        visual_result_data = None
+        if image_data:
+            visual_result_data = evaluate_visual_asset(client, prompt, image_data)
+            visual_metrics = visual_result_data["result"]
+            
+            # MERGE SCORES
+            # Formula: Final = TextScore + (VisualScore - 0.5) * 0.2
+            # This allows a boost of +0.1 or a penalty of -0.1
+            v_score_norm = visual_metrics.visual_score # 0.0 to 1.0
+            modifier = (v_score_norm - 0.5) * 0.2
+            
+            # Apply modifier
+            original_score = final_result["score"]
+            new_score = max(0.0, min(1.0, original_score + modifier))
+            
+            final_result["score"] = new_score
+            
+            # Append Visual Feedback
+            final_result["feedback"] += f"\n\n[VISUAL INTEL]: {visual_metrics.feedback} (Alignment: {visual_metrics.alignment_rating})"
+            final_result["visual_metrics"] = {
+                "visual_score": v_score_norm,
+                "visual_feedback": visual_metrics.feedback,
+                "visual_alignment": visual_metrics.alignment_rating
+            }
+            
+            # Combine token usage
+            final_result["usage"]["input_tokens"] += visual_result_data["usage"].get("input_tokens", 0)
+            final_result["usage"]["output_tokens"] += visual_result_data["usage"].get("output_tokens", 0)
+
         # Combine usage metrics
         combined_usage = {
             "input_tokens": red_team_result["usage"].get("input_tokens", 0) + final_result["usage"].get("input_tokens", 0),
@@ -242,3 +279,133 @@ Return PURE JSON.
         "improvements": parsed.improvements,
         "usage": usage
     }
+
+
+def evaluate_visual_asset(client, prompt: str, image_b64: str) -> Dict[str, Any]:
+    """
+    VISUAL ANALYST AGENT
+    Evaluates the image for semantic alignment, functional depth, and aesthetic fit.
+    """
+    system_prompt = """
+    You are the VISUAL FORENSICS LEAD for a strategic design firm.
+    Your job is to evaluate an image upload against a strategic concept.
+    
+    CRITIQUE PHILOSOPHY:
+    - **Outcome over Process**: Focus on the final visual impact.
+    - **Hallucination Amnesty**: Ignore minor AI artifacts (garbled text, glitchy hands). Focus on intent.
+    - **Conceptual Match**: Does it *feel* like the solution described?
+    
+    SCORING CRITERIA (0.0 - 1.0):
+    1. **Semantic Alignment (40%)**: Does the image depict the core subject matter accurately? (e.g. "Drone" -> Image shows Drone).
+    2. **Functional Depth (30%)**: Does it show *how* it works (UI, schematic, diagram) vs generic stock art?
+    3. **Aesthetic Fit (30%)**: Is the style professional and consistent with the industry context?
+    
+    SCORING ALGORITHM:
+    Score = (Alignment * 0.4) + (Depth * 0.3) + (Fit * 0.3)
+    
+    OUTPUT FORMAT:
+    Return a JSON object with:
+    - visual_score: float (0.0 to 1.0)
+    - rationale: string (Brief explanation of the score)
+    - alignment_rating: string ("High", "Medium", "Low", "Critical Mismatch")
+    - feedback: string (Constructive feedback for the user)
+    """
+
+    user_message = f"""
+    STRATEGIC CONTEXT (The Image should match this):
+    {prompt}
+    
+    ANALYZE THE ATTACHED IMAGE.
+    """
+    
+    # --- IMAGE SIZE SAFETY CHECK ---
+    # Claude on Bedrock has a 5MB limit for images.
+    # Base64 overhead is ~33%, but the error message indicates the decoded size check.
+    # We'll compress if the base64 string is suspiciously large.
+    media_type = "image/png"  # Default
+    try:
+        # Check base64 string length (approximate)
+        # 5MB in binary is ~6.7MB in base64
+        if len(image_b64) > 6000000:
+            print(f"⚠️ Image too large ({len(image_b64)} chars). Compressing...")
+            image_b64 = _compress_image(image_b64)
+            media_type = "image/jpeg" # _compress_image returns JPEG
+            print(f"✅ Compressed to {len(image_b64)} chars.")
+    except Exception as compress_err:
+        print(f"WARNING: Compression failed: {compress_err}")
+
+    # Use multi-modal generation
+    raw_response, usage = client.generate_content(
+        prompt=user_message,
+        system_prompt=system_prompt,
+        images=[{"data": image_b64, "media_type": media_type}]
+    )
+    
+    try:
+        # Client returns a dict/object, we need to parse it if strict JSON is enforced or extract it
+        # The prompt implies JSON return.
+        # Assuming generate_content handles basic parsing if json_mode is on, 
+        # but here we might get raw text. Ideally we use a parser or the client handles it.
+        # For this snippet, we'll try to parse the raw text.
+        import json
+        import re
+        
+        # Simple extraction if mixed content
+        json_match = re.search(r'\{.*\}', raw_response, re.DOTALL)
+        if json_match:
+            data = json.loads(json_match.group(0))
+        else:
+            data = json.loads(raw_response)
+            
+        result = VisualAnalysisResult(
+            visual_score=float(data.get("visual_score", 0.5)),
+            rationale=data.get("rationale", "No rationale provided."),
+            alignment_rating=data.get("alignment_rating", "Unknown"),
+            feedback=data.get("feedback", "No feedback provided.")
+        )
+    except Exception as e:
+        print(f"Visual Analyst Parsing Error: {e}. Raw: {raw_response}")
+        result = VisualAnalysisResult(
+            visual_score=0.5, # Neutral fallback
+            rationale="Failed to parse visual analysis. Defaulting to neutral.",
+            alignment_rating="Error",
+            feedback="System error during visual analysis."
+        )
+        
+    return {"result": result, "usage": usage}
+
+def _compress_image(image_b64: str, max_size_mb: float = 3.5) -> str:
+    """
+    Utility to compress a base64 image to be under the API's limit.
+    Reduces dimensions and uses JPEG compression if needed.
+    """
+    try:
+        # Decode
+        img_data = base64.b64decode(image_b64)
+        img = Image.open(io.BytesIO(img_data))
+        
+        # Convert RGBA to RGB if necessary for JPEG
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+            
+        # Recursive compression
+        quality = 85
+        output = io.BytesIO()
+        
+        while quality > 30:
+            output = io.BytesIO()
+            img.save(output, format="JPEG", quality=quality, optimize=True)
+            if output.tell() < max_size_mb * 1024 * 1024:
+                break
+            quality -= 15
+            
+            # If still too big, downscale
+            if quality <= 40:
+                w, h = img.size
+                img = img.resize((int(w*0.7), int(h*0.7)), Image.Resampling.LANCZOS)
+        
+        return base64.b64encode(output.getvalue()).decode("utf-8")
+        
+    except Exception as e:
+        print(f"Internal Image Compression Error: {e}")
+        return image_b64

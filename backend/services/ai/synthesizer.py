@@ -17,59 +17,49 @@ VAULT_ROOT = BASE_DIR / "vault"
 
 def _load_brand_colors(usecase: Dict[str, Any] = None, theme: Dict[str, Any] = None) -> str:
     """
-    Load and extract brand colors from the usecase's theme.
-    
-    The vault structure provides colors in theme.json:
-      vault/{usecase_id}/theme.json
-    
-    The theme object (passed from session) contains a 'colors' dict with:
-      - primary: Main brand color
-      - secondary: Accent color  
-      - bg: Background color
-      - success/error/warning: Semantic colors
+    Load and extract brand colors.
+    Prioritizes the usecase's specific vault theme to ensure brand consistency.
     """
     colors = []
-    
-    # Priority 1: Use colors from the theme object (already loaded in session)
-    if theme and isinstance(theme, dict):
-        theme_colors = theme.get("colors", {})
-        if theme_colors:
-            if theme_colors.get("primary"):
-                colors.append(f"Primary: {theme_colors['primary']}")
-            if theme_colors.get("secondary"):
-                colors.append(f"Secondary: {theme_colors['secondary']}")
-            if theme_colors.get("bg"):
-                colors.append(f"Background: {theme_colors['bg']}")
-            if theme_colors.get("success"):
-                colors.append(f"Success: {theme_colors['success']}")
-            if theme_colors.get("error"):
-                colors.append(f"Error: {theme_colors['error']}")
-            if theme_colors.get("warning"):
-                colors.append(f"Warning: {theme_colors['warning']}")
-    
-    # Priority 2: Load from usecase's theme.json file
-    if not colors and usecase:
+    usecase_theme_data = None
+
+    # Priority 1: Load from usecase's specific vault directory if available
+    if isinstance(usecase, dict):
         usecase_id = usecase.get("id")
         if usecase_id:
             theme_file = VAULT_ROOT / usecase_id / "theme.json"
             if theme_file.exists():
                 try:
                     with open(theme_file, encoding="utf-8") as f:
-                        theme_data = json.load(f)
-                        theme_colors = theme_data.get("colors", {})
+                        usecase_theme_data = json.load(f)
+                        theme_colors = usecase_theme_data.get("colors", {})
                         if theme_colors.get("primary"):
                             colors.append(f"Primary: {theme_colors['primary']}")
                         if theme_colors.get("secondary"):
                             colors.append(f"Secondary: {theme_colors['secondary']}")
                         if theme_colors.get("bg"):
                             colors.append(f"Background: {theme_colors['bg']}")
+                        if theme_colors.get("success"):
+                            colors.append(f"Success: {theme_colors['success']}")
+                        if theme_colors.get("error"):
+                            colors.append(f"Error: {theme_colors['error']}")
+                        if theme_colors.get("warning"):
+                            colors.append(f"Warning: {theme_colors['warning']}")
                 except Exception as e:
-                    print(f"WARNING: Could not load theme colors from {theme_file}: {e}")
+                    print(f"WARNING: Could not load vault theme for {usecase_id}: {e}")
+
+    # Priority 2: Use colors from the passed theme object (if Priority 1 didn't find anything)
+    if not colors and isinstance(theme, dict) and theme.get("colors"):
+        theme_colors = theme["colors"]
+        for key in ["primary", "secondary", "bg", "success", "error", "warning"]:
+            if theme_colors.get(key):
+                colors.append(f"{key.capitalize()}: {theme_colors[key]}")
     
     # Fallback: Default brand colors
     if colors:
         return " | ".join(colors)
-    return "Primary Orange (#BA5400), Corporate White, Dark Background (#0A0A0F)"
+    
+    return "Primary: #008B8B (Teal), Secondary: #4DCCCC (Light Blue), Background: #f0f9ff (Soft White)"
 
 
 # Default colors for fallback
@@ -341,10 +331,6 @@ def generate_customer_image_prompt(
     theme_name = theme.get('name', 'Modern') if isinstance(theme, dict) else str(theme)
     theme_style = theme.get('visual_style', 'Clean and professional') if isinstance(theme, dict) else ''
     theme_mood = theme.get('mood', 'Innovative') if isinstance(theme, dict) else ''
-    theme_colors = theme.get('colors', {}) if isinstance(theme, dict) else {}
-    primary_color = theme_colors.get('primary', '#00FFCC')
-    secondary_color = theme_colors.get('secondary', '#FF6B35')
-    bg_color = theme_colors.get('bg', '#0A0A0F')
 
     # Debug output
     # print("\n" + "="*60)
@@ -363,6 +349,8 @@ The user has specifically requested: {additional_notes}
 Make sure the image prompt strongly emphasizes and incorporates these refinements.
 """
     
+    brand_colors = _load_brand_colors(usecase, theme)
+    
     prompt = f"""
 ACT AS A SENIOR INFORMATION DESIGNER.
 Your goal is to create a prompt for a **DENSE, TEXT-HEAVY INFOGRAPHIC SLIDE**.
@@ -379,7 +367,7 @@ PRODUCT: "{usecase_title}"
 DOMAIN: {usecase_domain}
 
 === BRAND COLOR PALETTE ===
-{_load_brand_colors(usecase, theme)}
+{brand_colors}
 (Use these for headers, diagrams, and highlights)
 
 === CREATIVE DIRECTION (DENSE INFOGRAPHIC STYLE) ===
@@ -408,20 +396,12 @@ DOMAIN: {usecase_domain}
 === REQUIRED PROMPT STRUCTURE (JSON) ===
 Return a JSON object with a 'final_combined_prompt' that follows this structure:
 
-"A high-density technical infographic slide for '{usecase_title}'.
- + [LAYOUT: Complex grid layout, white background, high information density]
- + [HEADER: Bold title '{usecase_title}' and domain subtitle]
- + [CONTENT: Detailed text blocks describing problem and solution, long bullet lists of features]
- + [DIAGRAMS: Central complex architecture flowchart with labeled nodes]
- + [DATA: Stylized data tables and metric dashboards]
- + [TEXT: 'Problem: ...', 'Solution: ...', 'Benefits: ...' (simulated detailed text)]
- + [STYLE: AWS Architecture Diagram style, flat vector graphics, professional, clean lines, distinct colors: Orange accents]"
+{{
+  "final_combined_prompt": "A high-density technical infographic slide for '{usecase_title}'. + [LAYOUT: Complex grid layout, white background, high information density] + [HEADER: Bold title '{usecase_title}' and domain subtitle] + [CONTENT: Detailed text blocks describing problem and solution, long bullet lists of features] + [DIAGRAMS: Central complex architecture flowchart with labeled nodes] + [DATA: Stylized data tables and metric dashboards] + [TEXT: 'Problem: ...', 'Solution: ...', 'Benefits: ...' (simulated detailed text)] + [STYLE: AWS Architecture Diagram style, flat vector graphics, professional, clean lines, distinct colors: {brand_colors}]"
+}}
 
 === OUTPUT FORMAT ===
 Return ONLY the JSON structure.
-{{
-  "final_combined_prompt": "..."
-}}
 """
 
     client = get_client()

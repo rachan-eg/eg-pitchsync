@@ -33,10 +33,39 @@ class ClaudeClient:
         prompt: str, 
         system_prompt: Optional[str] = None,
         max_tokens: int = 2000,
-        temperature: float = 0.7
+        temperature: float = 0.7,
+        images: Optional[List[Dict[str, str]]] = None
     ) -> str:
-        """Unified method for generating text with Claude."""
+        """
+        Unified method for generating text with Claude.
+        Supports text-only or multi-modal (text + images) requests.
         
+        Args:
+            images: List of dicts with keys 'data' (base64) and 'media_type' (e.g. 'image/jpeg')
+        """
+        
+        # Construct message content
+        if images:
+            content_block = []
+            # Add images first
+            for img in images:
+                content_block.append({
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": img.get('media_type', 'image/png'),
+                        "data": img['data']
+                    }
+                })
+            # Add text prompt
+            content_block.append({
+                "type": "text",
+                "text": prompt
+            })
+        else:
+            # Simple text content
+            content_block = prompt
+
         body_dict = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": max_tokens,
@@ -44,7 +73,7 @@ class ClaudeClient:
             "messages": [
                 {
                     "role": "user",
-                    "content": prompt
+                    "content": content_block
                 }
             ]
         }
