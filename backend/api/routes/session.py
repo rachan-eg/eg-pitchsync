@@ -51,6 +51,17 @@ async def init_session(req: InitRequest):
         
         if should_resume:
             print(f"📌 Resuming session for team '{req.team_id}': phase {existing.current_phase}, complete: {existing.is_complete}")
+            
+            # Ensure phase start time exists (fix for older sessions missing this data)
+            phase_key = f"phase_{existing.current_phase}"
+            current_phase_start = existing.phase_start_times.get(phase_key)
+            if not current_phase_start:
+                # Initialize missing start time and persist it
+                current_phase_start = datetime.now(timezone.utc)
+                existing.phase_start_times[phase_key] = current_phase_start
+                update_session(existing)
+                print(f"  ⏱️ Initialized missing phase start time for {phase_key}")
+            
             return InitResponse(
                 session_id=existing.session_id,
                 usecase=existing.usecase,
@@ -66,7 +77,7 @@ async def init_session(req: InitRequest):
                 },
                 current_phase=existing.current_phase,
                 phase_scores=existing.phase_scores,
-                current_phase_started_at=existing.phase_start_times.get(f"phase_{existing.current_phase}"),
+                current_phase_started_at=current_phase_start,
                 is_complete=existing.is_complete,
                 total_tokens=existing.total_tokens,
                 extra_ai_tokens=existing.extra_ai_tokens,

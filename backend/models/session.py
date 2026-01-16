@@ -6,8 +6,9 @@ Core domain models for state management.
 import uuid
 from typing import Dict, List, Optional, Any
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
+
 
 
 class PhaseStatus(str, Enum):
@@ -85,7 +86,7 @@ class SessionState(BaseModel):
     phase_scores: Dict[str, float] = {}
     phase_start_times: Dict[str, datetime] = {}
     phase_elapsed_seconds: Dict[str, float] = {}  # Accumulated time per phase (for pause/resume)
-    created_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
     is_complete: bool = False
 
