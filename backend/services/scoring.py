@@ -22,7 +22,8 @@ def calculate_phase_score(
     phase_def: Dict[str, Any], # Added parameter
     hint_penalty: float = 0.0,
     input_tokens: int = 0,
-    output_tokens: int = 0
+    output_tokens: int = 0,
+    visual_metrics: Dict[str, Any] = None # Added for visual analytics
 ) -> Dict[str, Any]:
     """
     Calculate comprehensive score for a phase.
@@ -62,6 +63,15 @@ def calculate_phase_score(
     weighted_val = max(0, raw_score * phase_weight)
     weighted_score = round(min(weighted_val, max_phase_score))
     
+    # Parse visual metrics if present
+    v_score = 0.0
+    v_feedback = None
+    v_align = None
+    if visual_metrics:
+        v_score = visual_metrics.get("visual_score", 0.0)
+        v_feedback = visual_metrics.get("visual_feedback")
+        v_align = visual_metrics.get("visual_alignment")
+    
     metrics = PhaseMetric(
         ai_score=ai_score,
         weighted_score=weighted_score,
@@ -75,7 +85,10 @@ def calculate_phase_score(
         time_penalty=time_penalty,
         retry_penalty=retry_penalty,
         hint_penalty=hint_penalty,
-        efficiency_bonus=efficiency_bonus
+        efficiency_bonus=efficiency_bonus,
+        visual_score=v_score,
+        visual_feedback=v_feedback,
+        visual_alignment=v_align
     )
     
     return {

@@ -397,7 +397,8 @@ async def submit_phase(req: SubmitPhaseRequest):
             usecase=session.usecase,
             phase_config=phase_def,
             responses=[r.model_dump() for r in req.responses],
-            previous_feedback=prev_feedback
+            previous_feedback=prev_feedback,
+            image_data=req.image_data  # Pass visual evidence
         )
 
     # Calculate Hint Penalty
@@ -430,7 +431,8 @@ async def submit_phase(req: SubmitPhaseRequest):
         phase_def=phase_def, # Pass current phase config
         hint_penalty=total_hint_penalty,
         input_tokens=in_tokens,
-        output_tokens=out_tokens
+        output_tokens=out_tokens,
+        visual_metrics=eval_result.get("visual_metrics") # Pass visual analytics
     )
     
     # Determine pass/fail (with forced proceed option)
@@ -461,7 +463,8 @@ async def submit_phase(req: SubmitPhaseRequest):
         rationale=eval_result['rationale'],
         strengths=eval_result.get('strengths', []),
         improvements=eval_result.get('improvements', []),
-        history=history
+        history=history,
+        image_data=req.image_data # Persist evidence
     )
     session.phases[req.phase_name] = phase_data
     

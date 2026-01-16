@@ -45,7 +45,8 @@ def create_db_and_tables():
                 "answers_hash": "TEXT DEFAULT ''",
                 "final_output_json": "TEXT DEFAULT '{}'",
                 "phase_scores_json": "TEXT DEFAULT '{}'",
-                "phase_elapsed_seconds_json": "TEXT DEFAULT '{}'"  # For pause/resume timer
+                "phase_elapsed_seconds_json": "TEXT DEFAULT '{}'",  # For pause/resume timer
+                "uploaded_images_json": "TEXT DEFAULT '[]'"
             }
             
             for col_name, col_def in migrations.items():

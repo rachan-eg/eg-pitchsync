@@ -343,7 +343,11 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
             if (data.final_output) {
                 if (data.final_output.image_prompt) setCuratedPrompt(data.final_output.image_prompt);
-                if (data.final_output.image_url) setGeneratedImageUrl(getFullUrl(data.final_output.image_url));
+                if (data.final_output.image_url) {
+                    const url = getFullUrl(data.final_output.image_url);
+                    setGeneratedImageUrl(url);
+                    setActiveRevealImage(url);
+                }
             }
 
             const unlocked = calculateHighestUnlockedPhase(data.phase_scores || {}, data.phases, data.is_complete || false);
@@ -701,7 +705,10 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                         ...prev.final_output,
                         image_url: url,
                         image_prompt: data.prompt_used || finalPrompt,
-                        generated_at: new Date().toISOString()
+                        generated_at: new Date().toISOString(),
+                        visual_score: data.visual_metrics?.score,
+                        visual_feedback: data.visual_metrics?.feedback,
+                        visual_alignment: data.visual_metrics?.alignment
                     },
                     extra_ai_tokens: data.extra_ai_tokens,
                     uploadedImages: [...(prev.uploadedImages || []), url].slice(-3)
