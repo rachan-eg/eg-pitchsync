@@ -145,6 +145,10 @@ class TestPhaseEndpoints:
         })
         session_id = init_response.json()["session_id"]
 
+        # Get phase 1 name
+        phases = init_response.json()["phases"]
+        phase_name = phases["1"]["name"]
+
         client.post("/api/start-phase", json={
             "session_id": session_id,
             "phase_number": 1
@@ -153,7 +157,7 @@ class TestPhaseEndpoints:
         # Submit with "test" bypass
         response = client.post("/api/submit-phase", json={
             "session_id": session_id,
-            "phase_name": "Problem Definition",
+            "phase_name": phase_name,
             "responses": [
                 {"q": "Q1", "a": "test"},
                 {"q": "Q2", "a": "test"},

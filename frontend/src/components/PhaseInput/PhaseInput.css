@@ -657,21 +657,80 @@
     font-size: 0.85rem;
 }
 
-.pi-attempts-list {
+.pi-attempts-log {
     margin-top: 0.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+}
+
+.pi-attempts-label {
+    font-size: 0.55rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+    padding-left: 0.25rem;
+}
+
+.pi-attempts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .pi-attempt-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.35rem 0.5rem;
-    background: rgba(255, 255, 255, 0.01);
+    padding: 0.5rem 0.6rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.pi-attempt-item--current {
+    background: rgba(167, 139, 250, 0.05);
+    border-color: rgba(167, 139, 250, 0.3);
+    box-shadow: inset 0 0 10px rgba(167, 139, 250, 0.05);
+}
+
+.pi-attempt-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.pi-attempt-num {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.pi-attempt-item--current .pi-attempt-num {
+    color: var(--text-secondary);
+}
+
+.pi-attempt-tag {
+    font-size: 0.5rem;
+    font-weight: 900;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pi-attempt-score {
     font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-secondary);
+}
+
+.pi-attempt-item--current .pi-attempt-score {
+    color: var(--primary);
+    text-shadow: 0 0 10px var(--primary-glow);
 }
 
 .pi-simple-clock {

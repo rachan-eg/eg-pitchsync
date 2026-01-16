@@ -531,7 +531,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         } finally {
             setLoading(false);
         }
-    }, [session, phaseConfig, elapsedSeconds, pauseTimer, stopTimer, setLoading, setError]);
+    }, [session, phaseConfig, elapsedSeconds, pauseTimer, resumeTimer, stopTimer, setLoading, setError]);
 
     const handleFeedbackAction = useCallback(async (action: 'CONTINUE' | 'RETRY'): Promise<{ navigateTo?: string }> => {
         if (!phaseResult || !session) return {};

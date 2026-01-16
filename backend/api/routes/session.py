@@ -364,7 +364,8 @@ async def submit_phase(req: SubmitPhaseRequest):
                 can_proceed=True,
                 is_final_phase=phase_number >= len(PHASE_DEFINITIONS),
                 total_tokens=session.total_tokens,
-                extra_ai_tokens=session.extra_ai_tokens
+                extra_ai_tokens=session.extra_ai_tokens,
+                history=existing_phase.history
             )
     is_test_command = any(r.a.lower().strip() == "test" for r in req.responses)
     
@@ -484,7 +485,8 @@ async def submit_phase(req: SubmitPhaseRequest):
         total_tokens=session.total_tokens,
         extra_ai_tokens=session.extra_ai_tokens,
         can_proceed=can_proceed,
-        is_final_phase=is_final
+        is_final_phase=is_final,
+        history=history
     )
 
 

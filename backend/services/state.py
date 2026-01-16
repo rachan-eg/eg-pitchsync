@@ -16,8 +16,7 @@ from backend.database import engine, TeamContext, SessionData
 # Note: DB initialization is handled by lifespan handler in main.py
 # Removed redundant create_db_and_tables() call here (PERF-002)
 
-# In-memory helpers for specific timing (optional to persist, sticking to memory for ephemeral speed)
-_phase_start_times: Dict[str, datetime] = {}
+# In-memory helpers (removed as we persist everything to DB now for consistency)
 
 
 # --- HELPER: CONVERTERS ---
@@ -91,16 +90,18 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
     )
 
 def _domain_to_db(session: SessionState) -> SessionData:
-    """Convert Pydantic domain model to DB row."""
-    # Serialize complex objects
-    phases_dict = {k: v.dict() for k, v in session.phases.items()}
-    final_dict = session.final_output.dict()
+    """Convert Pydantic domain model to DB row using UTC consistency."""
+    # Use model_dump() for Pydantic v2 recursive serialization
+    phases_dict = {k: v.model_dump() for k, v in session.phases.items()}
+    final_dict = session.final_output.model_dump()
     
-    # Serialize phase_elapsed_seconds (with backwards compat)
-    elapsed_json = "{}"
-    if hasattr(session, 'phase_elapsed_seconds') and session.phase_elapsed_seconds:
-        elapsed_json = json.dumps(session.phase_elapsed_seconds, default=str)
-    
+    # Serialize complex objects to JSON strings
+    # We use a custom encoder or ensure dates are isoformatted
+    def _json_serial(obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        raise TypeError(f"Type {type(obj)} not serializable")
+
     return SessionData(
         session_id=session.session_id,
         team_id=session.team_id,
@@ -109,17 +110,17 @@ def _domain_to_db(session: SessionState) -> SessionData:
         total_tokens=session.total_tokens,
         extra_ai_tokens=session.extra_ai_tokens,
         answers_hash=session.answers_hash or "",
-        usecase_json=json.dumps(session.usecase, default=str),
-        theme_json=json.dumps(session.theme_palette, default=str),
-        phases_json=json.dumps(phases_dict, default=str),
-        final_output_json=json.dumps(final_dict, default=str),
-        phase_scores_json=json.dumps(session.phase_scores, default=str),
-        phase_start_times_json=json.dumps(session.phase_start_times, default=str),
-        phase_elapsed_seconds_json=elapsed_json,
-        uploaded_images_json=json.dumps(getattr(session, 'uploaded_images', []), default=str),
+        usecase_json=json.dumps(session.usecase, default=_json_serial),
+        theme_json=json.dumps(session.theme_palette, default=_json_serial),
+        phases_json=json.dumps(phases_dict, default=_json_serial),
+        final_output_json=json.dumps(final_dict, default=_json_serial),
+        phase_scores_json=json.dumps(session.phase_scores, default=_json_serial),
+        phase_start_times_json=json.dumps(session.phase_start_times, default=_json_serial),
+        phase_elapsed_seconds_json=json.dumps(session.phase_elapsed_seconds, default=_json_serial),
+        uploaded_images_json=json.dumps(session.uploaded_images, default=_json_serial),
         is_complete=session.is_complete,
         created_at=session.created_at,
-        updated_at=datetime.now()
+        updated_at=datetime.now(timezone.utc)
     )
 
 
@@ -156,6 +157,8 @@ def update_session(session: SessionState) -> SessionState:
             existing.total_tokens = db_row.total_tokens
             existing.extra_ai_tokens = db_row.extra_ai_tokens
             existing.answers_hash = db_row.answers_hash
+            existing.usecase_json = db_row.usecase_json
+            existing.theme_json = db_row.theme_json
             existing.phases_json = db_row.phases_json
             existing.final_output_json = db_row.final_output_json
             existing.phase_scores_json = db_row.phase_scores_json
@@ -163,7 +166,7 @@ def update_session(session: SessionState) -> SessionState:
             existing.phase_elapsed_seconds_json = db_row.phase_elapsed_seconds_json
             existing.uploaded_images_json = db_row.uploaded_images_json
             existing.is_complete = db_row.is_complete
-            existing.updated_at = datetime.now()
+            existing.updated_at = datetime.now(timezone.utc)
             
             db.add(existing)
             db.commit()

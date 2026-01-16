@@ -421,36 +421,41 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             })()}
                         </div>
 
-                        {/* RETRIES LIST */}
+                        {/* RETRIES LOG */}
                         {(() => {
                             const pName = phaseConfig[phaseNumber]?.name;
                             const existing = session?.phases[pName];
                             const history = existing?.history || [];
                             const currentMetrics = existing?.metrics;
 
-                            // Build complete attempts list: history + current attempt
+                            // Build complete attempts list: history
                             const allAttempts: Array<{ weighted_score: number; isCurrent?: boolean }> = [
                                 ...history.map(h => ({ weighted_score: h.weighted_score })),
                             ];
 
-                            // Add current attempt if it has been evaluated
-                            if (currentMetrics && typeof currentMetrics.weighted_score === 'number') {
+                            // Add current attempt if it has been evaluated AND it's not the same as the last history item
+                            // Backend usually moves current to history on next submission.
+                            // If user is viewing a passed phase, currentMetrics has the score.
+                            if (currentMetrics && typeof currentMetrics.weighted_score === 'number' && currentMetrics.ai_score > 0) {
                                 allAttempts.push({ weighted_score: currentMetrics.weighted_score, isCurrent: true });
                             }
 
                             if (allAttempts.length > 0) {
                                 return (
-                                    <div className="pi-attempts-list">
-                                        <div className="pi-scoring-separator" style={{ margin: '0.5rem 0', borderTop: '1px dashed var(--border-light)', opacity: 0.5 }} />
-                                        {allAttempts.map((h, idx) => (
-                                            <div key={idx} className="pi-attempt-item">
-                                                <span style={{ color: h.isCurrent ? 'var(--primary)' : 'var(--text-muted)', fontSize: '0.7rem' }}>
-                                                    {idx === 0 ? 'Initial Attempt' : `Retry #${idx}`}
-                                                    {h.isCurrent && ' (Current)'}
-                                                </span>
-                                                <span className="pi-scoring-val" style={{ background: 'transparent', padding: 0, color: h.isCurrent ? 'var(--primary)' : undefined }}>{Math.round(h.weighted_score)} PTS</span>
-                                            </div>
-                                        ))}
+                                    <div className="pi-attempts-log">
+                                        <div className="pi-scoring-separator" style={{ margin: '0.75rem 0 0.5rem', borderTop: '1px dashed var(--border-light)', opacity: 0.3 }} />
+                                        <div className="pi-attempts-label">TRIAL HISTORY</div>
+                                        <div className="pi-attempts-list custom-scrollbar">
+                                            {allAttempts.map((h, idx) => (
+                                                <div key={idx} className={`pi-attempt-item ${h.isCurrent ? 'pi-attempt-item--current' : ''}`}>
+                                                    <div className="pi-attempt-info">
+                                                        <span className="pi-attempt-num">TRIAL {idx + 1}</span>
+                                                        {h.isCurrent && <span className="pi-attempt-tag">CURRENT</span>}
+                                                    </div>
+                                                    <span className="pi-attempt-score">{Math.round(h.weighted_score)} PTS</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 );
                             }
