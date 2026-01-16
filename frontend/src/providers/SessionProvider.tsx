@@ -66,6 +66,9 @@ interface SessionContextType {
     curatedPrompt: string;
     setCuratedPrompt: (prompt: string) => void;
     generatedImageUrl: string;
+    uploadedImages: string[];
+    activeRevealImage: string;
+    setActiveRevealImage: (url: string) => void;
 
     // Token Usage (display only - calculated by backend)
     totalTokens: { payload: number; ai: number; total: number };
@@ -88,7 +91,7 @@ const SessionContext = createContext<SessionContextType | null>(null);
 // =============================================================================
 export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
-    const { startTimer, pauseTimer, stopTimer, elapsedSeconds } = useTimer();
+    const { startTimer, pauseTimer, resumeTimer, stopTimer, elapsedSeconds } = useTimer();
     const { loading, setLoading, setError } = useUI();
 
     // Selection State
@@ -108,6 +111,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Prompt & Image State
     const [curatedPrompt, setCuratedPrompt] = useState('');
     const [generatedImageUrl, setGeneratedImageUrl] = useState('');
+    const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+    const [activeRevealImage, setActiveRevealImage] = useState('');
 
     // =========================================================================
     // TOKEN CALCULATION (Display Only - Backend is authoritative)
@@ -168,6 +173,12 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     if (parsedSession.final_output) {
                         if (parsedSession.final_output.image_prompt) setCuratedPrompt(parsedSession.final_output.image_prompt);
                         if (parsedSession.final_output.image_url) setGeneratedImageUrl(getFullUrl(parsedSession.final_output.image_url));
+                    }
+
+                    if (parsedSession.uploadedImages) {
+                        const urls = parsedSession.uploadedImages.map((u: string) => getFullUrl(u));
+                        setUploadedImages(urls);
+                        if (urls.length > 0) setActiveRevealImage(urls[urls.length - 1]);
                     }
 
                     const unlocked = calculateHighestUnlockedPhase(
@@ -292,7 +303,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 completed_at: null,
                 is_complete: data.is_complete || false,
                 total_tokens: data.total_tokens || 0,
-                extra_ai_tokens: data.extra_ai_tokens || 0
+                extra_ai_tokens: data.extra_ai_tokens || 0,
+                uploadedImages: data.uploadedImages || []
             };
 
             setSession(newSession);
@@ -447,6 +459,25 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             // Update session with backend-provided values (backend is authoritative)
             setSession(prev => {
                 if (!prev) return null;
+
+                // Preserve existing history
+                const currentPhaseDef = phaseConfig[prev.current_phase];
+                const existingPhase = prev.phases[currentPhaseDef.name];
+                const existingHistory = existingPhase?.history || [];
+                const newHistory = [...existingHistory];
+
+                // Only add to history if there was a REAL retry (responses changed)
+                const existingResponses = existingPhase?.responses || [];
+                const hasChanges = responses.some((r, i) => {
+                    const existing = existingResponses[i];
+                    return !existing || r.a !== existing.a || r.hint_used !== existing.hint_used;
+                });
+
+                // If there was a previous attempt with a valid score AND responses changed, add it to history
+                if (hasChanges && existingPhase?.metrics && typeof existingPhase.metrics.weighted_score === 'number') {
+                    newHistory.push(existingPhase.metrics);
+                }
+
                 return {
                     ...prev,
                     total_score: result.total_score,
@@ -466,7 +497,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                                 ai_score: result.ai_score,
                                 weighted_score: result.phase_score,
                                 start_time: null,
-                                end_time: null,
+                                end_time: new Date().toISOString(),
                                 duration_seconds: elapsedSeconds,
                                 retries: result.metrics.retries,
                                 tokens_used: result.metrics.tokens_used,
@@ -481,7 +512,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                             rationale: result.rationale,
                             strengths: result.strengths,
                             improvements: result.improvements,
-                            history: prev.phases[currentPhaseDef.name]?.history || []
+                            history: newHistory
                         }
                     }
                 };
@@ -496,6 +527,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             stopTimer();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error submitting phase');
+            resumeTimer(); // Resume timer if submission failed so player can fix and retry
         } finally {
             setLoading(false);
         }
@@ -626,8 +658,12 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                         image_prompt: data.prompt_used || finalPrompt,
                         generated_at: new Date().toISOString()
                     },
-                    extra_ai_tokens: data.extra_ai_tokens
+                    extra_ai_tokens: data.extra_ai_tokens,
+                    uploadedImages: [...(prev.uploadedImages || []), url].slice(-3)
                 } : null);
+
+                setUploadedImages(prev => [...prev, url].slice(-3));
+                setActiveRevealImage(url);
             }
         } catch (e) {
             console.error("Failed to submit pitch image", e);
@@ -671,6 +707,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             curatedPrompt,
             setCuratedPrompt,
             generatedImageUrl,
+            uploadedImages,
+            activeRevealImage,
+            setActiveRevealImage,
             totalTokens,
             initSession,
             startPhase,

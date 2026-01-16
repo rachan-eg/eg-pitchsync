@@ -44,6 +44,9 @@ export interface AppContextType {
     curatedPrompt: string;
     setCuratedPrompt: (prompt: string) => void;
     generatedImageUrl: string;
+    uploadedImages: string[];
+    activeRevealImage: string;
+    setActiveRevealImage: (url: string) => void;
 
     // UI State
     loading: boolean;
