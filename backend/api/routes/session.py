@@ -106,8 +106,13 @@ async def init_session(req: InitRequest):
             theme = random.choice(THEME_REPO)
     else:
         if req.usecase_id:
-            # If usecase was selected but theme wasn't, pick random theme
-            theme = random.choice(THEME_REPO)
+            # If usecase was selected but theme wasn't, try to use the usecase's preferred theme
+            theme_id = usecase.get('theme_id')
+            theme = next((t for t in THEME_REPO if t.get('id') == theme_id), None)
+            
+            # Fallback to random if preferred theme not found
+            if not theme:
+                theme = random.choice(THEME_REPO)
         else:
             assignment = get_or_assign_team_context(req.team_id, USECASE_REPO, THEME_REPO)
             theme = assignment["theme"]
@@ -448,8 +453,8 @@ async def submit_phase(req: SubmitPhaseRequest):
          history = list(existing_phase.history)
          # If keeping track of attempts, add the current state of the phase *before* this new submission overwrites it
          # But wait, existing_phase is the PREVIOUS state. Yes.
-         # Only add if it was a real attempt (has metrics)
-         if existing_phase.status != PhaseStatus.PENDING and existing_phase.metrics.ai_score > 0:
+         # Only add to history if it was a real attempt (has a final status)
+         if existing_phase.status in [PhaseStatus.PASSED, PhaseStatus.FAILED]:
              # We want to store the metrics of the ATTEMPT.
              history.append(existing_phase.metrics)
 
