@@ -6,4 +6,6 @@
 export { TimerProvider, useTimer } from './TimerProvider';
 export { UIProvider, useUI } from './UIProvider';
 export { SessionProvider, useSession } from './SessionProvider';
+export { AuthProvider, useAuth } from './AuthProvider';
+
 

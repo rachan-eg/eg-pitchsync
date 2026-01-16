@@ -1,0 +1,1 @@
+export { TeamCode } from './TeamCode';

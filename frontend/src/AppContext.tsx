@@ -59,6 +59,7 @@ export interface AppContextType {
 
     // Actions
     initSession: (teamId: string) => Promise<{ success: boolean; isResumed: boolean; isComplete: boolean; currentPhase: number }>;
+    initSessionFromTeamCode: (teamName: string, usecaseId: string) => Promise<{ success: boolean; isResumed: boolean; isComplete: boolean; currentPhase: number }>;
     startPhase: (phaseNum: number) => Promise<void>;
     submitPhase: (responses: PhaseResponse[]) => Promise<void>;
     handleFeedbackAction: (action: 'CONTINUE' | 'RETRY') => Promise<{ navigateTo?: string }>;

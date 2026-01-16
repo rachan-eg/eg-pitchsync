@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../../AppContext';
+import { useAuth } from '../../providers';
 import type { SessionState } from '../../types';
 import { Branding } from '../Branding/Branding';
 import './GlobalHeader.css';
@@ -31,6 +32,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
     const navigate = useNavigate();
     const location = useLocation();
     const { resetToStart, fetchLeaderboard } = useApp();
+    const { user } = useAuth();
 
     const currentPath = location.pathname;
 
@@ -138,6 +140,26 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
                     <Icons.Trophy />
                     <span className="header-leaderboard-btn__text">Ranks</span>
                 </button>
+
+                {user && (
+                    <>
+                        <div className="global-header__divider" />
+                        <div className="header-user-profile" title={`Logon: ${user.name || 'User'} (${user.email})`}>
+                            <div className="header-user-avatar">
+                                {user.picture ? (
+                                    <img src={user.picture} alt={user.name || 'User'} className="header-avatar-img" />
+                                ) : (
+                                    <span>{user.email?.charAt(0).toUpperCase() || 'U'}</span>
+                                )}
+                            </div>
+                            <div className="header-user-info">
+                                <span className="header-user-name" title={user.name || user.email}>
+                                    {user.name || user.email?.split('@')[0]}
+                                </span>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
         );
     };

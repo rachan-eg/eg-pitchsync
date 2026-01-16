@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../AppContext';
+import { useAuth } from '../../providers';
 import type { UseCase, Theme, PhaseDefinition } from '../../types';
 import './MissionBrief.css';
 
@@ -19,17 +20,27 @@ const Icons = {
     ),
     Shield: () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+    ),
+    ArrowLeft: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
     )
 };
 
 export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) => {
     const navigate = useNavigate();
-    const { startPhase } = useApp();
+    const { startPhase, resetToStart } = useApp();
+    const { clearTeamCode } = useAuth();
     const phaseList = Object.values(phases);
 
     const handleStart = async () => {
         await startPhase(1);
         navigate('/war-room');
+    };
+
+    const handleBackToTeamCode = () => {
+        resetToStart();
+        clearTeamCode();
+        navigate('/team-code', { replace: true });
     };
 
     return (
@@ -124,9 +135,17 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
 
                 {/* Bottom: Launch */}
                 <div className="mission-brief__footer">
-                    <button onClick={handleStart} className="mission-brief__launch-btn">
-                        <Icons.Rocket /> Launch Mission
-                    </button>
+                    <div className="mission-brief__footer-actions">
+                        <button
+                            onClick={handleBackToTeamCode}
+                            className="btn-secondary mission-brief__back-btn"
+                        >
+                            <Icons.ArrowLeft /> Change Team
+                        </button>
+                        <button onClick={handleStart} className="btn-primary mission-brief__launch-btn">
+                            <Icons.Rocket /> Launch Mission
+                        </button>
+                    </div>
                     <p className="mission-brief__status">Systems ready • AI synthesis active</p>
                 </div>
             </div>

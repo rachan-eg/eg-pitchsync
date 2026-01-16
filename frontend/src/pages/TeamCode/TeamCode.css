@@ -1,0 +1,301 @@
+/* =============================================================================
+   TEAM CODE PAGE STYLES
+   ============================================================================= */
+
+.teamcode-container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-dark);
+    overflow: hidden;
+}
+
+.teamcode-background {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.teamcode-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(167, 139, 250, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(167, 139, 250, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(circle at center, black, transparent 80%);
+    opacity: 0.5;
+}
+
+.teamcode-gradient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+    animation: float 15s infinite alternate;
+}
+
+.orb-1 {
+    width: 600px;
+    height: 600px;
+    background: var(--primary);
+    top: -200px;
+    right: -100px;
+}
+
+.orb-2 {
+    width: 400px;
+    height: 400px;
+    background: var(--secondary);
+    bottom: -100px;
+    left: -100px;
+    animation-delay: -7s;
+}
+
+/* User Info Bar */
+.teamcode-user-bar {
+    position: absolute;
+    top: 1.5rem;
+    right: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    z-index: 2;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-full);
+    animation: slideDown 0.5s ease-out forwards;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: var(--font-bold);
+    color: var(--bg-dark);
+    overflow: hidden;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-email {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    font-weight: var(--font-medium);
+}
+
+.logout-button {
+    font-size: var(--text-xs);
+    color: var(--danger);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.5rem;
+    transition: filter 0.2s;
+    font-weight: var(--font-bold);
+}
+
+.logout-button:hover {
+    filter: brightness(1.2);
+}
+
+/* Team Code Card */
+.teamcode-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 440px;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    opacity: 0;
+    animation: reveal-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.teamcode-header {
+    text-align: center;
+}
+
+.teamcode-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 1.5rem;
+    color: var(--primary);
+    filter: drop-shadow(0 0 10px var(--primary-glow));
+}
+
+.teamcode-title {
+    font-size: 2rem;
+    font-weight: var(--font-black);
+    margin-bottom: 0.75rem;
+    background: linear-gradient(to bottom, #fff, #cbd5e1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.teamcode-subtitle {
+    font-size: 0.9375rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+}
+
+/* Form Styles */
+.teamcode-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.teamcode-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: var(--font-bold);
+    text-align: center;
+    letter-spacing: 0.2em;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.teamcode-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(167, 139, 250, 0.05);
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.1);
+}
+
+.teamcode-input.error {
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.input-error {
+    color: #f87171;
+    font-size: var(--text-xs);
+    text-align: center;
+}
+
+.teamcode-submit {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Success State */
+.teamcode-success {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.success-icon {
+    width: 64px;
+    height: 64px;
+    color: var(--success);
+    margin-bottom: 0.5rem;
+}
+
+.success-title {
+    font-size: 1.75rem;
+    font-weight: var(--font-bold);
+    color: white;
+}
+
+.success-details {
+    padding: 1.5rem;
+    background: rgba(16, 185, 129, 0.05);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(16, 185, 129, 0.1);
+    width: 100%;
+}
+
+.team-name {
+    font-size: 1.25rem;
+    font-weight: var(--font-black);
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+}
+
+.team-description {
+    font-size: 0.875rem;
+    color: var(--text-dim);
+}
+
+.success-loader {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.loader-bar {
+    height: 100%;
+    background: var(--primary);
+    width: 0;
+    animation: progress 1.5s ease-in-out forwards;
+}
+
+@keyframes progress {
+    to {
+        width: 100%;
+    }
+}
+
+.success-message {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.teamcode-help {
+    text-align: center;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+    .teamcode-card {
+        padding: 2rem;
+    }
+
+    .teamcode-user-bar {
+        right: 1rem;
+        left: 1rem;
+        justify-content: space-between;
+    }
+}

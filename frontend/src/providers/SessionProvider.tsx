@@ -75,6 +75,7 @@ interface SessionContextType {
 
     // Actions
     initSession: (teamId: string) => Promise<{ success: boolean; isResumed: boolean; isComplete: boolean; currentPhase: number }>;
+    initSessionFromTeamCode: (teamName: string, usecaseId: string) => Promise<{ success: boolean; isResumed: boolean; isComplete: boolean; currentPhase: number }>;
     startPhase: (phaseNum: number) => Promise<void>;
     submitPhase: (responses: PhaseResponse[]) => Promise<void>;
     handleFeedbackAction: (action: 'CONTINUE' | 'RETRY') => Promise<{ navigateTo?: string }>;
@@ -290,6 +291,84 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // API ACTIONS
     // =========================================================================
 
+    // Helper function to process init response (shared between initSession and initSessionFromTeamCode)
+    const processInitResponse = useCallback((data: InitResponse, teamId: string) => {
+        const isResumedSession = !!(data.phase_scores && Object.keys(data.phase_scores).length > 0);
+
+        const newSession: SessionState = {
+            session_id: data.session_id,
+            team_id: teamId,
+            usecase: data.usecase,
+            usecase_context: data.usecase.target_market,
+            current_phase: data.current_phase || 1,
+            phases: data.phase_data || {},
+            theme_palette: data.theme,
+            final_output: data.final_output || {
+                visionary_hook: '',
+                customer_pitch: '',
+                image_prompt: '',
+                image_url: '',
+                generated_at: null
+            },
+            total_score: Object.values(data.phase_scores || {}).reduce((a, b) => a + b, 0),
+            phase_scores: data.phase_scores || {},
+            created_at: new Date().toISOString(),
+            completed_at: null,
+            is_complete: data.is_complete || false,
+            total_tokens: data.total_tokens || 0,
+            extra_ai_tokens: data.extra_ai_tokens || 0,
+            uploadedImages: data.uploadedImages || []
+        };
+
+        setSession(newSession);
+        setPhaseConfig(data.phases);
+        setScoringInfo(data.scoring_info);
+        setSelectedUsecase(data.usecase);
+        setSelectedTheme(data.theme);
+
+        if (data.final_output) {
+            if (data.final_output.image_prompt) setCuratedPrompt(data.final_output.image_prompt);
+            if (data.final_output.image_url) setGeneratedImageUrl(getFullUrl(data.final_output.image_url));
+        }
+
+        const unlocked = calculateHighestUnlockedPhase(data.phase_scores || {}, data.phases, data.is_complete || false);
+        setHighestUnlockedPhase(unlocked);
+
+        // Timer initialization - handle both new and resumed sessions
+        const phaseDef = data.phases[data.current_phase || 1];
+        const phaseData = phaseDef ? data.phase_data?.[phaseDef.name] : null;
+        const isPhaseComplete = phaseData?.status === 'passed';
+
+        if (isPhaseComplete) {
+            stopTimer(Math.round(phaseData?.metrics?.duration_seconds || 0));
+        } else if (data.current_phase_started_at) {
+            const serverStartTime = new Date(data.current_phase_started_at).getTime();
+            const serverNow = data.current_server_time ? new Date(data.current_server_time).getTime() : Date.now();
+            const elapsedSecs = Math.max(0, Math.floor((serverNow - serverStartTime) / 1000));
+            console.log(`[Timer] Resuming session, elapsed: ${elapsedSecs}s`);
+            startTimer(elapsedSecs);
+        } else {
+            console.log('[Timer] Starting fresh timer for new session');
+            startTimer(0);
+        }
+
+        if (isResumedSession && data.phase_data) {
+            const phaseDef = data.phases[data.current_phase || 1];
+            if (phaseDef) {
+                const phaseData = data.phase_data[phaseDef.name];
+                if (phaseData?.responses) {
+                    setCurrentPhaseResponses(phaseData.responses);
+                }
+            }
+        }
+
+        return {
+            isResumed: isResumedSession,
+            isComplete: data.is_complete || false,
+            currentPhase: data.current_phase || 1
+        };
+    }, [startTimer, stopTimer, setCurrentPhaseResponses]);
+
     const initSession = useCallback(async (teamId: string) => {
         if (!selectedUsecase || !selectedTheme) return { success: false, isResumed: false, isComplete: false, currentPhase: 1 };
 
@@ -310,89 +389,46 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             if (!res.ok) throw new Error('Failed to initialize session');
 
             const data: InitResponse = await res.json();
-            const isResumedSession = !!(data.phase_scores && Object.keys(data.phase_scores).length > 0);
-
-            const newSession: SessionState = {
-                session_id: data.session_id,
-                team_id: teamId,
-                usecase: data.usecase,
-                usecase_context: data.usecase.target_market,
-                current_phase: data.current_phase || 1,
-                phases: data.phase_data || {},
-                theme_palette: data.theme,
-                final_output: data.final_output || {
-                    visionary_hook: '',
-                    customer_pitch: '',
-                    image_prompt: '',
-                    image_url: '',
-                    generated_at: null
-                },
-                total_score: Object.values(data.phase_scores || {}).reduce((a, b) => a + b, 0),
-                phase_scores: data.phase_scores || {},
-                created_at: new Date().toISOString(),
-                completed_at: null,
-                is_complete: data.is_complete || false,
-                total_tokens: data.total_tokens || 0,
-                extra_ai_tokens: data.extra_ai_tokens || 0,
-                uploadedImages: data.uploadedImages || []
-            };
-
-            setSession(newSession);
-            setPhaseConfig(data.phases);
-            setScoringInfo(data.scoring_info);
-
-            if (data.final_output) {
-                if (data.final_output.image_prompt) setCuratedPrompt(data.final_output.image_prompt);
-                if (data.final_output.image_url) setGeneratedImageUrl(getFullUrl(data.final_output.image_url));
-            }
-
-            const unlocked = calculateHighestUnlockedPhase(data.phase_scores || {}, data.phases, data.is_complete || false);
-            setHighestUnlockedPhase(unlocked);
-
-            // Timer initialization - handle both new and resumed sessions
-            const phaseDef = data.phases[data.current_phase || 1];
-            const phaseData = phaseDef ? data.phase_data?.[phaseDef.name] : null;
-            const isPhaseComplete = phaseData?.status === 'passed';
-
-            if (isPhaseComplete) {
-                // Phase already complete - show the final duration
-                stopTimer(Math.round(phaseData?.metrics?.duration_seconds || 0));
-            } else if (data.current_phase_started_at) {
-                // Resumed session with valid start time - calculate elapsed
-                const serverStartTime = new Date(data.current_phase_started_at).getTime();
-                const serverNow = data.current_server_time ? new Date(data.current_server_time).getTime() : Date.now();
-                const elapsedSecs = Math.max(0, Math.floor((serverNow - serverStartTime) / 1000));
-                console.log(`[Timer] Resuming session, elapsed: ${elapsedSecs}s`);
-                startTimer(elapsedSecs);
-            } else {
-                // New session or missing start time - start fresh from 0
-                console.log('[Timer] Starting fresh timer for new session');
-                startTimer(0);
-            }
-
-            if (isResumedSession && data.phase_data) {
-                const phaseDef = data.phases[data.current_phase || 1];
-                if (phaseDef) {
-                    const phaseData = data.phase_data[phaseDef.name];
-                    if (phaseData?.responses) {
-                        setCurrentPhaseResponses(phaseData.responses);
-                    }
-                }
-            }
+            const result = processInitResponse(data, teamId);
 
             setLoading(false);
-            return {
-                success: true,
-                isResumed: isResumedSession,
-                isComplete: data.is_complete || false,
-                currentPhase: data.current_phase || 1
-            };
+            return { success: true, ...result };
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');
             setLoading(false);
             return { success: false, isResumed: false, isComplete: false, currentPhase: 1 };
         }
-    }, [selectedUsecase, selectedTheme, setLoading, setError, startTimer, stopTimer, setCurrentPhaseResponses]);
+    }, [selectedUsecase, selectedTheme, setLoading, setError, processInitResponse]);
+
+    // New function: Initialize session directly from team code info
+    const initSessionFromTeamCode = useCallback(async (teamName: string, usecaseId: string) => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const res = await fetch(getApiUrl('/api/init'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    team_id: teamName,
+                    usecase_id: usecaseId,
+                    // theme_id will be inferred from usecase on the backend
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to initialize session');
+
+            const data: InitResponse = await res.json();
+            const result = processInitResponse(data, teamName);
+
+            setLoading(false);
+            return { success: true, ...result };
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+            setLoading(false);
+            return { success: false, isResumed: false, isComplete: false, currentPhase: 1 };
+        }
+    }, [setLoading, setError, processInitResponse]);
 
     const startPhase = useCallback(async (phaseNum: number) => {
         if (!session) return;
@@ -757,6 +793,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             setActiveRevealImage,
             totalTokens,
             initSession,
+            initSessionFromTeamCode,
             startPhase,
             submitPhase,
             handleFeedbackAction,

@@ -1,0 +1,29 @@
+{
+    "team_codes": {
+        "ALPHA2026": {
+            "team_name": "Alpha Innovators",
+            "usecase_id": "construction_ai_deviation",
+            "description": "Construction AI Deviation Detection team"
+        },
+        "BETA2026": {
+            "team_name": "Beta Builders",
+            "usecase_id": "construction_ai_deviation",
+            "description": "Construction tech challenge team"
+        },
+        "HEALTH2026": {
+            "team_name": "HealthTech Pioneers",
+            "usecase_id": "healthcare_onprem_ai",
+            "description": "Healthcare AI team"
+        },
+        "MEDAI2026": {
+            "team_name": "MedAI Solutions",
+            "usecase_id": "healthcare_onprem_ai",
+            "description": "Medical AI innovation team"
+        },
+        "DEMO2026": {
+            "team_name": "Demo Team",
+            "usecase_id": "construction_ai_deviation",
+            "description": "Demonstration and testing team"
+        }
+    }
+}

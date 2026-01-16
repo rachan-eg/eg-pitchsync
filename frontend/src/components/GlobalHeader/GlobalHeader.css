@@ -278,6 +278,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: none;
+}
+
+.global-header__center>* {
+    pointer-events: auto;
 }
 
 /* Right Content */
@@ -437,5 +442,71 @@
 @media (min-width: 640px) and (max-width: 1023px) {
     .header-project-info {
         max-width: 250px;
+    }
+}
+
+/* User Profile Section */
+.header-user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem;
+    border-radius: 999px;
+    transition: background 0.3s ease;
+}
+
+.header-user-avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--bg-dark);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.header-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.header-user-info {
+    display: flex;
+    flex-direction: column;
+    max-width: 120px;
+    display: none;
+    /* Hidden by default, shown on desktop */
+}
+
+.header-user-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (min-width: 1024px) {
+    .header-user-info {
+        display: flex;
+    }
+
+    .header-user-profile {
+        background: rgba(255, 255, 255, 0.03);
+        padding-right: 0.75rem;
+    }
+}
+
+@media (max-width: 639px) {
+    .header-user-profile {
+        gap: 0;
     }
 }

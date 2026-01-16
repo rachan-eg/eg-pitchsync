@@ -4,7 +4,19 @@ Database Models.
 Refactored for modularity.
 """
 from datetime import datetime
+from typing import Optional
 from sqlmodel import Field, SQLModel
+
+class User(SQLModel, table=True):
+    """
+    User information recorded after SSO login.
+    """
+    email: str = Field(primary_key=True, index=True)
+    name: Optional[str] = None
+    preferred_username: Optional[str] = None
+    picture: Optional[str] = None
+    last_login: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=datetime.now)
 
 class TeamContext(SQLModel, table=True):
     """

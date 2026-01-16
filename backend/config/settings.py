@@ -41,7 +41,7 @@ class Settings:
     APP_NAME = "Pitch-Sync Engine"
     APP_VERSION = "2.0.0"
     DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
-    TEST_MODE = os.environ.get("TEST_MODE", "true").lower() == "true"
+    TEST_MODE = os.environ.get("TEST_MODE", "false").lower() == "true"
     ALLOW_FAIL_PROCEED = os.environ.get("ALLOW_FAIL_PROCEED", "true").lower() == "true"
     
     # Paths
@@ -85,6 +85,12 @@ class Settings:
     AWS_SESSION_TOKEN = os.environ.get("AWS_SESSION_TOKEN", "")
     AWS_REGION = os.environ.get("AWS_REGION", "eu-central-1")
 
+    # Keycloak SSO Configuration
+    KEYCLOAK_SERVER_URL = os.environ.get("KEYCLOAK_SERVER_URL", "")
+    KEYCLOAK_REALM = os.environ.get("KEYCLOAK_REALM", "")
+    KEYCLOAK_CLIENT_ID = os.environ.get("KEYCLOAK_CLIENT_ID", "")
+    KEYCLOAK_CLIENT_SECRET = os.environ.get("KEYCLOAK_CLIENT_SECRET", "")
+
 
 
 settings = Settings()
@@ -99,8 +105,8 @@ if not settings.DEBUG and not settings.TEST_MODE:
         missing_credentials.append('AWS_ACCESS_KEY_ID')
     if not settings.AWS_SECRET_ACCESS_KEY:
         missing_credentials.append('AWS_SECRET_ACCESS_KEY')
-    if not settings.FLUX_API_KEY:
-        missing_credentials.append('FLUX_API_KEY')
+    # if not settings.FLUX_API_KEY:
+    #     missing_credentials.append('FLUX_API_KEY')
     
     if missing_credentials:
         print(f"🚨 FATAL: Missing required credentials: {', '.join(missing_credentials)}")
