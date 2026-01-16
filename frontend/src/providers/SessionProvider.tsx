@@ -481,7 +481,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                             rationale: result.rationale,
                             strengths: result.strengths,
                             improvements: result.improvements,
-                            history: prev.phases[currentPhaseDef.name]?.history || []
+                            history: result.history || prev.phases[currentPhaseDef.name]?.history || []
                         }
                     }
                 };

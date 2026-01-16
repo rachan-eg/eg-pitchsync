@@ -30,6 +30,6 @@ warn_return_any = false
 warn_unused_ignores = true
 
 [tool.pytest.ini_options]
-testpaths = ["backend"]
+testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 asyncio_mode = "auto"

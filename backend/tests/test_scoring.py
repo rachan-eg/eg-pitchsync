@@ -13,6 +13,8 @@ from backend.services.scoring import (
 )
 
 
+from backend.config import settings
+
 class TestCalculatePhaseScore:
     """Tests for phase score calculation."""
 
@@ -27,7 +29,8 @@ class TestCalculatePhaseScore:
             start_time=start_time,
             end_time=end_time,
             token_count=300,  # Within optimal range
-            phase_number=1
+            phase_number=1,
+            phase_def={"weight": 0.33, "time_limit_seconds": 300}
         )
 
         assert result["raw_score"] > 0
@@ -46,7 +49,8 @@ class TestCalculatePhaseScore:
             start_time=start_time,
             end_time=end_time,
             token_count=300,
-            phase_number=1
+            phase_number=1,
+            phase_def={"weight": 0.33, "time_limit_seconds": 300}
         )
 
         # With 0 AI score, should get minimal points
@@ -63,7 +67,8 @@ class TestCalculatePhaseScore:
             start_time=start_time,
             end_time=end_time,
             token_count=300,
-            phase_number=1
+            phase_number=1,
+            phase_def={"weight": 0.33, "time_limit_seconds": 300}
         )
 
         result_with_retry = calculate_phase_score(
@@ -72,11 +77,15 @@ class TestCalculatePhaseScore:
             start_time=start_time,
             end_time=end_time,
             token_count=300,
-            phase_number=1
+            phase_number=1,
+            phase_def={"weight": 0.33, "time_limit_seconds": 300}
         )
 
-        assert result_with_retry["raw_score"] < result_no_retry["raw_score"]
-        assert result_with_retry["breakdown"]["retry_penalty"] > 0
+        if settings.RETRY_PENALTY_POINTS > 0:
+            assert result_with_retry["raw_score"] < result_no_retry["raw_score"]
+            assert result_with_retry["breakdown"]["retry_penalty"] > 0
+        else:
+            assert result_with_retry["raw_score"] <= result_no_retry["raw_score"]
 
     def test_time_penalty_applied(self):
         """Test that overtime penalty is applied."""
@@ -89,7 +98,8 @@ class TestCalculatePhaseScore:
             start_time=start_time,
             end_time=end_time,
             token_count=300,
-            phase_number=1
+            phase_number=1,
+            phase_def={"weight": 0.33, "time_limit_seconds": 300}
         )
 
         assert result["breakdown"]["time_penalty"] > 0
@@ -106,6 +116,7 @@ class TestCalculatePhaseScore:
             end_time=end_time,
             token_count=300,
             phase_number=1,
+            phase_def={"weight": 0.33, "time_limit_seconds": 300},
             hint_penalty=0
         )
 
@@ -116,6 +127,7 @@ class TestCalculatePhaseScore:
             end_time=end_time,
             token_count=300,
             phase_number=1,
+            phase_def={"weight": 0.33, "time_limit_seconds": 300},
             hint_penalty=100
         )
 

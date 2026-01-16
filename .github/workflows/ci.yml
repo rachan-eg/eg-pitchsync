@@ -70,7 +70,8 @@ jobs:
         env:
           TEST_MODE: "true"
           DEBUG: "true"
-        run: pytest . -v --tb=short || echo "No tests found yet"
+          PYTHONPATH: ${{ github.workspace }}
+        run: pytest . -v --tb=short
 
   # Docker Build Test
   docker:

@@ -86,6 +86,7 @@ class SubmitPhaseResponse(BaseModel):
     extra_ai_tokens: int = 0
     can_proceed: bool
     is_final_phase: bool
+    history: Optional[List[Any]] = None
 
 
 # =============================================================================

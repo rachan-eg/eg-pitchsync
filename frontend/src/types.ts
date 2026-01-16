@@ -202,6 +202,7 @@ export interface SubmitPhaseResponse {
     extra_ai_tokens: number;
     can_proceed: boolean;
     is_final_phase: boolean;
+    history?: PhaseMetrics[];
 }
 
 export interface PrepareSynthesisRequest {
