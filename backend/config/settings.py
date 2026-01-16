@@ -107,7 +107,6 @@ settings = Settings()
 # STARTUP VALIDATION (SEC-001)
 # =============================================================================
 # Fail fast if required credentials are missing in production mode
-# Fail fast if required credentials are missing in production mode
 if not settings.DEBUG and not settings.TEST_MODE:
     missing_credentials = []
     # AWS Credentials are now optional to support IAM Roles/Instance Profiles
