@@ -13,19 +13,15 @@ class ClaudeClient:
     """Client for interacting with Claude 3.5 Sonnet on AWS Bedrock."""
     
     def __init__(self):
-        #session credentials from settings (loaded from .env)
-        self.access_key = settings.AWS_ACCESS_KEY_ID
-        self.secret_key = settings.AWS_SECRET_ACCESS_KEY
-        self.session_token = settings.AWS_SESSION_TOKEN
+        """Initialize the Bedrock runtime client."""
         self.region = settings.AWS_REGION
         self.model_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0'
         
+        # Initialize client. Boto3 will automatically use IAM roles if credentials 
+        # are not explicitly provided and not found in environment variables.
         self.client = boto3.client(
             service_name='bedrock-runtime',
-            region_name=self.region,
-            aws_access_key_id=self.access_key,
-            aws_secret_access_key=self.secret_key,
-            aws_session_token=self.session_token
+            region_name=self.region
         )
 
     def generate_content(
@@ -33,10 +29,39 @@ class ClaudeClient:
         prompt: str, 
         system_prompt: Optional[str] = None,
         max_tokens: int = 2000,
-        temperature: float = 0.7
+        temperature: float = 0.7,
+        images: Optional[List[Dict[str, str]]] = None
     ) -> str:
-        """Unified method for generating text with Claude."""
+        """
+        Unified method for generating text with Claude.
+        Supports text-only or multi-modal (text + images) requests.
         
+        Args:
+            images: List of dicts with keys 'data' (base64) and 'media_type' (e.g. 'image/jpeg')
+        """
+        
+        # Construct message content
+        if images:
+            content_block = []
+            # Add images first
+            for img in images:
+                content_block.append({
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": img.get('media_type', 'image/png'),
+                        "data": img['data']
+                    }
+                })
+            # Add text prompt
+            content_block.append({
+                "type": "text",
+                "text": prompt
+            })
+        else:
+            # Simple text content
+            content_block = prompt
+
         body_dict = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": max_tokens,
@@ -44,7 +69,7 @@ class ClaudeClient:
             "messages": [
                 {
                     "role": "user",
-                    "content": prompt
+                    "content": content_block
                 }
             ]
         }

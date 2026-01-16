@@ -70,6 +70,8 @@ class SubmitPhaseRequest(BaseModel):
     phase_name: str
     responses: List[PhaseResponse]
     time_taken_seconds: Optional[float] = None
+    image_data: Optional[str] = None  # Base64 encoded image
+    image_mime_type: Optional[str] = None # e.g. "image/png"
 
 
 class SubmitPhaseResponse(BaseModel):

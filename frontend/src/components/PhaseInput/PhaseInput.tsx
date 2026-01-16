@@ -107,6 +107,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     }, [currentQuestionIndex]);
 
     const allAnswered = answers.every(a => a.trim().length >= 100);
+
     const anyChanges =
         answers.some((a, i) => originalAnswers[i] !== undefined && a !== originalAnswers[i]) ||
         hintsUsed.some((h, i) => originalHintsUsed[i] !== undefined && h !== originalHintsUsed[i]);
@@ -122,6 +123,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                 hint_used: hintsUsed[i]
             };
         });
+
         await submitPhase(responses);
     };
 

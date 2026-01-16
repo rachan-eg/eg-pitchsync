@@ -106,8 +106,13 @@ async def init_session(req: InitRequest):
             theme = random.choice(THEME_REPO)
     else:
         if req.usecase_id:
-            # If usecase was selected but theme wasn't, pick random theme
-            theme = random.choice(THEME_REPO)
+            # If usecase was selected but theme wasn't, try to use the usecase's preferred theme
+            theme_id = usecase.get('theme_id')
+            theme = next((t for t in THEME_REPO if t.get('id') == theme_id), None)
+            
+            # Fallback to random if preferred theme not found
+            if not theme:
+                theme = random.choice(THEME_REPO)
         else:
             assignment = get_or_assign_team_context(req.team_id, USECASE_REPO, THEME_REPO)
             theme = assignment["theme"]
@@ -397,7 +402,8 @@ async def submit_phase(req: SubmitPhaseRequest):
             usecase=session.usecase,
             phase_config=phase_def,
             responses=[r.model_dump() for r in req.responses],
-            previous_feedback=prev_feedback
+            previous_feedback=prev_feedback,
+            image_data=req.image_data  # Pass visual evidence
         )
 
     # Calculate Hint Penalty
@@ -430,7 +436,8 @@ async def submit_phase(req: SubmitPhaseRequest):
         phase_def=phase_def, # Pass current phase config
         hint_penalty=total_hint_penalty,
         input_tokens=in_tokens,
-        output_tokens=out_tokens
+        output_tokens=out_tokens,
+        visual_metrics=eval_result.get("visual_metrics") # Pass visual analytics
     )
     
     # Determine pass/fail (with forced proceed option)
@@ -446,8 +453,8 @@ async def submit_phase(req: SubmitPhaseRequest):
          history = list(existing_phase.history)
          # If keeping track of attempts, add the current state of the phase *before* this new submission overwrites it
          # But wait, existing_phase is the PREVIOUS state. Yes.
-         # Only add if it was a real attempt (has metrics)
-         if existing_phase.status != PhaseStatus.PENDING and existing_phase.metrics.ai_score > 0:
+         # Only add to history if it was a real attempt (has a final status)
+         if existing_phase.status in [PhaseStatus.PASSED, PhaseStatus.FAILED]:
              # We want to store the metrics of the ATTEMPT.
              history.append(existing_phase.metrics)
 
@@ -461,7 +468,8 @@ async def submit_phase(req: SubmitPhaseRequest):
         rationale=eval_result['rationale'],
         strengths=eval_result.get('strengths', []),
         improvements=eval_result.get('improvements', []),
-        history=history
+        history=history,
+        image_data=req.image_data # Persist evidence
     )
     session.phases[req.phase_name] = phase_data
     

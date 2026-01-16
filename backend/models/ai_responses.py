@@ -130,6 +130,27 @@ class PitchNarrative(BaseModel):
     )
 
 
+class VisualAnalysisResult(BaseModel):
+    """Response model for Visual Analyst Agent."""
+    visual_score: float = Field(
+        default=0.0,
+        description="Score between 0.0 and 1.0 based on evidence quality"
+    )
+    rationale: str = Field(
+        default="",
+        description="Explanation of the score"
+    )
+    alignment_rating: str = Field(
+        default="Low",
+        description="High, Medium, or Low"
+    )
+    feedback: str = Field(
+        default="",
+        description="Specific feedback on the visual asset"
+    )
+
+
+
 def parse_ai_response(response_text: str, model_class: type) -> BaseModel:
     """
     Safely parse AI response text into a Pydantic model.

@@ -211,7 +211,14 @@ def get_or_assign_team_context(team_id: str, usecase_repo: List[Dict[str, Any]],
         if not context:
             # Assign new
             new_usecase = random.choice(usecase_repo)
-            new_theme = random.choice(theme_repo)
+            
+            # Try to match theme to usecase
+            theme_id = new_usecase.get('theme_id')
+            new_theme = next((t for t in theme_repo if t.get('id') == theme_id), None)
+            
+            # Fallback to random if no linked theme
+            if not new_theme:
+                new_theme = random.choice(theme_repo)
             
             context = TeamContext(
                 team_id=team_id,

@@ -187,6 +187,8 @@ const PromptCurationPage: React.FC = () => {
     );
 };
 
+import { getFullUrl } from './utils';
+
 const FinalRevealPage: React.FC = () => {
     const { session, activeRevealImage } = useApp();
 
@@ -194,10 +196,13 @@ const FinalRevealPage: React.FC = () => {
         return <Navigate to="/login" replace />;
     }
 
+    // Determine the best image URL to show (current selection OR session default)
+    const effectiveImageUrl = activeRevealImage || (session.final_output?.image_url ? getFullUrl(session.final_output.image_url) : '');
+
     return (
         <FinalReveal
             session={session}
-            imageUrl={activeRevealImage}
+            imageUrl={effectiveImageUrl}
         />
     );
 };

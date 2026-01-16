@@ -67,6 +67,9 @@ export interface PhaseMetrics {
     retry_penalty: number;
     hint_penalty: number;
     efficiency_bonus: number;
+    visual_score?: number;
+    visual_feedback?: string;
+    visual_alignment?: string;
 }
 
 export interface PhaseResponse {
@@ -94,6 +97,9 @@ export interface FinalOutput {
     image_prompt: string;
     image_url: string;
     generated_at: string | null;
+    visual_score?: number;
+    visual_feedback?: string;
+    visual_alignment?: string;
 }
 
 export interface SessionState {
@@ -174,6 +180,7 @@ export interface SubmitPhaseRequest {
     phase_name: string;
     responses: PhaseResponse[];
     time_taken_seconds?: number;
+    image_data?: string; // Base64 encoded image
 }
 
 export interface ScoreBreakdown {
