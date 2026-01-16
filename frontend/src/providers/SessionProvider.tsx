@@ -247,44 +247,44 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return;
         }
 
-        const currentPhaseNum = session?.current_phase;
-        const phaseName = currentPhaseNum ? phaseConfig[currentPhaseNum]?.name : null;
-        const phaseData = phaseName ? session?.phases[phaseName] : null;
-        const isPhasePassed = phaseData?.status === 'passed';
+        // Use functional updates to avoid dependency on 'session'
+        setSession(prev => {
+            if (!prev) return null;
 
-        if (isPhasePassed) {
-            const existingResponses = phaseData?.responses || [];
-            const hasChanges = responses.some((r, i) => {
-                const existing = existingResponses[i];
-                return existing && (r.a !== existing.a || r.hint_used !== existing.hint_used);
-            });
+            const currentPhaseNum = prev.current_phase;
+            const phaseName = currentPhaseNum ? phaseConfig[currentPhaseNum]?.name : null;
+            if (!phaseName) return prev;
 
-            // CRITICAL FIX: Only start timer if it's not already running
-            // This prevents resetting the clock to 'storedDuration' on every keystroke
-            if (hasChanges && timerState !== 'RUNNING') {
-                const storedDuration = phaseData?.metrics?.duration_seconds || 0;
-                console.log(`[Timer] Edit detected on passed phase, starting timer from baseline: ${storedDuration}s`);
-                startTimer(Math.round(storedDuration));
-            }
-        }
+            const updatedPhases = { ...prev.phases };
+            const phaseData = updatedPhases[phaseName];
 
-        // Persist draft responses back to the session object so they survive re-renders/refreshes
-        if (session && phaseName) {
-            setSession(prev => {
-                if (!prev) return null;
-                const updatedPhases = { ...prev.phases };
-                if (updatedPhases[phaseName]) {
-                    updatedPhases[phaseName] = {
-                        ...updatedPhases[phaseName],
-                        responses: responses
-                    };
+            // Timer logic moved inside to be safe
+            if (phaseData?.status === 'passed') {
+                const existingResponses = phaseData.responses || [];
+                const hasChanges = responses.some((r, i) => {
+                    const existing = existingResponses[i];
+                    return existing && (r.a !== existing.a || r.hint_used !== existing.hint_used);
+                });
+
+                if (hasChanges && timerState !== 'RUNNING') {
+                    const storedDuration = phaseData.metrics?.duration_seconds || 0;
+                    console.log(`[Timer] Edit detected on passed phase, starting timer from baseline: ${storedDuration}s`);
+                    // We call startTimer here - it's stable
+                    startTimer(Math.round(storedDuration));
                 }
-                return { ...prev, phases: updatedPhases };
-            });
-        }
+            }
+
+            if (updatedPhases[phaseName]) {
+                updatedPhases[phaseName] = {
+                    ...updatedPhases[phaseName],
+                    responses: responses
+                };
+            }
+            return { ...prev, phases: updatedPhases };
+        });
 
         setCurrentPhaseResponsesInternal(responses);
-    }, [session, phaseConfig, loading, phaseResult, startTimer, timerState]);
+    }, [phaseConfig, loading, phaseResult, startTimer, timerState]);
 
     // =========================================================================
     // API ACTIONS

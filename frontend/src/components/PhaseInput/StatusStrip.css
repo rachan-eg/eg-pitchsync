@@ -1,0 +1,41 @@
+.stt-status {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 1.25rem;
+    border-radius: 24px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    white-space: nowrap;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    animation: stt-status-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stt-status__dot {
+    width: 8px;
+    height: 8px;
+    background: #a78bfa;
+    /* var(--primary) equivalent */
+    border-radius: 50%;
+    animation: stt-blink 1.2s infinite ease-in-out;
+    box-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+}
+
+.stt-status--error {
+    color: #ef4444;
+    /* var(--danger) equivalent */
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.stt-status--error .stt-status__dot {
+    background: #ef4444;
+}
