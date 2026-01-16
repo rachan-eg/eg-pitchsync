@@ -105,7 +105,6 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         state: voiceState,
         error: voiceError,
         volume: voiceVolume,
-        start: startVoice,
         stop: stopVoice,
         toggle: toggleVoice
     } = useVoiceInput({
