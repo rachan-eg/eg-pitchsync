@@ -13,19 +13,15 @@ class ClaudeClient:
     """Client for interacting with Claude 3.5 Sonnet on AWS Bedrock."""
     
     def __init__(self):
-        #session credentials from settings (loaded from .env)
-        self.access_key = settings.AWS_ACCESS_KEY_ID
-        self.secret_key = settings.AWS_SECRET_ACCESS_KEY
-        self.session_token = settings.AWS_SESSION_TOKEN
+        """Initialize the Bedrock runtime client."""
         self.region = settings.AWS_REGION
         self.model_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0'
         
+        # Initialize client. Boto3 will automatically use IAM roles if credentials 
+        # are not explicitly provided and not found in environment variables.
         self.client = boto3.client(
             service_name='bedrock-runtime',
-            region_name=self.region,
-            aws_access_key_id=self.access_key,
-            aws_secret_access_key=self.secret_key,
-            aws_session_token=self.session_token
+            region_name=self.region
         )
 
     def generate_content(

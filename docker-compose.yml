@@ -16,10 +16,11 @@ services:
       # Database stored in container - wiped on each deployment for fresh start
       - DATABASE_URL=sqlite:////app/gum_app.db
       - PYTHONPATH=/app
-      # AWS Credentials from host shell
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+      # AWS Credentials - Passed from host environment ONLY if they exist (local dev).
+      # On EC2, these won't be set on host, so they won't exist in container, allowing IAM Role fallback.
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
       - AWS_REGION=${AWS_REGION:-eu-central-1}
       - AWS_DEFAULT_REGION=${AWS_REGION:-eu-central-1}
     volumes:
