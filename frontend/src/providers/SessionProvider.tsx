@@ -496,7 +496,18 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.detail || 'Submission failed');
+                const detail = errData.detail;
+                let message = 'Submission failed';
+
+                if (detail) {
+                    if (typeof detail === 'string') {
+                        message = detail;
+                    } else {
+                        message = JSON.stringify(detail);
+                    }
+                }
+
+                throw new Error(message);
             }
 
             const result: SubmitPhaseResponse = await res.json();

@@ -78,8 +78,10 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const syncToProvider = useCallback((newAnswers: string[], newHints: boolean[]) => {
         const currentResponses = phase.questions.map((q: any, i: number) => {
             const id = typeof q === 'string' ? q : q.id;
+            const question_text = typeof q === 'string' ? q : q.text || q.question;
             return {
                 question_id: id,
+                q: question_text,
                 a: newAnswers[i] || '',
                 hint_used: newHints[i] || false
             };
@@ -175,8 +177,10 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const handleSubmit = async () => {
         const responses = phase.questions.map((q: any, i: number) => {
             const question_id = typeof q === 'string' ? q : q.id;
+            const question_text = typeof q === 'string' ? q : q.text || q.question;
             return {
                 question_id,
+                q: question_text,
                 a: answers[i],
                 hint_used: hintsUsed[i]
             };
