@@ -4,7 +4,7 @@ Minimal main.py that wires together all modular components.
 """
 
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,7 +61,7 @@ def health_check():
         "status": "online",
         "system": f"{settings.APP_NAME} v{settings.APP_VERSION}",
         "active_sessions": get_session_count(),
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 

@@ -3,7 +3,7 @@ Leaderboard API Routes
 Real-time leaderboard endpoints.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter
 
 from backend.models import LeaderboardEntry, LeaderboardResponse, USECASE_REPO, THEME_REPO
@@ -78,7 +78,7 @@ async def get_leaderboard():
     return LeaderboardResponse(
         entries=entries,
         total_teams=len(entries),
-        updated_at=datetime.now()
+        updated_at=datetime.now(timezone.utc)
     )
 
 

@@ -9,7 +9,7 @@
  * - Final synthesis and image generation
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getApiUrl, getFullUrl } from '../utils';
 import { useTimer } from './TimerProvider';
@@ -218,17 +218,29 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }, [session, phaseConfig, scoringInfo]);
 
-    // Pause timer when leaving war-room
+    // Tactical Timer Management: Only pause when specifically LEAVING the war-room
+    const lastPathname = useRef(location.pathname);
     useEffect(() => {
+        const wasWarRoom = lastPathname.current === '/war-room';
         const isWarRoom = location.pathname === '/war-room';
-        if (!isWarRoom) {
+
+        if (wasWarRoom && !isWarRoom) {
+            console.log('[Timer] User left War Room, pausing tactical clock');
             pauseTimer();
+        } else if (!wasWarRoom && isWarRoom) {
+            console.log('[Timer] User entering War Room');
+            // We don't auto-resume here because startPhase/initSession handle that
+            // with more context (e.g. checking if phase is already passed)
         }
+
+        lastPathname.current = location.pathname;
     }, [location.pathname, pauseTimer]);
 
     // =========================================================================
     // RESPONSE SETTER WITH TIMER LOGIC
     // =========================================================================
+    const { timerState } = useTimer(); // Need this to check running state
+
     const setCurrentPhaseResponses = useCallback((responses: PhaseResponse[]) => {
         if (loading || phaseResult) {
             setCurrentPhaseResponsesInternal(responses);
@@ -247,14 +259,32 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 return existing && (r.a !== existing.a || r.hint_used !== existing.hint_used);
             });
 
-            if (hasChanges) {
+            // CRITICAL FIX: Only start timer if it's not already running
+            // This prevents resetting the clock to 'storedDuration' on every keystroke
+            if (hasChanges && timerState !== 'RUNNING') {
                 const storedDuration = phaseData?.metrics?.duration_seconds || 0;
+                console.log(`[Timer] Edit detected on passed phase, starting timer from baseline: ${storedDuration}s`);
                 startTimer(Math.round(storedDuration));
             }
         }
 
+        // Persist draft responses back to the session object so they survive re-renders/refreshes
+        if (session && phaseName) {
+            setSession(prev => {
+                if (!prev) return null;
+                const updatedPhases = { ...prev.phases };
+                if (updatedPhases[phaseName]) {
+                    updatedPhases[phaseName] = {
+                        ...updatedPhases[phaseName],
+                        responses: responses
+                    };
+                }
+                return { ...prev, phases: updatedPhases };
+            });
+        }
+
         setCurrentPhaseResponsesInternal(responses);
-    }, [session, phaseConfig, loading, phaseResult, startTimer]);
+    }, [session, phaseConfig, loading, phaseResult, startTimer, timerState]);
 
     // =========================================================================
     // API ACTIONS
@@ -319,19 +349,25 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             const unlocked = calculateHighestUnlockedPhase(data.phase_scores || {}, data.phases, data.is_complete || false);
             setHighestUnlockedPhase(unlocked);
 
-            if (data.current_phase_started_at) {
-                const phaseDef = data.phases[data.current_phase || 1];
-                const phaseData = phaseDef ? data.phase_data?.[phaseDef.name] : null;
-                const isPhaseComplete = phaseData?.status === 'passed';
+            // Timer initialization - handle both new and resumed sessions
+            const phaseDef = data.phases[data.current_phase || 1];
+            const phaseData = phaseDef ? data.phase_data?.[phaseDef.name] : null;
+            const isPhaseComplete = phaseData?.status === 'passed';
 
-                if (isPhaseComplete) {
-                    stopTimer(Math.round(phaseData?.metrics?.duration_seconds || 0));
-                } else {
-                    const serverStartTime = new Date(data.current_phase_started_at).getTime();
-                    const serverNow = data.current_server_time ? new Date(data.current_server_time).getTime() : Date.now();
-                    const elapsedSecs = Math.max(0, Math.floor((serverNow - serverStartTime) / 1000));
-                    startTimer(elapsedSecs);
-                }
+            if (isPhaseComplete) {
+                // Phase already complete - show the final duration
+                stopTimer(Math.round(phaseData?.metrics?.duration_seconds || 0));
+            } else if (data.current_phase_started_at) {
+                // Resumed session with valid start time - calculate elapsed
+                const serverStartTime = new Date(data.current_phase_started_at).getTime();
+                const serverNow = data.current_server_time ? new Date(data.current_server_time).getTime() : Date.now();
+                const elapsedSecs = Math.max(0, Math.floor((serverNow - serverStartTime) / 1000));
+                console.log(`[Timer] Resuming session, elapsed: ${elapsedSecs}s`);
+                startTimer(elapsedSecs);
+            } else {
+                // New session or missing start time - start fresh from 0
+                console.log('[Timer] Starting fresh timer for new session');
+                startTimer(0);
             }
 
             if (isResumedSession && data.phase_data) {
@@ -382,6 +418,10 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             if (res.ok) {
                 const data: StartPhaseResponse = await res.json();
 
+                // Check phase status BEFORE updating state - use current session data
+                const existingPhaseData = session?.phases[data.phase_name];
+                const isPhaseAlreadyPassed = existingPhaseData?.status === 'passed';
+
                 setSession(prev => {
                     if (!prev) return null;
                     const updatedPhases = { ...prev.phases };
@@ -419,12 +459,17 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
                 setCurrentPhaseResponsesInternal(data.previous_responses || []);
 
-                const phaseData = session?.phases[data.phase_name];
-                if (phaseData?.status === 'passed') {
-                    stopTimer(Math.round(phaseData.metrics?.duration_seconds || 0));
+                // Use pre-computed phase status for timer logic
+                if (isPhaseAlreadyPassed) {
+                    const duration = existingPhaseData?.metrics?.duration_seconds || 0;
+                    console.log(`[Timer] Phase ${phaseNum} already passed, showing duration: ${duration}s`);
+                    stopTimer(Math.round(duration));
                 } else {
+                    console.log(`[Timer] Starting phase ${phaseNum} with elapsed: ${data.elapsed_seconds ?? 0}s`);
                     startTimer(data.elapsed_seconds ?? 0);
                 }
+            } else {
+                console.error('Failed to start phase, status:', res.status);
             }
         } catch (e) {
             console.error("Failed to start phase", e);
@@ -434,7 +479,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const submitPhase = useCallback(async (responses: PhaseResponse[]) => {
         if (!session) return;
         setLoading(true);
-        pauseTimer();
+        stopTimer(); // Complete stop during evaluation as requested
 
         try {
             const currentPhaseDef = phaseConfig[session.current_phase];

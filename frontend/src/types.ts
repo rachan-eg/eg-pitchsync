@@ -126,6 +126,7 @@ export interface InitRequest {
 export interface ScoringInfo {
     max_ai_points: number;
     retry_penalty: number;
+    max_retries: number;
     time_penalty_max: number;
     efficiency_bonus: string;
     pass_threshold: number;

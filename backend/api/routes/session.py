@@ -51,6 +51,17 @@ async def init_session(req: InitRequest):
         
         if should_resume:
             print(f"📌 Resuming session for team '{req.team_id}': phase {existing.current_phase}, complete: {existing.is_complete}")
+            
+            # Ensure phase start time exists (fix for older sessions missing this data)
+            phase_key = f"phase_{existing.current_phase}"
+            current_phase_start = existing.phase_start_times.get(phase_key)
+            if not current_phase_start:
+                # Initialize missing start time and persist it
+                current_phase_start = datetime.now(timezone.utc)
+                existing.phase_start_times[phase_key] = current_phase_start
+                update_session(existing)
+                print(f"  ⏱️ Initialized missing phase start time for {phase_key}")
+            
             return InitResponse(
                 session_id=existing.session_id,
                 usecase=existing.usecase,
@@ -59,13 +70,14 @@ async def init_session(req: InitRequest):
                 scoring_info={
                     "max_ai_points": settings.AI_QUALITY_MAX_POINTS,
                     "retry_penalty": settings.RETRY_PENALTY_POINTS,
+                    "max_retries": settings.MAX_RETRIES,
                     "time_penalty_max": settings.TIME_PENALTY_MAX_POINTS,
                     "efficiency_bonus": f"{settings.TOKEN_EFFICIENCY_BONUS_PERCENT * 100}%",
                     "pass_threshold": settings.PASS_THRESHOLD
                 },
                 current_phase=existing.current_phase,
                 phase_scores=existing.phase_scores,
-                current_phase_started_at=existing.phase_start_times.get(f"phase_{existing.current_phase}"),
+                current_phase_started_at=current_phase_start,
                 is_complete=existing.is_complete,
                 total_tokens=existing.total_tokens,
                 extra_ai_tokens=existing.extra_ai_tokens,
@@ -125,6 +137,7 @@ async def init_session(req: InitRequest):
         scoring_info={
             "max_ai_points": settings.AI_QUALITY_MAX_POINTS,
             "retry_penalty": settings.RETRY_PENALTY_POINTS,
+            "max_retries": settings.MAX_RETRIES,
             "time_penalty_max": settings.TIME_PENALTY_MAX_POINTS,
             "efficiency_bonus": f"{settings.TOKEN_EFFICIENCY_BONUS_PERCENT * 100}%",
             "pass_threshold": settings.PASS_THRESHOLD
@@ -498,14 +511,36 @@ def _get_retry_info(session: SessionState, phase_name: str) -> tuple[int, str | 
     
     if prev_phase_data:
         try:
+            from backend.models import PhaseStatus
+            
+            # Use getattr for robustness with both dicts and objects
+            status = getattr(prev_phase_data, 'status', PhaseStatus.PENDING)
+            
+            if isinstance(prev_phase_data, dict):
+                history = prev_phase_data.get('history', [])
+                prev_feedback = prev_phase_data.get('feedback')
+                status = prev_phase_data.get('status', PhaseStatus.PENDING)
+            else:
+                history = prev_phase_data.history
+                prev_feedback = prev_phase_data.feedback
+                status = prev_phase_data.status
+
+            # Calculate completed trials: trials in history + the current main trial if it's finished
+            completed_trials = len(history)
+            if status in [PhaseStatus.PASSED, PhaseStatus.FAILED]:
+                completed_trials += 1
+            
+            # The current submission will be the (completed + 1)-th attempt (0-indexed for retries)
+            # wait, if 0 trials completed, then retries=0. If 1 trial completed, retries=1.
+            retries = completed_trials
+                
+        except Exception as e:
+            print(f"Retry detection error: {e}")
+            # Fallback to current increment logic if history parsing fails
             if hasattr(prev_phase_data, 'metrics'):
                 retries = prev_phase_data.metrics.retries + 1
-                prev_feedback = prev_phase_data.feedback
             elif isinstance(prev_phase_data, dict):
                 m = prev_phase_data.get('metrics', {})
                 retries = (m.get('retries', 0) if isinstance(m, dict) else getattr(m, 'retries', 0)) + 1
-                prev_feedback = prev_phase_data.get('feedback')
-        except Exception as e:
-            print(f"Retry detection error: {e}")
     
     return retries, prev_feedback

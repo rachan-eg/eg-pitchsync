@@ -94,7 +94,6 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                                     )
                                 }
                                 {isLocked && <Icons.Lock />}
-                                {isActive && !isLocked && <div className="war-room__phase-active-indicator" />}
                             </button>
                         );
                     })}
@@ -127,7 +126,6 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                                         <div className="war-room__phase-name">Vision Curation</div>
                                     </div>
                                     {!isCurationUnlocked && <Icons.Lock />}
-                                    {isCurateActive && <div className="war-room__phase-active-indicator" />}
                                 </button>
 
                                 {/* Final Reveal Phase */}
@@ -147,7 +145,6 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                                         <div className="war-room__phase-name">Final Validation</div>
                                     </div>
                                     {!isRevealUnlocked && <Icons.Lock />}
-                                    {isRevealActive && <div className="war-room__phase-active-indicator" />}
                                 </button>
                             </>
                         );

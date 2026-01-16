@@ -5,7 +5,7 @@ Final pitch generation endpoint.
 
 import json
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, File, UploadFile, Form
 
 from backend.models import (
@@ -58,8 +58,8 @@ async def final_synthesis(req: FinalSynthesisRequest):
     session.final_output.customer_pitch = result.get('customer_pitch', '')
     session.final_output.image_prompt = result.get('image_prompt', '')
     session.final_output.image_url = result.get('image_url', '')
-    session.final_output.generated_at = datetime.now()
-    session.completed_at = datetime.now()
+    session.final_output.generated_at = datetime.now(timezone.utc)
+    session.completed_at = datetime.now(timezone.utc)
     session.is_complete = True
     
     # session.total_tokens = calculate_total_tokens(session.phases) + session.extra_ai_tokens
@@ -185,8 +185,8 @@ async def submit_pitch_image(
         # Update session
         session.final_output.image_prompt = edited_prompt
         session.final_output.image_url = image_url
-        session.final_output.generated_at = datetime.now()
-        session.completed_at = datetime.now()
+        session.final_output.generated_at = datetime.now(timezone.utc)
+        session.completed_at = datetime.now(timezone.utc)
         session.is_complete = True
         
         # Update upload history (max 3)

@@ -33,6 +33,7 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Start timer from a given base (accumulated) seconds
     const startTimer = useCallback((baseSeconds: number = 0) => {
+        console.log(`[Timer] startTimer called with base: ${baseSeconds}s`);
         setTimerBaseSeconds(baseSeconds);
         setTimerStartedAt(Date.now());
         setElapsedSeconds(baseSeconds);
@@ -43,15 +44,19 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const pauseTimer = useCallback(() => {
         if (timerState === 'RUNNING' && timerStartedAt) {
             const currentRun = Math.floor((Date.now() - timerStartedAt) / 1000);
-            setTimerBaseSeconds(prev => prev + currentRun);
+            const total = timerBaseSeconds + currentRun;
+            console.log(`[Timer] pausing at ${total}s (${currentRun}s in current run)`);
+            setTimerBaseSeconds(total);
+            setElapsedSeconds(total); // Update UI immediately
             setTimerStartedAt(null);
         }
         setTimerState('PAUSED');
-    }, [timerState, timerStartedAt]);
+    }, [timerState, timerStartedAt, timerBaseSeconds]);
 
     // Resume from paused state
     const resumeTimer = useCallback(() => {
         if (timerState === 'PAUSED') {
+            console.log('[Timer] resuming from pause');
             setTimerStartedAt(Date.now());
             setTimerState('RUNNING');
         }
@@ -59,15 +64,17 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Stop timer completely (optionally set final value)
     const stopTimer = useCallback((finalSeconds?: number) => {
+        let total = timerBaseSeconds;
         if (finalSeconds !== undefined) {
-            setElapsedSeconds(finalSeconds);
-            setTimerBaseSeconds(finalSeconds);
+            total = finalSeconds;
         } else if (timerStartedAt) {
             const currentRun = Math.floor((Date.now() - timerStartedAt) / 1000);
-            const total = timerBaseSeconds + currentRun;
-            setElapsedSeconds(total);
-            setTimerBaseSeconds(total);
+            total = timerBaseSeconds + currentRun;
         }
+
+        console.log(`[Timer] stopping at ${total}s`);
+        setElapsedSeconds(total);
+        setTimerBaseSeconds(total);
         setTimerStartedAt(null);
         setTimerState('STOPPED');
     }, [timerStartedAt, timerBaseSeconds]);
@@ -80,20 +87,37 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setTimerState('STOPPED');
     }, []);
 
-    // Timer tick effect
+    // Timer tick effect with visibility handling
     useEffect(() => {
         let interval: ReturnType<typeof setInterval>;
 
+        const updateElapsed = () => {
+            if (timerStartedAt) {
+                const currentRun = Math.floor((Date.now() - timerStartedAt) / 1000);
+                setElapsedSeconds(timerBaseSeconds + currentRun);
+            }
+        };
+
+        // Handle visibility change - immediately update when tab becomes visible
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && timerState === 'RUNNING') {
+                updateElapsed();
+            }
+        };
+
         if (timerState === 'RUNNING' && timerStartedAt) {
-            interval = setInterval(() => {
-                if (document.visibilityState === 'visible') {
-                    const currentRun = Math.floor((Date.now() - timerStartedAt) / 1000);
-                    setElapsedSeconds(timerBaseSeconds + currentRun);
-                }
-            }, 1000);
+            // Initial update
+            updateElapsed();
+            // Regular interval
+            interval = setInterval(updateElapsed, 1000);
+            // Visibility listener
+            document.addEventListener('visibilitychange', handleVisibilityChange);
         }
 
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, [timerState, timerStartedAt, timerBaseSeconds]);
 
     return (

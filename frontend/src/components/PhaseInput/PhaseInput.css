@@ -566,7 +566,7 @@
 }
 
 .pi-list-item--active .pi-intel-content {
-    color: var(--primary);
+    color: var(--claude-orange);
     font-weight: 700;
 }
 
@@ -731,6 +731,21 @@
 .pi-attempt-item--current .pi-attempt-score {
     color: var(--primary);
     text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.pi-attempt-item--draft {
+    border-style: dashed;
+    border-color: var(--warning);
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.pi-attempt-item--draft .pi-attempt-num {
+    color: var(--warning);
+}
+
+.pi-attempt-item--draft .pi-attempt-score {
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 .pi-simple-clock {
