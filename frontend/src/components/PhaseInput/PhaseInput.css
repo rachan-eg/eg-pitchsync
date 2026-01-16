@@ -1,4 +1,4 @@
-/* =============================================================================
+﻿/* =============================================================================
    PHASE INPUT - REVOLUTION V1
    Grid-locked layout for zero-clipping guarantee.
    ============================================================================= */
@@ -165,7 +165,8 @@
     border-radius: var(--radius-lg);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
+    /* Allow pimple bulge to show outside */
     min-height: 0;
 }
 
@@ -275,7 +276,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
+    /* Allow pimple bulge to show outside */
     position: relative;
     min-height: 0;
 }
@@ -298,6 +300,14 @@
     box-sizing: border-box;
     width: calc(100% - var(--space-md) * 2);
     height: calc(100% - var(--space-md) * 2);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.pi-textarea--listening {
+    caret-color: transparent;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 15px var(--primary-glow), inset 0 0 10px rgba(167, 139, 250, 0.05) !important;
 }
 
 .pi-textarea:focus {
@@ -309,6 +319,13 @@
 .pi-textarea--preview {
     cursor: text;
     overflow-y: auto;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.pi-textarea--preview p {
+    margin: 0 0 1rem 0;
 }
 
 .pi-textarea--preview:hover {
@@ -499,6 +516,20 @@
     .pi-sidebar {
         display: none;
     }
+}
+
+.pi-input-area {
+    background: var(--bg-surface);
+    /*border: 0 solid var(--border-light); */
+    border-radius: 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+    overflow: hidden;
+    position: relative;
+    /* Anchor for VoiceOrb */
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .pi-sidebar-section {
@@ -1025,4 +1056,158 @@
         opacity: 1;
         filter: drop-shadow(0 0 15px var(--primary-glow));
     }
+}
+
+/* --- Footer Mic Button Styles --- */
+.pi-mic-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-surface-highlight, rgb(33, 25, 46));
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    will-change: transform;
+}
+
+.pi-mic-btn:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.pi-mic-btn:active {
+    transform: scale(0.95);
+}
+
+/* Listening State */
+.pi-mic-btn.listening {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
+.pi-mic-btn.requesting {
+    background: var(--bg-surface-highlight);
+    animation: pi-mic-pulse 1.5s infinite;
+}
+
+/* Ripple Rings */
+.pi-mic-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.pi-mic-btn.listening .pi-mic-ring {
+    animation: pi-mic-ripple 1.5s infinite;
+}
+
+.pi-mic-btn.listening .pi-mic-ring:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+@keyframes pi-mic-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pi-mic-ripple {
+    0% {
+        width: 100%;
+        height: 100%;
+        opacity: 0.6;
+        border-width: 2px;
+    }
+
+    100% {
+        width: 200%;
+        height: 200%;
+        opacity: 0;
+        border-width: 0px;
+    }
+}
+
+/* Animations */
+.pi-orb-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.listening .pi-orb-ring {
+    animation: pi-orb-ripple 1.5s infinite;
+}
+
+.listening .pi-orb-ring:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+@keyframes pi-orb-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pi-orb-ripple {
+    0% {
+        width: 100%;
+        height: 100%;
+        opacity: 0.6;
+        border-width: 2px;
+    }
+
+    100% {
+        width: 250%;
+        height: 250%;
+        opacity: 0;
+        border-width: 0px;
+    }
+}
+
+/* Fix Scrollbar Corner Artifact */
+.pi-textarea::-webkit-scrollbar-corner {
+    background: transparent;
 }

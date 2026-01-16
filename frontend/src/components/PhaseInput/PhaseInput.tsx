@@ -4,6 +4,12 @@ import remarkGfm from 'remark-gfm';
 import { useApp } from '../../AppContext';
 import { EvaluationOverlay } from './EvaluationOverlay';
 import type { PhaseResponse } from '../../types';
+import {
+    useVoiceInput
+} from '../../hooks/useVoiceInput';
+import { appendTranscript } from '../../utils/transcriptParser';
+import { LiveTranscriptOverlay } from './LiveTranscriptOverlay';
+import { StatusStrip } from './StatusStrip';
 import './PhaseInput.css';
 
 interface PhaseInputProps {
@@ -37,7 +43,11 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     isSubmitting,
     initialResponses = []
 }) => {
-    const { submitPhase, elapsedSeconds, scoringInfo, session, phaseConfig, setCurrentPhaseResponses } = useApp();
+    const {
+        submitPhase, elapsedSeconds, scoringInfo, session, phaseConfig,
+        setCurrentPhaseResponses, resumeTimer
+    } = useApp();
+
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<string[]>([]);
     const [originalAnswers, setOriginalAnswers] = useState<string[]>([]);
@@ -45,87 +55,163 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const [originalHintsUsed, setOriginalHintsUsed] = useState<boolean[]>([]);
     const [isEditing, setIsEditing] = useState(true);
     const [hintModalOpen, setHintModalOpen] = useState(false);
+
+    // Voice Input State
+    const [interimTranscript, setInterimTranscript] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lastPhaseIdRef = useRef<string | null>(null);
+    const hintsUsedRef = useRef<boolean[]>([]);
+    const currentQuestionIndexRef = useRef<number>(0);
 
-    // Initialize or sync answers and hints
+    // Keep refs in sync
     useEffect(() => {
-        const initialAnsw = phase.questions.map((q: any) => {
-            const id = typeof q === 'string' ? q : q.id;
-            const prev = initialResponses.find(r => r.question_id === id);
-            return prev?.a || '';
-        });
-        const initialHints = phase.questions.map((q: any) => {
-            const id = typeof q === 'string' ? q : q.id;
-            const prev = initialResponses.find(r => r.question_id === id);
-            return prev?.hint_used || false;
-        });
-        setAnswers(initialAnsw);
-        setHintsUsed(initialHints);
+        hintsUsedRef.current = hintsUsed;
+        currentQuestionIndexRef.current = currentQuestionIndex;
+    }, [hintsUsed, currentQuestionIndex]);
 
-        // Only reset originals and question index if phase changes
+    // --- STRATEGIC STATE ---
+    const anyChanges =
+        answers.some((a, i) => originalAnswers[i] !== undefined && a !== originalAnswers[i]) ||
+        hintsUsed.some((h, i) => originalHintsUsed[i] !== undefined && h !== originalHintsUsed[i]);
+
+    // Internal Sync logic (Memoized)
+    const syncToProvider = useCallback((newAnswers: string[], newHints: boolean[]) => {
+        const currentResponses = phase.questions.map((q: any, i: number) => {
+            const id = typeof q === 'string' ? q : q.id;
+            const question_text = typeof q === 'string' ? q : q.text || q.question;
+            return {
+                question_id: id,
+                q: question_text,
+                a: newAnswers[i] || '',
+                hint_used: newHints[i] || false
+            };
+        });
+        setCurrentPhaseResponses(currentResponses);
+    }, [phase.questions, setCurrentPhaseResponses]);
+
+    // Debounced Sync Effect
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            if (anyChanges) {
+                syncToProvider(answers, hintsUsed);
+            }
+        }, 1200); // 1.2s delay for stability
+
+        return () => clearTimeout(handler);
+    }, [answers, hintsUsed, anyChanges, syncToProvider]);
+
+    // --- NEW VOICE INPUT ---
+    const {
+        state: voiceState,
+        error: voiceError,
+        volume: voiceVolume,
+        start: startVoice,
+        stop: stopVoice,
+        toggle: toggleVoice
+    } = useVoiceInput({
+        lang: 'en-IN',
+        onInterimSegment: (text) => setInterimTranscript(text),
+        onFinalSegment: (text) => {
+            setAnswers(prevAnswers => {
+                const idx = currentQuestionIndexRef.current;
+                const currentVal = prevAnswers[idx] || '';
+                const updated = appendTranscript(currentVal, text);
+                const nextAnswers = prevAnswers.map((a, i) => i === idx ? updated : a);
+                return nextAnswers;
+            });
+            setInterimTranscript('');
+            resumeTimer();
+        }
+    });
+
+    const isListening = voiceState === 'listening' || voiceState === 'requesting';
+
+    // Initialize answers ONLY when Phase ID changes
+    useEffect(() => {
         const currentId = phase.id || phase.name;
+
+        // Prevent re-initialization unless it's a new phase
         if (currentId !== lastPhaseIdRef.current) {
+            const initialAnsw = phase.questions.map((q: any) => {
+                const id = typeof q === 'string' ? q : q.id;
+                const prev = initialResponses.find(r => r.question_id === id);
+                return prev?.a || '';
+            });
+            const initialHints = phase.questions.map((q: any) => {
+                const id = typeof q === 'string' ? q : q.id;
+                const prev = initialResponses.find(r => r.question_id === id);
+                return prev?.hint_used || false;
+            });
+
+            setAnswers(initialAnsw);
+            setHintsUsed(initialHints);
+
             setOriginalAnswers([...initialAnsw]);
             setOriginalHintsUsed([...initialHints]);
             setCurrentQuestionIndex(0);
+
             lastPhaseIdRef.current = currentId;
         }
     }, [phase, initialResponses]);
+
+    const handleMicClick = () => {
+        if (voiceState === 'idle' || voiceState === 'error') {
+            resumeTimer();
+        }
+        toggleVoice();
+    };
 
     const handleChange = (val: string) => {
         const newAnswers = [...answers];
         newAnswers[currentQuestionIndex] = val;
         setAnswers(newAnswers);
-
-        // SYNC TO CONTEXT FOR PERSISTENCE
-        const currentResponses = phase.questions.map((q: any, i: number) => {
-            const questionText = typeof q === 'string' ? q : q.text || q.question;
-            const question_id = typeof q === 'string' ? q : q.id;
-            return {
-                q: questionText,
-                a: newAnswers[i] || '',
-                question_id,
-                hint_used: hintsUsed[i] || false
-            };
-        });
-        setCurrentPhaseResponses(currentResponses);
     };
 
-    const handleNext = useCallback(() => {
-        if (currentQuestionIndex < phase.questions.length - 1) {
-            setCurrentQuestionIndex(prev => prev + 1);
-            setIsEditing(true);
-        }
-    }, [currentQuestionIndex, phase.questions.length]);
-
-    const handlePrev = useCallback(() => {
-        if (currentQuestionIndex > 0) {
-            setCurrentQuestionIndex(prev => prev - 1);
-            setIsEditing(true);
-        }
-    }, [currentQuestionIndex]);
-
-    const allAnswered = answers.every(a => a.trim().length >= 100);
-
-    const anyChanges =
-        answers.some((a, i) => originalAnswers[i] !== undefined && a !== originalAnswers[i]) ||
-        hintsUsed.some((h, i) => originalHintsUsed[i] !== undefined && h !== originalHintsUsed[i]);
+    const unlockHint = () => {
+        const newHints = [...hintsUsed];
+        newHints[currentQuestionIndex] = true;
+        setHintsUsed(newHints);
+        setHintModalOpen(false);
+    };
 
     const handleSubmit = async () => {
         const responses = phase.questions.map((q: any, i: number) => {
-            const questionText = typeof q === 'string' ? q : q.text || q.question;
             const question_id = typeof q === 'string' ? q : q.id;
+            const question_text = typeof q === 'string' ? q : q.text || q.question;
             return {
-                q: questionText,
-                a: answers[i],
                 question_id,
+                q: question_text,
+                a: answers[i],
                 hint_used: hintsUsed[i]
             };
         });
 
         await submitPhase(responses);
     };
+
+    const handleNext = useCallback(() => {
+        if (currentQuestionIndex < phase.questions.length - 1) {
+            if (isListening) stopVoice();
+            setCurrentQuestionIndex(prev => prev + 1);
+            setIsEditing(false);
+        }
+    }, [currentQuestionIndex, phase.questions.length, isListening, stopVoice]);
+
+    const handlePrev = useCallback(() => {
+        if (currentQuestionIndex > 0) {
+            if (isListening) stopVoice();
+            setCurrentQuestionIndex(prev => prev - 1);
+            setIsEditing(false);
+        }
+    }, [currentQuestionIndex, isListening, stopVoice]);
+
+    const handleGoToQuestion = (index: number) => {
+        if (isListening) stopVoice();
+        setCurrentQuestionIndex(index);
+        setIsEditing(false);
+    };
+
+    const allAnswered = answers.every(a => a.trim().length >= 100);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.ctrlKey && e.key === 'Enter') {
@@ -137,30 +223,49 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         }
     };
 
-    const unlockHint = () => {
-        const newHints = [...hintsUsed];
-        newHints[currentQuestionIndex] = true;
-        setHintsUsed(newHints);
-        setHintModalOpen(false);
-
-        // SYNC TO CONTEXT
-        const currentResponses = phase.questions.map((q: any, i: number) => {
-            const questionText = typeof q === 'string' ? q : q.text || q.question;
-            const question_id = typeof q === 'string' ? q : q.id;
-            return {
-                q: questionText,
-                a: answers[i] || '',
-                question_id,
-                hint_used: newHints[i] || false
-            };
-        });
-        setCurrentPhaseResponses(currentResponses);
-    };
-
     const formatTime = (s: number) => {
         const mins = Math.floor(s / 60);
         const secs = s % 60;
         return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Keyboard Shortcuts for STT
+    useEffect(() => {
+        const handleKeys = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'm' && !isSubmitting) {
+                e.preventDefault();
+                handleMicClick();
+            }
+            if (e.key === 'Escape' && isListening) {
+                e.preventDefault();
+                stopVoice();
+            }
+        };
+        window.addEventListener('keydown', handleKeys);
+        return () => window.removeEventListener('keydown', handleKeys);
+    }, [handleMicClick, stopVoice, isListening, isSubmitting]);
+
+    useEffect(() => {
+        if (isListening && textareaRef.current) {
+            textareaRef.current.blur();
+        }
+    }, [isListening]);
+
+    useEffect(() => {
+        if (isEditing && textareaRef.current && !isListening) {
+            const el = textareaRef.current;
+            if (document.activeElement !== el) {
+                el.focus();
+                el.scrollTop = el.scrollHeight;
+            }
+        }
+    }, [isEditing, isListening]);
+
+    const handleInputClick = () => {
+        if (isListening) {
+            stopVoice();
+        }
+        setIsEditing(true);
     };
 
     const currentQuestion = phase.questions[currentQuestionIndex];
@@ -169,14 +274,10 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const isLastQuestion = currentQuestionIndex === phase.questions.length - 1;
     const isFirstQuestion = currentQuestionIndex === 0;
     const currentValid = currentAnswer.trim().length >= 100;
-    const currentHintPenalty = typeof currentQuestion !== 'string' ? (currentQuestion.hint_penalty || 50) : 50;
 
     return (
         <div className="pi-container animate-fade-in">
-            {/* Operational Area */}
             <div className="pi-main">
-
-                {/* Header */}
                 <header className="pi-header">
                     <div className="pi-header__title-group">
                         <div className="pi-header__meta">
@@ -193,14 +294,12 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                         {phase.questions.map((_: any, i: number) => {
                             const isDone = answers[i]?.trim().length >= 100;
                             const hasChanged = originalAnswers[i] !== undefined && answers[i] !== originalAnswers[i];
-
                             return (
                                 <button
                                     key={i}
                                     className={`pi-btn ${i === currentQuestionIndex ? 'pi-btn--primary' : 'pi-btn--secondary'} ${isDone ? 'pi-btn--done' : ''} ${hasChanged ? 'pi-btn--changed' : ''}`}
                                     style={{ padding: '0.35rem 0.75rem', minWidth: '40px', position: 'relative' }}
-                                    onClick={() => setCurrentQuestionIndex(i)}
-                                    title={hasChanged ? `Question ${i + 1} (Modified)` : `Question ${i + 1}`}
+                                    onClick={() => handleGoToQuestion(i)}
                                 >
                                     {i + 1}
                                     {hasChanged && <span className="pi-btn-dot" />}
@@ -210,7 +309,6 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </header>
 
-                {/* Body */}
                 <main className="pi-body">
                     <div className="pi-question-box">
                         <div className="pi-question">
@@ -242,29 +340,36 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                         {isEditing ? (
                             <textarea
                                 ref={textareaRef}
-                                className="pi-textarea custom-scrollbar"
+                                className={`pi-textarea custom-scrollbar ${isListening ? 'pi-textarea--listening' : ''}`}
                                 value={currentAnswer}
                                 onChange={(e) => handleChange(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                onBlur={() => currentAnswer.trim().length > 0 && setIsEditing(false)}
-                                placeholder="Type your response here (min 100 chars). Press Ctrl+Enter for next."
-                                autoFocus
+                                // Removed aggressive onBlur to keep input open
+                                placeholder={isListening ? "" : "Type your response here (min 100 chars). Press Ctrl+Enter for next."}
+                                readOnly={isListening}
+                                onClick={handleInputClick}
                             />
                         ) : (
                             <div
                                 className="pi-textarea pi-textarea--preview custom-scrollbar"
-                                onClick={() => setIsEditing(true)}
+                                onClick={handleInputClick}
                                 title="Click to edit"
                             >
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {currentAnswer || "_Empty response. Click to edit._"}
+                                    {currentAnswer || ""}
                                 </ReactMarkdown>
                             </div>
                         )}
+
+                        <LiveTranscriptOverlay
+                            transcript={interimTranscript}
+                            existingText={currentAnswer}
+                            visible={isListening}
+                        />
+                        <StatusStrip status={voiceState === 'listening' ? 'listening' : (voiceError ? 'error' : 'idle')} message={voiceError} />
                     </div>
                 </main>
 
-                {/* Footer */}
                 <footer className="pi-footer">
                     <div className="pi-footer__left">
                         <div className="pi-char-count">
@@ -285,16 +390,36 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 className="pi-btn pi-btn--secondary"
                                 onClick={handlePrev}
                                 disabled={isFirstQuestion}
-                                title="Previous Intel Question"
                             >
                                 <Icons.ChevronLeft /> Back
+                            </button>
+
+                            {/* Mic Button */}
+                            <button
+                                className={`pi-mic-btn ${voiceState}`}
+                                onClick={handleMicClick}
+                                title={voiceState === 'listening' ? 'Stop Listening' : 'Start Voice Input'}
+                                type="button"
+                                style={{ transform: `scale(${voiceState === 'listening' ? 1 + (voiceVolume * 0.3) : 1})` }}
+                            >
+                                {voiceState === 'listening' && (
+                                    <>
+                                        <div className="pi-mic-ring" />
+                                        <div className="pi-mic-ring" />
+                                    </>
+                                )}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                    <line x1="12" y1="19" x2="12" y2="23" />
+                                    <line x1="8" y1="23" x2="16" y2="23" />
+                                </svg>
                             </button>
 
                             {!isLastQuestion && (
                                 <button
                                     className="pi-btn pi-btn--secondary"
                                     onClick={handleNext}
-                                    title="Next Intel Question"
                                 >
                                     Next <Icons.ChevronRight />
                                 </button>
@@ -315,7 +440,6 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                     style={{ position: 'relative' }}
                                     onClick={handleSubmit}
                                     disabled={!allAnswered || isSubmitting}
-                                    title={!allAnswered ? 'Complete all questions to finalize' : (anyChanges ? 'Changes detected: Submit for re-evaluation' : (isPassed ? 'No changes: Review previous evaluation' : 'Submit for AI Evaluation'))}
                                 >
                                     {isSubmitting ? 'Processing...' : (showReview ? 'Review Evaluation' : 'Finalize Phase')}
                                     {showReview ? <Icons.Check /> : <Icons.Send />}
@@ -327,20 +451,16 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                 </footer>
             </div>
 
-            {/* Intelligence Sidebar */}
             <aside className="pi-sidebar">
-                {/* MISSION CLOCK (Simplified) */}
                 <div className="pi-simple-clock">
                     <Icons.Clock />
                     <div className="pi-simple-timer-group">
                         <span className={`pi-simple-timer ${elapsedSeconds > timeLimit ? 'text-danger' : 'text-secondary'}`}>
                             {formatTime(elapsedSeconds)}
                         </span>
-                        {/* <span className="pi-simple-limit">/ {formatTime(timeLimit)}</span> */}
                     </div>
                 </div>
 
-                {/* MISSION OBJECTIVES */}
                 <div className="pi-sidebar-section">
                     <div className="pi-sidebar-header">
                         <div className="pi-sidebar-icon"><Icons.Target /></div>
@@ -357,7 +477,6 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </div>
 
-                {/* EVALUATION FOCUS */}
                 <div className="pi-sidebar-section">
                     <div className="pi-sidebar-header">
                         <div className="pi-sidebar-icon"><Icons.Cpu /></div>
@@ -365,10 +484,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                     <div className="pi-sidebar-content">
                         <div className="pi-scoring-item">
-                            <span>
-                                Time Penalty
-                                <span className="pi-scoring-rule">(-10/10m)</span>
-                            </span>
+                            <span>Time Penalty<span className="pi-scoring-rule">(-10/10m)</span></span>
                             {(() => {
                                 const pName = phaseConfig[phaseNumber]?.name;
                                 const existing = session?.phases[pName];
@@ -409,12 +525,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             {(() => {
                                 const pName = phaseConfig[phaseNumber]?.name;
                                 const existing = session?.phases[pName];
-
-                                // Use backend's authoritative metrics.retries value directly.
-                                // This ensures the display matches what the backend will enforce.
-                                // Backend: Initial=0, R1=1, R2=2, R3=3. Blocked at R4 (4 > 3).
                                 const displayRetries = existing?.metrics?.retries || 0;
-
                                 return (
                                     <span className="pi-scoring-val" style={{ color: displayRetries > (scoringInfo?.max_retries || 3) ? 'var(--danger)' : (displayRetries > 0 ? 'var(--text-primary)' : 'var(--text-muted)') }}>
                                         {displayRetries} <span style={{ fontSize: '0.8em', opacity: 0.7 }}>/ {scoringInfo?.max_retries || 3}</span>
@@ -423,56 +534,30 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             })()}
                         </div>
 
-                        {/* RETRIES LOG */}
                         {(() => {
                             const pName = phaseConfig[phaseNumber]?.name;
                             const existing = session?.phases[pName];
                             const history = existing?.history || [];
                             const currentMetrics = existing?.metrics;
-
-                            // 1. Start with history
-                            const allAttempts: Array<{ weighted_score: number; isCurrent?: boolean; label?: string; isDraft?: boolean }> = [
-                                ...history.map((h, i) => ({
-                                    weighted_score: h.weighted_score,
-                                    label: i === 0 ? "INITIAL ATTEMPT" : `RETRY ${i}`,
-                                    isCurrent: false
-                                })),
-                            ];
+                            const allAttempts: any[] = history.map((h, i) => ({
+                                weighted_score: h.weighted_score,
+                                label: i === 0 ? "INITIAL ATTEMPT" : `RETRY ${i}`,
+                                isCurrent: false
+                            }));
 
                             const hasEvaluatedCurrent = currentMetrics && (currentMetrics.ai_score > 0 || existing?.status === 'passed' || existing?.status === 'failed');
 
-                            // 2. Add current finalized entry or draft
                             if (hasEvaluatedCurrent) {
                                 const currentLabel = allAttempts.length === 0 ? "INITIAL ATTEMPT" : `RETRY ${allAttempts.length}`;
-
-                                // Can we add a new draft? (Only if we haven't hit the limit)
                                 const canAddDraft = anyChanges && (allAttempts.length < (scoringInfo?.max_retries || 3));
 
                                 if (canAddDraft) {
-                                    // Previous eval becomes history, new draft is current
-                                    allAttempts.push({
-                                        weighted_score: currentMetrics.weighted_score,
-                                        label: currentLabel,
-                                        isCurrent: false
-                                    });
-                                    allAttempts.push({
-                                        weighted_score: 0,
-                                        label: `RETRY ${allAttempts.length}`,
-                                        isCurrent: true,
-                                        isDraft: true
-                                    });
+                                    allAttempts.push({ weighted_score: currentMetrics.weighted_score, label: currentLabel, isCurrent: false });
+                                    allAttempts.push({ weighted_score: 0, label: `RETRY ${allAttempts.length}`, isCurrent: true, isDraft: true });
                                 } else {
-                                    // Highlight the finalized result as current if:
-                                    // - No changes detected
-                                    // - OR we've hit the retry limit (can't draft anymore)
-                                    allAttempts.push({
-                                        weighted_score: currentMetrics.weighted_score,
-                                        label: currentLabel,
-                                        isCurrent: true
-                                    });
+                                    allAttempts.push({ weighted_score: currentMetrics.weighted_score, label: currentLabel, isCurrent: true });
                                 }
                             } else if (allAttempts.length < (scoringInfo?.max_retries || 3) + 1) {
-                                // Fresh phase, no submissions yet - show Initial Draft
                                 allAttempts.push({
                                     weighted_score: 0,
                                     label: allAttempts.length === 0 ? "INITIAL ATTEMPT" : `RETRY ${allAttempts.length}`,
@@ -493,9 +578,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                                         <span className="pi-attempt-num">{h.label}</span>
                                                         {h.isCurrent && <span className="pi-attempt-tag">{h.isDraft ? 'DRAFT' : 'CURRENT'}</span>}
                                                     </div>
-                                                    <span className="pi-attempt-score">
-                                                        {h.isDraft ? '--' : `${Math.round(h.weighted_score)} PTS`}
-                                                    </span>
+                                                    <span className="pi-attempt-score">{h.isDraft ? '--' : `${Math.round(h.weighted_score)} PTS`}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -508,30 +591,21 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                 </div>
             </aside>
 
-            {/* Hint Modal */}
             {hintModalOpen && (
                 <div className="pi-modal-overlay animate-fade-in">
                     <div className="pi-modal animate-slide-up">
-                        <div className="pi-modal-icon">
-                            <Icons.Alert />
-                        </div>
+                        <div className="pi-modal-icon"><Icons.Alert /></div>
                         <h3 className="pi-modal-title">Unlock Strategic Insight?</h3>
                         <p className="pi-modal-desc">
-                            Accessing this intelligence hint will deduct <span className="pi-modal-highlight">{currentHintPenalty} points</span> from your potential score for this phase.
-                            This action is recorded and cannot be undone.
+                            Accessing this intelligence hint will deduct <span className="pi-modal-highlight">{typeof currentQuestion !== 'string' ? (currentQuestion.hint_penalty || 50) : 50} points</span> from your potential score.
                         </p>
                         <div className="pi-modal-actions">
-                            <button className="pi-btn pi-btn--secondary" onClick={() => setHintModalOpen(false)}>
-                                Cancel
-                            </button>
-                            <button className="pi-btn pi-btn--primary" onClick={unlockHint}>
-                                Unlock Intel
-                            </button>
+                            <button className="pi-btn pi-btn--secondary" onClick={() => setHintModalOpen(false)}>Cancel</button>
+                            <button className="pi-btn pi-btn--primary" onClick={unlockHint}>Unlock Intel</button>
                         </div>
                     </div>
                 </div>
             )}
-
             {isSubmitting && <EvaluationOverlay />}
         </div>
     );

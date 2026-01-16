@@ -1,0 +1,61 @@
+.stt-overlay-mirror {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    /* Exactly match .pi-textarea geometry */
+    margin: var(--space-md);
+    width: calc(100% - var(--space-md) * 2);
+    height: calc(100% - var(--space-md) * 2);
+    padding: var(--space-lg);
+    box-sizing: border-box;
+
+    /* Exactly match font metrics */
+    font-size: 1.05rem;
+    line-height: 1.8;
+    font-family: inherit;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    /* Ensure wrapping matches */
+
+    /* Hide the mirror text, render only the ghost */
+    color: transparent;
+    pointer-events: none;
+    z-index: 8;
+    /* Above textarea */
+    overflow: hidden;
+    /* Don't spill */
+}
+
+.stt-mirror-text {
+    /* Main text takes up space but is invisible */
+    opacity: 0;
+    white-space: pre-wrap;
+}
+
+.stt-ghost-text {
+    /* Ghost text is visible right after */
+    color: var(--primary);
+    opacity: 0.8;
+    font-style: italic;
+    font-weight: 500;
+    text-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
+
+    /* Animation to pulse slightly */
+    animation: ghost-pulse 1.5s infinite;
+}
+
+@keyframes ghost-pulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}
