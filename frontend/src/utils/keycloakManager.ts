@@ -98,6 +98,17 @@ class KeycloakManager {
         // Start a new initialization process
         this.initPromise = (async () => {
             try {
+                // Check for mock session bypass (only if allowed by environment)
+                const isBypassAllowed = import.meta.env.VITE_ALLOW_BYPASS === 'true';
+                if (isBypassAllowed && localStorage.getItem('isMockSession') === 'true') {
+                    console.log("[Keycloak] Mock session active, bypassing initialization");
+                    this.initialized = true;
+                    return true;
+                } else if (!isBypassAllowed) {
+                    // Safety: clear mock session if bypass is no longer allowed
+                    localStorage.removeItem('isMockSession');
+                }
+
                 const kc = this.getKeycloakInstance();
                 console.log("[Keycloak] Instance created, checking stored session...");
 
@@ -242,6 +253,7 @@ class KeycloakManager {
         if (typeof window === "undefined") return;
 
         localStorage.removeItem(KEYCLOAK_SESSION_KEY);
+        localStorage.removeItem('isMockSession');
 
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
@@ -306,6 +318,12 @@ class KeycloakManager {
     }
 
     async logout(): Promise<void> {
+        // Handle mock session logout
+        if (localStorage.getItem('isMockSession') === 'true') {
+            this.removeSession();
+            return;
+        }
+
         const kc = await this.getKeycloakSession("/logout");
         if (kc === null) {
             this.removeSession();
@@ -323,6 +341,10 @@ class KeycloakManager {
     }
 
     async getKeycloakProfile(): Promise<string> {
+        if (localStorage.getItem('isMockSession') === 'true') {
+            return "dev-user@example.com";
+        }
+
         const kc = await this.getKeycloakSession();
         if (!kc) {
             throw new Error("Keycloak session not initialized");
@@ -338,13 +360,24 @@ class KeycloakManager {
     }
 
     getToken(): string | null {
+        if (localStorage.getItem('isMockSession') === 'true') {
+            return "mock-dev-token";
+        }
         const kc = this.getKeycloakInstance();
         return kc.token || null;
     }
 
     isAuthenticated(): boolean {
+        if (localStorage.getItem('isMockSession') === 'true') {
+            return true;
+        }
         const kc = this.getKeycloakInstance();
         return kc.authenticated || false;
+    }
+
+    setMockSession(): void {
+        localStorage.setItem('isMockSession', 'true');
+        this.initialized = true;
     }
 }
 

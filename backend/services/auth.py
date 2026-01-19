@@ -94,6 +94,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 def get_keycloak_client() -> KeycloakOpenID:
     """Create and return a Keycloak client instance."""
+    logger.debug(f"[Auth] Initializing Keycloak: URL={settings.KEYCLOAK_SERVER_URL}, Realm={settings.KEYCLOAK_REALM}, Client={settings.KEYCLOAK_CLIENT_ID}")
     return KeycloakOpenID(
         server_url=settings.KEYCLOAK_SERVER_URL,
         realm_name=settings.KEYCLOAK_REALM,

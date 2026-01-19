@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../providers';
+import { keycloakManager } from '../../utils/keycloakManager';
 import { Branding } from '../../components/Branding/Branding';
 import { AuthLoading } from '../../components/AuthLoading/AuthLoading';
 import './Login.css';
@@ -102,6 +103,18 @@ export const Login: React.FC = () => {
                     </button>
 
                     <div className="login-footer">
+                        {import.meta.env.VITE_ALLOW_BYPASS === 'true' && (
+                            <button
+                                className="btn-secondary dev-bypass-button"
+                                style={{ marginTop: '1rem', width: '100%', opacity: 0.7 }}
+                                onClick={() => {
+                                    keycloakManager.setMockSession();
+                                    window.location.reload();
+                                }}
+                            >
+                                🧪 Bypass SSO (Dev Mode)
+                            </button>
+                        )}
                         <p className="login-help">
                             Network issues? Contact systems administration.
                         </p>

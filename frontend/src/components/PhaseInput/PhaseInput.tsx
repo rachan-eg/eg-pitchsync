@@ -105,7 +105,6 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         state: voiceState,
         error: voiceError,
         volume: voiceVolume,
-        start: startVoice,
         stop: stopVoice,
         toggle: toggleVoice
     } = useVoiceInput({
@@ -256,6 +255,9 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
             const el = textareaRef.current;
             if (document.activeElement !== el) {
                 el.focus();
+                // Move cursor to the end
+                const length = el.value.length;
+                el.setSelectionRange(length, length);
                 el.scrollTop = el.scrollHeight;
             }
         }

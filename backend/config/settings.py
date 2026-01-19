@@ -94,10 +94,10 @@ class Settings:
     AWS_REGION = os.environ.get("AWS_REGION", "eu-central-1")
 
     # Keycloak SSO Configuration
-    KEYCLOAK_SERVER_URL = os.environ.get("KEYCLOAK_SERVER_URL", "")
-    KEYCLOAK_REALM = os.environ.get("KEYCLOAK_REALM", "")
-    KEYCLOAK_CLIENT_ID = os.environ.get("KEYCLOAK_CLIENT_ID", "")
-    KEYCLOAK_CLIENT_SECRET = os.environ.get("KEYCLOAK_CLIENT_SECRET", "")
+    KEYCLOAK_SERVER_URL = os.environ.get("KEYCLOAK_SERVER_URL") or os.environ.get("VITE_KEYCLOAK_URL", "")
+    KEYCLOAK_REALM = os.environ.get("KEYCLOAK_REALM") or os.environ.get("VITE_KEYCLOAK_REALM", "")
+    KEYCLOAK_CLIENT_ID = os.environ.get("KEYCLOAK_CLIENT_ID") or os.environ.get("VITE_KEYCLOAK_CLIENT_ID", "")
+    KEYCLOAK_CLIENT_SECRET = os.environ.get("KEYCLOAK_CLIENT_SECRET") or os.environ.get("VITE_KEYCLOAK_CLIENT_SECRET", "")
 
 
 
