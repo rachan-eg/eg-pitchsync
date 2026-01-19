@@ -316,29 +316,68 @@
     box-shadow: 0 0 15px rgba(167, 139, 250, 0.1);
 }
 
+.pi-textarea,
+.pi-textarea--preview {
+    width: calc(100% - var(--space-md) * 2);
+    margin: var(--space-md);
+    padding: var(--space-lg);
+    box-sizing: border-box;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
 .pi-textarea--preview {
     cursor: text;
     overflow-y: auto;
     overflow-x: hidden;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
     white-space: pre-wrap;
+    background: transparent;
 }
 
-.pi-textarea--preview p {
-    margin: 0 0 1rem 0;
+.pi-textarea--preview * {
     max-width: 100%;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
     word-break: break-word;
+    box-sizing: border-box;
+}
+
+/* Ensure common MD elements wrap strictly */
+.pi-textarea--preview p,
+.pi-textarea--preview h1,
+.pi-textarea--preview h2,
+.pi-textarea--preview h3,
+.pi-textarea--preview li,
+.pi-textarea--preview blockquote {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    margin-bottom: 1rem;
+}
+
+/* Stable Tables */
+.pi-textarea--preview table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.pi-textarea--preview td,
+.pi-textarea--preview th {
+    border: 1px solid var(--border-light);
+    padding: 0.5rem;
+    overflow-wrap: anywhere;
 }
 
 .pi-textarea--preview blockquote,
 .pi-textarea--preview pre,
 .pi-textarea--preview code {
-    max-width: 100%;
-    overflow-wrap: break-word;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
     white-space: pre-wrap;
-    word-break: break-word;
 }
 
 .pi-textarea--preview:hover {

@@ -346,7 +346,8 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 value={currentAnswer}
                                 onChange={(e) => handleChange(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                // Removed aggressive onBlur to keep input open
+                                onBlur={() => !isListening && setIsEditing(false)}
+                                // Restored onBlur to allow switching back to Markdown Preview
                                 placeholder={isListening ? "" : "Type your response here (min 100 chars). Press Ctrl+Enter for next."}
                                 readOnly={isListening}
                                 onClick={handleInputClick}
