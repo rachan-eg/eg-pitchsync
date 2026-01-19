@@ -108,14 +108,5 @@ settings = Settings()
 # =============================================================================
 # Fail fast if required credentials are missing in production mode
 if not settings.DEBUG and not settings.TEST_MODE:
-    missing_credentials = []
-    # AWS Credentials are now optional to support IAM Roles/Instance Profiles
-    # We only check for FLUX_API_KEY which is mandatory
-    if not settings.FLUX_API_KEY:
-        missing_credentials.append('FLUX_API_KEY')
-    
-    if missing_credentials:
-        print(f"🚨 FATAL: Missing required credentials: {', '.join(missing_credentials)}")
-        print("Set these environment variables or enable DEBUG/TEST_MODE to bypass this check.")
-        print("Note: AWS credentials can be omitted if using IAM Roles.")
-        sys.exit(1)
+    # No mandatory credentials required at this stage
+    pass
