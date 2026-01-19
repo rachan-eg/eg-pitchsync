@@ -741,25 +741,15 @@
 }
 
 .pi-attempts-log {
-    margin-top: 0.5rem;
     display: flex;
     flex-direction: column;
-}
-
-.pi-attempts-label {
-    font-size: 0.55rem;
-    font-weight: 800;
-    color: var(--text-muted);
-    letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
-    padding-left: 0.25rem;
 }
 
 .pi-attempts-list {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
-    max-height: 180px;
+    max-height: 250px;
     overflow-y: auto;
     padding-right: 4px;
 }
