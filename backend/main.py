@@ -22,6 +22,10 @@ async def lifespan(app: FastAPI):
     """Application lifecycle handler."""
     print(f"🚀 {settings.APP_NAME} v{settings.APP_VERSION} starting...")
     print(f"🔧 Multi-user concurrency: ENABLED (async AI, WAL mode)")
+    
+    auth_mode = "🧪 TEST_MODE (Bypass)" if settings.TEST_MODE else f"🔐 KEYCLOAK ({settings.KEYCLOAK_SERVER_URL})"
+    print(f"🔑 Auth Mode: {auth_mode}")
+    
     # Initialize database
     create_db_and_tables()
     yield
