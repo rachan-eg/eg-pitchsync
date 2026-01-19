@@ -291,35 +291,37 @@ def generate_customer_image_prompt(
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Creates a comprehensive, customer-centric image prompt for pitch presentations.
-    Extracts actual business details from QnA and builds a detailed infographic spec.
+    Synthesizes Q&A responses into a coherent solution mockup with specific details.
+    ALWAYS outputs prompts for 16:9 aspect ratio images.
     """
     phase_summaries = _extract_phase_summaries(all_phases_data)
     
-    # Extract specific answers for better context
-    problem_context = ""
-    solution_context = ""
-    audience_context = ""
-    benefits_context = ""
+    # Structured extraction of Q&A insights for coherent story-building
+    problem_insights = []
+    solution_insights = []
+    market_insights = []
+    benefit_insights = []
     
     # phase_summaries is a list of {"phase": name, "content": ...}
-    # Build full context string from all phases
-    all_answers_context = ""
+    # Build structured context that tells a coherent story
+    structured_context = ""
     for phase_data in phase_summaries:
         p_name = phase_data.get("phase", "Unknown Phase")
         p_content = phase_data.get("content", "")
-        if p_content:
-            all_answers_context += f"- **{p_name}**: {p_content}\n"
-
-    # Extract specific buckets for specific framing (keep existing logic if useful, or just use full context)
-    for phase_data in phase_summaries:
-        phase_name = phase_data.get("phase", "")
-        phase_lower = phase_name.lower()
-        content = phase_data.get("content", "")
+        phase_lower = p_name.lower()
         
-        if 'problem' in phase_lower or 'definition' in phase_lower:
-            problem_context = content
-        elif 'solution' in phase_lower or 'architecture' in phase_lower:
-            solution_context = content
+        if p_content:
+            structured_context += f"\n### {p_name} ###\n{p_content}\n"
+            
+            # Categorize insights for coherent story synthesis
+            if any(kw in phase_lower for kw in ['problem', 'challenge', 'pain', 'issue', 'need']):
+                problem_insights.append(p_content)
+            elif any(kw in phase_lower for kw in ['solution', 'approach', 'how', 'method', 'architecture']):
+                solution_insights.append(p_content)
+            elif any(kw in phase_lower for kw in ['market', 'customer', 'audience', 'user', 'target']):
+                market_insights.append(p_content)
+            elif any(kw in phase_lower for kw in ['benefit', 'value', 'outcome', 'result', 'impact']):
+                benefit_insights.append(p_content)
     
     # Extract key details from usecase
     usecase_title = usecase.get('title', 'Unknown Product')
@@ -332,81 +334,83 @@ def generate_customer_image_prompt(
     theme_style = theme.get('visual_style', 'Clean and professional') if isinstance(theme, dict) else ''
     theme_mood = theme.get('mood', 'Innovative') if isinstance(theme, dict) else ''
 
-    # Debug output
-    # print("\n" + "="*60)
-    # print("IMAGE PROMPT CURATOR - CONTEXT")
-    # print("="*60)
-    # print(f"Product: {usecase_title}")
-    # # ... (Keep existing debug prints) ...
-    # print(f"Full Data Stream Length: {len(all_answers_context)} chars")
-    # print("="*60 + "\n")
-    
     refinement_instruction = ""
     if additional_notes:
         refinement_instruction = f"""
-=== CRITICAL USER REFINEMENTS (PRIORITIZE THESE) ===
+=== CRITICAL USER REFINEMENTS (MUST PRIORITIZE) ===
 The user has specifically requested: {additional_notes}
-Make sure the image prompt strongly emphasizes and incorporates these refinements.
+These refinements MUST be prominently featured in the final image prompt.
 """
     
     brand_colors = _load_brand_colors(usecase, theme)
     
+    # Build a focused summary of insights for the AI to work with
+    story_summary = f"""
+PROBLEM BEING SOLVED: {' | '.join(problem_insights[:2]) if problem_insights else 'Streamlining business operations'}
+SOLUTION APPROACH: {' | '.join(solution_insights[:2]) if solution_insights else 'Intelligent automation platform'}
+TARGET CUSTOMERS: {' | '.join(market_insights[:2]) if market_insights else target_market}
+KEY BENEFITS: {' | '.join(benefit_insights[:2]) if benefit_insights else 'Efficiency gains and cost reduction'}
+"""
+    
     prompt = f"""
-ACT AS A CUSTOMER EXPERIENCE STRATEGIST & VISUAL DESIGNER.
-Your goal is to create a prompt for a **CUSTOMER-CENTRIC VALUE VISUALIZATION**.
-The user wants an image that visualizes the **CUSTOMER JOURNEY**, **VALUE REALIZATION**, and **TANGIBLE OUTCOMES** of the product.
-It should be "High-Information Density" but focused on **BENEFITS**, **SUCCESS METRICS**, and **USER IMPACT**, rather than just dry technical specs.
+ACT AS A SILICON VALLEY PITCH DESIGNER who creates COMPELLING VISUAL MOCKUPS for investor presentations.
+
+Your task: Synthesize the Q&A insights below into ONE COHERENT CUSTOMER-CENTRIC SOLUTION MOCKUP.
+
+=== CRITICAL FORMAT REQUIREMENT ===
+The image MUST be in **16:9 ASPECT RATIO** (widescreen presentation format).
+This is NON-NEGOTIABLE - always specify "16:9 aspect ratio" in the prompt.
 
 {refinement_instruction}
 
-=== DATA STREAM (USER ANSWERS) - USE ALL OF THIS CONTENT ===
-{all_answers_context}
-
-=== TARGET USE CASE ===
-PRODUCT: "{usecase_title}"
+=== PRODUCT CONTEXT ===
+PRODUCT NAME: "{usecase_title}"
 DOMAIN: {usecase_domain}
+TARGET MARKET: {target_market}
 
-=== BRAND COLOR PALETTE ===
+=== SYNTHESIZED STORY FROM Q&A ===
+{story_summary}
+
+=== FULL Q&A CONTEXT (for specific details) ===
+{structured_context}
+
+=== BRAND COLOR PALETTE (MUST USE) ===
 {brand_colors}
-(Use these for primary elements and highlights)
+These colors MUST be the dominant visual theme. Use them for backgrounds, accents, headers, and key elements.
 
-=== CREATIVE DIRECTION (CUSTOMER-CENTRIC STYLE) ===
-1. **LAYOUT**:
-   - **Header**: Compelling Value Headline (e.g., "Transforming {usecase_domain}").
-   - **Structure**: Journey Map, Value Pillar Grid, or "Before/After" split layout.
-   - **Density**: High. Rich with proof points, metrics, and success indicators.
+=== YOUR MISSION ===
+Create a prompt that generates a **COHESIVE SOLUTION MOCKUP** showing:
+1. **THE CUSTOMER'S PROBLEM** (left side or top) - Visual representation of the pain point
+2. **THE SOLUTION IN ACTION** (center) - Show the product/interface solving the problem
+3. **THE OUTCOME/BENEFIT** (right side or bottom) - Metrics, happy users, success indicators
 
-2. **TEXT CONTENT (CRITICAL - CUSTOMER LENS)**:
-   - The image MUST appear to have ACTUAL READABLE TEXT visualizing the CUSTOMER'S WIN.
-   - INSTRUCTIONS: "Show metrics like '50% Efficiency Gain'", "List key user benefits", "Display 'Current Pain' vs 'Future Gain'".
-   - Do NOT use generic placeholder text. Use specific **User Outcomes** and **Business Value** derived from the inputs.
-   - Focus on: "Time Saved", "Revenue Increased", "Risk Reduced", "Experience Improved".
+=== VISUAL STYLE REQUIREMENTS ===
+- **FORMAT**: 16:9 widescreen, professional presentation slide style
+- **LAYOUT**: Clean 3-panel journey (Problem → Solution → Outcome) OR split-screen Before/After
+- **STYLE**: Modern SaaS product visualization, clean vector/isometric style
+- **MUST INCLUDE**: 
+  • Specific metrics from the Q&A (use actual numbers/percentages mentioned)
+  • Clear visual hierarchy showing the transformation
+  • Human elements (users, customers) benefiting from the solution
+  • Dashboard or interface mockup showing the product in use
+- **COLORS**: Dominant use of the brand palette specified above
+- **TEXT**: Include readable headlines/metrics that tell the value story
+- **AVOID**: Abstract shapes without meaning, generic stock imagery, cluttered designs
 
-3. **VISUALS**:
-   - **User Flow Diagrams**: Showing the seamless experience.
-   - **Success Dashboards**: Simulating the user seeing their results.
-   - **Icons & Illustrations**: Represents people, interactions, and success states (not just server racks).
-   - **Style**: Professional, Modern, Clean, potentially 2.5D or Isometric to show depth of value.
-
-4. **STYLE**:
-   - "Strategic Value Map", "Customer Success Blueprint", "Modern SaaS Product Landing Page".
-   - Vibrant, engaging, human-centric.
-   - **NO** dry abstract topology diagrams. **NO** chaotic 3D renders. Think "McKinsey Digital" meets "Stripe Landing Page".
-
-=== REQUIRED PROMPT STRUCTURE (JSON) ===
-Return a JSON object with a 'final_combined_prompt' that follows this structure:
+=== OUTPUT FORMAT (JSON) ===
+Return ONLY a JSON object with 'final_combined_prompt' containing a detailed, specific prompt:
 
 {{
-  "final_combined_prompt": "A customer-centric value visualization for '{usecase_title}'. + [LAYOUT: Modern split-screen or journey map layout, clean white background] + [HEADER: Bold benefit-driven headline for '{usecase_title}'] + [CONTENT: text blocks highlighting 'User Benefits', 'Efficiency Gains', and 'Success Metrics'] + [VISUALS: Central illustration of user success/process, icons representing happy users/outcomes, stylized dashboard metrics showing growth] + [TEXT: 'Benefit 1...', 'Outcome 2...', 'ROI...' (simulated readable text)] + [STYLE: Modern SaaS landing page style, isometric or flat vector, vibrant, engaging colors: {brand_colors}]"
+  "final_combined_prompt": "A professional 16:9 widescreen customer solution mockup for '{usecase_title}'. [FORMAT: 16:9 aspect ratio, presentation slide] [LAYOUT: 3-panel transformation journey showing Problem → Solution → Outcome] [PROBLEM PANEL: Visual of [SPECIFIC pain point from Q&A]] [SOLUTION PANEL: Clean interface mockup of '{usecase_title}' showing [SPECIFIC feature from Q&A] in action] [OUTCOME PANEL: Success dashboard with metrics like '[SPECIFIC benefit/metric from Q&A]', happy customer icons] [STYLE: Modern SaaS visualization, clean isometric/flat design] [COLORS: Primary {brand_colors}] [TEXT: Readable headlines and metric callouts] [QUALITY: Professional, 8K resolution, presentation-ready]"
 }}
 
-=== OUTPUT FORMAT ===
-Return ONLY the JSON structure.
+BE SPECIFIC! Pull actual details from the Q&A context - names, numbers, features mentioned.
+DO NOT be vague. The mockup should tell a clear, cohesive story specific to THIS solution.
 """
 
     client = get_client()
     try:
-        print(f"DEBUG: Generating text-to-image prompt struct for {usecase_title}...")
+        print(f"DEBUG: Generating coherent customer solution mockup prompt for {usecase_title}...")
         
         response_text, usage = client.generate_content(
             prompt=prompt,
@@ -422,33 +426,37 @@ Return ONLY the JSON structure.
         # Check if we got a totally empty response (fail-safe)
         if not data.final_combined_prompt and not data.subject:
              print(f"⚠️ Image Curator Parsing FAILURE. Raw response: {response_text[:200]}")
-             # Return a safe dictionary fallback
+             # Return a safe dictionary fallback with proper format
              return {
-                 "final_combined_prompt": f"Professional technical infographic for {usecase_title}, high information density, clean flat vector style, 8k resolution.",
-                 "style": "clean flat vector"
+                 "final_combined_prompt": f"Professional 16:9 widescreen customer solution mockup for {usecase_title}. 3-panel transformation layout showing Problem to Solution to Outcome. Modern SaaS visualization style. Colors: {brand_colors}. High information density, clean flat vector style, 8k resolution.",
+                 "style": "modern saas visualization"
              }, usage
 
         # Convert to dictionary but keep the prompt-building logic from the model
         prompt_data = data.model_dump()
         final_prompt = data.get_combined_prompt()
         
+        # Ensure 16:9 aspect ratio is always specified
+        if "16:9" not in final_prompt.lower() and "16x9" not in final_prompt.lower():
+            final_prompt = f"16:9 widescreen aspect ratio, {final_prompt}"
+        
         # Add high-fidelity specs if missing (ensures engine consistency)
-        specs = "8k resolution, photorealistic, octane render, cinematic lighting"
+        specs = "8k resolution, professional presentation quality"
         if "8k" not in final_prompt.lower():
             final_prompt += f", {specs}"
         
         # Sync the polished prompt back into the data object
         prompt_data["final_combined_prompt"] = final_prompt
         
-        print(f"DEBUG: Successfully generated and polished image prompt struct")
+        print(f"DEBUG: Successfully generated coherent customer solution mockup prompt")
         return prompt_data, usage
         
     except Exception as e:
         print(f"Critical Image Curator Error: {e}")
-        # Always return something to allow the game to continue
+        # Always return something with proper format to allow the game to continue
         return {
-            "final_combined_prompt": f"Infographic for {usecase_title}, system architecture diagram style.",
-            "style": "flat vector"
+            "final_combined_prompt": f"Professional 16:9 widescreen customer solution mockup for {usecase_title}. Problem to Solution to Outcome transformation layout. Modern SaaS style. Colors: {brand_colors}.",
+            "style": "modern saas visualization"
         }, {"input_tokens": 0, "output_tokens": 0}
 
 
