@@ -18,6 +18,8 @@ backend/__pycache__/
 backend/*.py[cod]
 backend/.pytest_cache/
 gum_app.db
+gum_app.db-shm
+gum_app.db-wal
 claude_debug.log
 credentials
 

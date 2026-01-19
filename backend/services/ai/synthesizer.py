@@ -414,60 +414,43 @@ Return ONLY the JSON structure.
             temperature=0.7
         )
         
-        # Robust JSON extraction
-        json_str = response_text.strip()
-        import re
+        # Robust JSON extraction and parsing via specialized utility
+        from backend.models.ai_responses import ImagePromptSpec, parse_ai_response
         
-        # Try to find JSON block
-        json_match = re.search(r'```json\s*(.*?)\s*```', json_str, re.DOTALL)
-        if json_match:
-            json_str = json_match.group(1).strip()
-        else:
-            json_match = re.search(r'(\{.*\})', json_str, re.DOTALL)
-            if json_match:
-                json_str = json_match.group(1).strip()
-                
-        try:
-            # Use strict=False to allow control characters in strings
-            prompt_data = json.loads(json_str, strict=False)
-            
-            # Ensure final_combined_prompt is present and polished
-            final_prompt = prompt_data.get("final_combined_prompt", "")
-            if not final_prompt:
-                components = [
-                    prompt_data.get("subject", ""),
-                    prompt_data.get("composition", ""),
-                    prompt_data.get("environment", ""),
-                    prompt_data.get("lighting", ""),
-                    prompt_data.get("style", "")
-                ]
-                final_prompt = ", ".join([c for c in components if c])
-            
-            # Add specs if missing to the internal combined prompt
-            specs = "8k resolution, photorealistic, octane render, cinematic lighting"
-            if "8k" not in final_prompt.lower():
-                final_prompt += f", {specs}"
-            
-            # Update the JSON object with the polished combined prompt
-            prompt_data["final_combined_prompt"] = final_prompt
-            
-            print(f"DEBUG: Successfully generated JSON prompt struct")
-            # Return the Dict object directly
-            return prompt_data, usage
-            
-        except json.JSONDecodeError:
-            print(f"JSON Decode Error in Image Curator. Raw: {response_text[:200]}...")
-            # If not valid JSON, create a dummy struct to maintain consistency
-            fallback_struct = {
-                "subject": "Unknown",
-                "final_combined_prompt": response_text.replace('```json', '').replace('```', '').strip(),
-                "style": "8k resolution"
-            }
-            return fallback_struct, {"input_tokens": 0, "output_tokens": 0}
+        data = parse_ai_response(response_text, ImagePromptSpec)
+        
+        # Check if we got a totally empty response (fail-safe)
+        if not data.final_combined_prompt and not data.subject:
+             print(f"⚠️ Image Curator Parsing FAILURE. Raw response: {response_text[:200]}")
+             # Return a safe dictionary fallback
+             return {
+                 "final_combined_prompt": f"Professional technical infographic for {usecase_title}, high information density, clean flat vector style, 8k resolution.",
+                 "style": "clean flat vector"
+             }, usage
+
+        # Convert to dictionary but keep the prompt-building logic from the model
+        prompt_data = data.model_dump()
+        final_prompt = data.get_combined_prompt()
+        
+        # Add high-fidelity specs if missing (ensures engine consistency)
+        specs = "8k resolution, photorealistic, octane render, cinematic lighting"
+        if "8k" not in final_prompt.lower():
+            final_prompt += f", {specs}"
+        
+        # Sync the polished prompt back into the data object
+        prompt_data["final_combined_prompt"] = final_prompt
+        
+        print(f"DEBUG: Successfully generated and polished image prompt struct")
+        return prompt_data, usage
         
     except Exception as e:
-        print(f"Image Curator Error: {e}")
-        raise e
+        print(f"Critical Image Curator Error: {e}")
+        # Always return something to allow the game to continue
+        return {
+            "final_combined_prompt": f"Infographic for {usecase_title}, system architecture diagram style.",
+            "style": "flat vector"
+        }, {"input_tokens": 0, "output_tokens": 0}
+
 
 
 
@@ -515,18 +498,14 @@ Return ONLY `{{ "visionary_hook": "...", "customer_pitch": "..." }}`
     try:
         response_text, _ = client.generate_content(prompt=prompt, temperature=0.7)
         
-        # Robust JSON extraction
-        json_str = response_text.strip()
-        import re
-        json_match = re.search(r'(\{.*\})', json_str, re.DOTALL)
-        if json_match:
-            json_str = json_match.group(1).strip()
-            
-        data = json.loads(json_str, strict=False)
+        from backend.models.ai_responses import PitchNarrative, parse_ai_response
+        parsed = parse_ai_response(response_text, PitchNarrative)
+        
         return {
-            "visionary_hook": data.get("visionary_hook", "Experience the future."),
-            "customer_pitch": data.get("customer_pitch", "A revolutionary solution for your business.")
+            "visionary_hook": parsed.visionary_hook,
+            "customer_pitch": parsed.customer_pitch
         }
+
     except Exception as e:
         print(f"Pitch Narrative Generation Error: {e}")
         return {

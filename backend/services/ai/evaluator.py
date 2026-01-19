@@ -341,36 +341,19 @@ def evaluate_visual_asset(client, prompt: str, image_b64: str) -> Dict[str, Any]
         images=[{"data": image_b64, "media_type": media_type}]
     )
     
-    try:
-        # Client returns a dict/object, we need to parse it if strict JSON is enforced or extract it
-        # The prompt implies JSON return.
-        # Assuming generate_content handles basic parsing if json_mode is on, 
-        # but here we might get raw text. Ideally we use a parser or the client handles it.
-        # For this snippet, we'll try to parse the raw text.
-        import json
-        import re
-        
-        # Simple extraction if mixed content
-        json_match = re.search(r'\{.*\}', raw_response, re.DOTALL)
-        if json_match:
-            data = json.loads(json_match.group(0))
-        else:
-            data = json.loads(raw_response)
-            
+    # Parse using robust utility (handles logic/newlines/markdown)
+    result = parse_ai_response(raw_response, VisualAnalysisResult)
+    
+    # Handle complete parsing failures (where utility returned an empty default)
+    if result.visual_score == 0.0 and not result.rationale:
+        print(f"⚠️ Visual Analyst Parsing FAILURE. Raw response: {raw_response[:200]}")
         result = VisualAnalysisResult(
-            visual_score=float(data.get("visual_score", 0.5)),
-            rationale=data.get("rationale", "No rationale provided."),
-            alignment_rating=data.get("alignment_rating", "Unknown"),
-            feedback=data.get("feedback", "No feedback provided.")
+            visual_score=0.5,
+            rationale="Visual link synchronization intermittent. Analysis incomplete.",
+            alignment_rating="Pending",
+            feedback="The neural engine encountered high-dimensional noise while parsing this asset. Please try a different angle or lighting."
         )
-    except Exception as e:
-        print(f"Visual Analyst Parsing Error: {e}. Raw: {raw_response}")
-        result = VisualAnalysisResult(
-            visual_score=0.5, # Neutral fallback
-            rationale="Failed to parse visual analysis. Defaulting to neutral.",
-            alignment_rating="Error",
-            feedback="System error during visual analysis."
-        )
+
         
     return {"result": result, "usage": usage}
 
