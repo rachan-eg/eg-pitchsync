@@ -66,9 +66,10 @@ export const TeamCode: React.FC = () => {
     return (
         <div className="teamcode-container">
             <div className="teamcode-background">
-                <div className="teamcode-grid"></div>
-                <div className="teamcode-gradient-orb orb-1"></div>
-                <div className="teamcode-gradient-orb orb-2"></div>
+                <div className="aurora-blob-1"></div>
+                <div className="aurora-blob-2"></div>
+                <div className="aurora-blob-3"></div>
+                <div className="noise-overlay"></div>
             </div>
 
             {/* User Info Bar */}
@@ -90,7 +91,7 @@ export const TeamCode: React.FC = () => {
                 </div>
             )}
 
-            <div className="teamcode-card glass-panel">
+            <div className="teamcode-card">
                 {showSuccess ? (
                     <div className="teamcode-success">
                         <div className="success-icon animate-float">

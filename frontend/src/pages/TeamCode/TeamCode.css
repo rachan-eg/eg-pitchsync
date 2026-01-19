@@ -12,47 +12,64 @@
     overflow: hidden;
 }
 
+/* Main Deep Background */
 .teamcode-background {
     position: absolute;
     inset: 0;
-    pointer-events: none;
+    background: #020205;
+    /* Slightly off-black contrast */
+    overflow: hidden;
     z-index: 0;
 }
 
-.teamcode-grid {
+/* Fluid Mesh Gradients */
+.aurora-blob-1 {
     position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(167, 139, 250, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(167, 139, 250, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
-    mask-image: radial-gradient(circle at center, black, transparent 80%);
-    opacity: 0.5;
+    top: -15%;
+    right: -10%;
+    width: 60vw;
+    height: 60vh;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.6) 0%, rgba(30, 27, 75, 0.2) 55%, transparent 80%);
+    filter: blur(80px);
+    mix-blend-mode: screen;
+    animation:
+        mesh-drift 20s infinite ease-in-out,
+        mesh-morph 16s infinite ease-in-out,
+        mesh-pulse 9s infinite ease-in-out;
 }
 
-.teamcode-gradient-orb {
+.aurora-blob-2 {
     position: absolute;
-    border-radius: 50%;
+    bottom: -10%;
+    left: -10%;
+    width: 60vw;
+    height: 60vh;
+    background: radial-gradient(ellipse, rgba(37, 99, 235, 0.6) 0%, rgba(30, 58, 138, 0.2) 55%, transparent 80%);
+    filter: blur(90px);
+    mix-blend-mode: screen;
+    animation:
+        mesh-drift 24s infinite ease-in-out reverse,
+        mesh-morph 19s infinite ease-in-out -3s,
+        mesh-pulse 11s infinite ease-in-out -4s;
+}
+
+.aurora-blob-3 {
+    position: absolute;
+    top: 35%;
+    right: 25%;
+    width: 40vw;
+    height: 40vh;
+    background: conic-gradient(from 0deg at 50% 50%,
+            rgba(139, 92, 246, 0.0) 0deg,
+            rgba(139, 92, 246, 0.6) 120deg,
+            rgba(167, 139, 250, 0.4) 240deg,
+            rgba(139, 92, 246, 0.0) 360deg);
     filter: blur(100px);
-    opacity: 0.15;
-    animation: float 15s infinite alternate;
-}
-
-.orb-1 {
-    width: 600px;
-    height: 600px;
-    background: var(--primary);
-    top: -200px;
-    right: -100px;
-}
-
-.orb-2 {
-    width: 400px;
-    height: 400px;
-    background: var(--secondary);
-    bottom: -100px;
-    left: -100px;
-    animation-delay: -7s;
+    mix-blend-mode: screen;
+    border-radius: 40%;
+    animation:
+        aurora-wave 16s infinite ease-in-out,
+        mesh-pulse 13s infinite ease-in-out -6s;
 }
 
 /* User Info Bar */
@@ -130,6 +147,14 @@
     gap: 2rem;
     opacity: 0;
     animation: reveal-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    background: linear-gradient(135deg, rgba(15, 15, 20, 0.85) 0%, rgba(5, 5, 8, 0.92) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 28px;
+    box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 40px rgba(139, 92, 246, 0.05);
 }
 
 .teamcode-header {
