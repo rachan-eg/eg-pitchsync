@@ -494,13 +494,13 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                 <div className="pi-sidebar-section">
                     <div className="pi-sidebar-header">
                         <div className="pi-sidebar-icon"><Icons.Target /></div>
-                        <h3 className="pi-sidebar-title">Strategic Metrics</h3>
+                        <h3 className="pi-sidebar-title">Strategic Focus</h3>
                     </div>
                     <div className="pi-sidebar-content">
                         <ul className="pi-list">
                             <li className="pi-list-item pi-list-item--active">
                                 <span className="pi-intel-content">
-                                    {typeof currentQuestion === 'string' ? 'Strategic Clarity' : (currentQuestion.criteria || 'Analytical Depth')}
+                                    {typeof currentQuestion === 'string' ? 'Strategic Clarity' : (currentQuestion.focus || currentQuestion.criteria || 'Analytical Depth')}
                                 </span>
                             </li>
                         </ul>

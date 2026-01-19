@@ -4,6 +4,7 @@ Endpoints for session initialization, phase submission.
 """
 
 import random
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException
 
@@ -269,10 +270,11 @@ async def start_phase(req: StartPhaseRequest):
             questions.append({
                 "id": q.get("id", ""),
                 "text": q.get("text", ""),
-                "criteria": q.get("criteria", "")
+                "criteria": q.get("criteria", ""),
+                "focus": q.get("focus", "")
             })
         else:
-            questions.append({"id": "", "text": q, "criteria": ""})
+            questions.append({"id": "", "text": q, "criteria": "", "focus": ""})
     
     previous_responses = None
     phase_name = phase_def["name"]
