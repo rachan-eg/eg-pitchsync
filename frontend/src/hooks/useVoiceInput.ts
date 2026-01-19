@@ -4,7 +4,7 @@ import { isSTTSupported } from '../utils/browserSupportCheck';
 export type VoiceState = 'idle' | 'requesting' | 'listening' | 'error';
 
 interface UseVoiceInputProps {
-    onFinalSegment: (text: string) => void;
+    onFinalSegment: (text: string, pauseDuration?: number) => void;
     onInterimSegment?: (text: string) => void;
     lang?: string;
 }
@@ -22,7 +22,7 @@ export const useVoiceInput = ({ onFinalSegment, onInterimSegment, lang = 'en-IN'
     const shouldBeListeningRef = useRef(false);
     const noSpeechCountRef = useRef(0);
     const lastSpeechTimeRef = useRef<number>(0);
-    const silenceCheckIntervalRef = useRef<any>(null);
+    const lastTranscriptTimeRef = useRef<number>(0);
 
     // Audio Context
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -100,11 +100,6 @@ export const useVoiceInput = ({ onFinalSegment, onInterimSegment, lang = 'en-IN'
         shouldBeListeningRef.current = false;
         stopAudioAnalysis();
 
-        if (silenceCheckIntervalRef.current) {
-            clearInterval(silenceCheckIntervalRef.current);
-            silenceCheckIntervalRef.current = null;
-        }
-
         const recognition = recognitionRef.current;
         if (recognition) {
             try {
@@ -123,18 +118,6 @@ export const useVoiceInput = ({ onFinalSegment, onInterimSegment, lang = 'en-IN'
         noSpeechCountRef.current = 0;
         lastSpeechTimeRef.current = Date.now();
         setState('requesting');
-
-        // 8s Watchdog
-        if (silenceCheckIntervalRef.current) clearInterval(silenceCheckIntervalRef.current);
-        silenceCheckIntervalRef.current = setInterval(() => {
-            if (shouldBeListeningRef.current && stateRef.current === 'listening') {
-                const elapsed = Date.now() - lastSpeechTimeRef.current;
-                if (elapsed > 8000) {
-                    console.log('[VoiceInput] 8s Silence - Closing');
-                    stop();
-                }
-            }
-        }, 1000);
 
         const initiateRecognition = () => {
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -160,7 +143,16 @@ export const useVoiceInput = ({ onFinalSegment, onInterimSegment, lang = 'en-IN'
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     const result = event.results[i];
                     if (result.isFinal) {
-                        if (onFinalSegmentRef.current) onFinalSegmentRef.current(result[0].transcript);
+                        // Calculate pause duration since last transcript
+                        const now = Date.now();
+                        const pauseDuration = lastTranscriptTimeRef.current > 0
+                            ? now - lastTranscriptTimeRef.current
+                            : 0;
+                        lastTranscriptTimeRef.current = now;
+
+                        if (onFinalSegmentRef.current) {
+                            onFinalSegmentRef.current(result[0].transcript, pauseDuration);
+                        }
                     } else {
                         interim += result[0].transcript;
                     }
@@ -213,7 +205,6 @@ export const useVoiceInput = ({ onFinalSegment, onInterimSegment, lang = 'en-IN'
         return () => {
             shouldBeListeningRef.current = false;
             stopAudioAnalysis();
-            if (silenceCheckIntervalRef.current) clearInterval(silenceCheckIntervalRef.current);
             if (recognitionRef.current) try { recognitionRef.current.abort(); } catch (e) { }
         };
     }, []);

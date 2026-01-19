@@ -45,6 +45,9 @@ Generate stunning pitch visuals with **FLUX.2 Pro** in cinematic 21:9 aspect rat
 </td>
 <td width="50%">
 
+### 🎤 Smart Speech-to-Text
+Neural VAD, auto-punctuation, brand dictionary, and voice feedback for hands-free operation. [Learn more](docs/STT_OPTIMIZATIONS.md)
+
 ### 💾 Session Persistence
 SQLite database preserves progress across server restarts. Resume where you left off.
 

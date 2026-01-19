@@ -8,6 +8,7 @@ import {
     useVoiceInput
 } from '../../hooks/useVoiceInput';
 import { appendTranscript } from '../../utils/transcriptParser';
+import { confirmAudio } from '../../utils/tts';
 import { LiveTranscriptOverlay } from './LiveTranscriptOverlay';
 import { StatusStrip } from './StatusStrip';
 import './PhaseInput.css';
@@ -110,11 +111,11 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     } = useVoiceInput({
         lang: 'en-IN',
         onInterimSegment: (text) => setInterimTranscript(text),
-        onFinalSegment: (text) => {
+        onFinalSegment: (text, pauseDuration) => {
             setAnswers(prevAnswers => {
                 const idx = currentQuestionIndexRef.current;
                 const currentVal = prevAnswers[idx] || '';
-                const updated = appendTranscript(currentVal, text);
+                const updated = appendTranscript(currentVal, text, pauseDuration);
                 const nextAnswers = prevAnswers.map((a, i) => i === idx ? updated : a);
                 return nextAnswers;
             });
@@ -173,6 +174,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         setHintModalOpen(false);
     };
 
+
     const handleSubmit = async () => {
         const responses = phase.questions.map((q: any, i: number) => {
             const question_id = typeof q === 'string' ? q : q.id;
@@ -186,6 +188,13 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         });
 
         await submitPhase(responses);
+
+        // Voice confirmation for hands-free mode
+        try {
+            await confirmAudio(`Phase ${phaseNumber} submitted`);
+        } catch (e) {
+            // TTS not critical, silently fail
+        }
     };
 
     const handleNext = useCallback(() => {
