@@ -47,7 +47,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 }) => {
     const {
         submitPhase, elapsedSeconds, scoringInfo, session, phaseConfig,
-        setCurrentPhaseResponses, resumeTimer
+        setCurrentPhaseResponses, resumeTimer, phaseResult
     } = useApp();
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -62,6 +62,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const [interimTranscript, setInterimTranscript] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lastPhaseIdRef = useRef<string | null>(null);
+    const lastResponsesKeyRef = useRef<string | null>(null); // Track responses signature for resync
     const hintsUsedRef = useRef<boolean[]>([]);
     const currentQuestionIndexRef = useRef<number>(0);
 
@@ -127,33 +128,57 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
     const isListening = voiceState === 'listening' || voiceState === 'requesting';
 
-    // Initialize answers ONLY when Phase ID changes
+    // Initialize answers when Phase changes OR when returning to a phase with new server data
+    // (e.g., when returning to a passed phase after navigating away)
     useEffect(() => {
         const currentId = phase.id || phase.name;
 
-        // Prevent re-initialization unless it's a new phase
-        if (currentId !== lastPhaseIdRef.current) {
-            const initialAnsw = phase.questions.map((q: any) => {
-                const id = typeof q === 'string' ? q : q.id;
-                const prev = initialResponses.find(r => r.question_id === id);
-                return prev?.a || '';
-            });
-            const initialHints = phase.questions.map((q: any) => {
-                const id = typeof q === 'string' ? q : q.id;
-                const prev = initialResponses.find(r => r.question_id === id);
-                return prev?.hint_used || false;
-            });
+        // Create a signature of the initialResponses to detect server-side updates
+        const responsesKey = initialResponses.map(r => `${r.question_id}:${r.a?.slice(0, 20)}:${r.hint_used}`).join('|');
 
+        // Compute initial values from initialResponses
+        const initialAnsw = phase.questions.map((q: any) => {
+            const id = typeof q === 'string' ? q : q.id;
+            const prev = initialResponses.find(r => r.question_id === id);
+            return prev?.a || '';
+        });
+        const initialHints = phase.questions.map((q: any) => {
+            const id = typeof q === 'string' ? q : q.id;
+            const prev = initialResponses.find(r => r.question_id === id);
+            return prev?.hint_used || false;
+        });
+
+        // Reinitialize if phase changed OR if responses changed (e.g., returned from navigation)
+        const needsReset = currentId !== lastPhaseIdRef.current ||
+            (responsesKey !== lastResponsesKeyRef.current && lastResponsesKeyRef.current !== null);
+
+        if (needsReset) {
             setAnswers(initialAnsw);
             setHintsUsed(initialHints);
-
             setOriginalAnswers([...initialAnsw]);
             setOriginalHintsUsed([...initialHints]);
             setCurrentQuestionIndex(0);
-
             lastPhaseIdRef.current = currentId;
         }
+
+        // Always update the responses key
+        lastResponsesKeyRef.current = responsesKey;
     }, [phase, initialResponses]);
+
+    // Sync original answers with current answers when phase evaluation completes successfully.
+    // This ensures that after clicking "Back" on the feedback modal, anyChanges = false,
+    // correctly showing "Review Evaluation" button instead of "Finalize Phase".
+    useEffect(() => {
+        const pName = phaseConfig[phaseNumber]?.name;
+        const phaseData = session?.phases[pName];
+
+        // When the phase is passed and we have a phaseResult showing success,
+        // sync the originals with current to reset the change detection
+        if (phaseData?.status === 'passed' && phaseResult?.passed) {
+            setOriginalAnswers([...answers]);
+            setOriginalHintsUsed([...hintsUsed]);
+        }
+    }, [phaseResult, session?.phases, phaseConfig, phaseNumber, answers, hintsUsed]);
 
     const handleMicClick = () => {
         if (voiceState === 'idle' || voiceState === 'error') {
@@ -560,25 +585,56 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             const existing = session?.phases[pName];
                             const history = existing?.history || [];
                             const currentMetrics = existing?.metrics;
+
+                            // Correctly identify if the current metrics represent a real evaluated attempt.
+                            // We trust the status if it's passed/failed/submitted.
+                            // If it's in_progress, it means we are editing, but we might still have the results 
+                            // of the LAST evaluation in currentMetrics.
+                            const hasLastEvaluation = !!existing && (
+                                existing.status === 'passed' ||
+                                existing.status === 'failed' ||
+                                existing.status === 'submitted' ||
+                                (currentMetrics && (currentMetrics.ai_score > 0 || currentMetrics.weighted_score > 0 || currentMetrics.duration_seconds > 0))
+                            );
+
                             const allAttempts: any[] = history.map((h, i) => ({
                                 weighted_score: h.weighted_score,
                                 label: i === 0 ? "INITIAL ATTEMPT" : `RETRY ${i}`,
                                 isCurrent: false
                             }));
 
-                            const hasEvaluatedCurrent = currentMetrics && (currentMetrics.ai_score > 0 || existing?.status === 'passed' || existing?.status === 'failed');
-
-                            if (hasEvaluatedCurrent) {
+                            if (hasLastEvaluation && currentMetrics) {
                                 const currentLabel = allAttempts.length === 0 ? "INITIAL ATTEMPT" : `RETRY ${allAttempts.length}`;
+
+                                // In the case of in_progress, we prioritize showing the DRAFT if there are changes.
+                                // If no changes yet, we just show the last evaluated state as "CURRENT".
                                 const canAddDraft = anyChanges && (allAttempts.length < (scoringInfo?.max_retries || 3));
 
                                 if (canAddDraft) {
-                                    allAttempts.push({ weighted_score: currentMetrics.weighted_score, label: currentLabel, isCurrent: false });
-                                    allAttempts.push({ weighted_score: 0, label: `RETRY ${allAttempts.length}`, isCurrent: true, isDraft: true });
+                                    // The evaluated one is now technically previous
+                                    allAttempts.push({
+                                        weighted_score: currentMetrics.weighted_score,
+                                        label: currentLabel,
+                                        isCurrent: false
+                                    });
+                                    // The new one is the current draft
+                                    allAttempts.push({
+                                        weighted_score: 0,
+                                        label: `RETRY ${allAttempts.length}`,
+                                        isCurrent: true,
+                                        isDraft: true
+                                    });
                                 } else {
-                                    allAttempts.push({ weighted_score: currentMetrics.weighted_score, label: currentLabel, isCurrent: true });
+                                    // No changes or max retries reached, current evaluated one is the "current" viewable state
+                                    allAttempts.push({
+                                        weighted_score: currentMetrics.weighted_score,
+                                        label: currentLabel,
+                                        isCurrent: true,
+                                        isDraft: existing.status === 'in_progress' && currentMetrics.weighted_score === 0
+                                    });
                                 }
                             } else if (allAttempts.length < (scoringInfo?.max_retries || 3) + 1) {
+                                // No previous evaluation at all, show initial draft
                                 allAttempts.push({
                                     weighted_score: 0,
                                     label: allAttempts.length === 0 ? "INITIAL ATTEMPT" : `RETRY ${allAttempts.length}`,
@@ -597,7 +653,9 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                                         <span className="pi-attempt-num">{h.label}</span>
                                                         {h.isCurrent && <span className="pi-attempt-tag">{h.isDraft ? 'DRAFT' : 'CURRENT'}</span>}
                                                     </div>
-                                                    <span className="pi-attempt-score">{h.isDraft ? '--' : `${Math.round(h.weighted_score)} PTS`}</span>
+                                                    <span className="pi-attempt-score">
+                                                        {h.isDraft ? '--' : `${Math.round(h.weighted_score)} PTS`}
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>

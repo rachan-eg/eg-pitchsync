@@ -90,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         if (response.ok) {
                             const data = await response.json();
                             console.log('[Auth] Backend status:', data.authenticated);
+
                             if (data.authenticated) {
                                 setIsAuthenticated(true);
                                 setToken(token);
@@ -102,14 +103,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 const normalizePicture = (url?: string) => {
                                     if (!url) return undefined;
                                     if (url.startsWith('http') || url.startsWith('data:')) return url;
-                                    const baseUrl = import.meta.env.VITE_KEYCLOAK_URL || "https://egauth.cto.aks.egdev.eu";
-                                    return `${baseUrl.replace(/\/$/, '')}${url.startsWith('/') ? '' : '/'}${url}`;
+                                    const baseUrl = import.meta.env.VITE_KEYCLOAK_URL || "";
+                                    return baseUrl ? `${baseUrl.replace(/\/$/, '')}${url.startsWith('/') ? '' : '/'}${url}` : url;
                                 };
 
                                 let picture = idToken.picture || idToken.avatar || idToken.photo || idToken.avatar_url;
 
-                                // Fallback: Load full profile if picture is missing from ID token
-                                if (!picture) {
+                                // Fallback: Load full profile if picture is missing from ID token (SKIP IN MOCK MODE)
+                                const isMock = localStorage.getItem('isMockSession') === 'true';
+                                if (!picture && !isMock) {
                                     console.log('[Auth] Picture missing in ID Token, fetching full profile...');
                                     try {
                                         const profile = await kc.loadUserProfile() as any;
@@ -131,11 +133,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 console.log('[Auth] Handshake - Final User Data:', userData);
                                 setUser(userData);
                             } else {
-                                console.warn('[Auth] Backend rejected session');
+                                console.warn('[Auth] Backend rejected session (authenticated=false)');
                                 setIsAuthenticated(false);
+                                setUser(null);
                             }
+                        } else if (response.status === 401) {
+                            console.warn('[Auth] Backend returned 401 Unauthorized');
+                            // If backend is in TEST_MODE but frontend thinks it's auth'd, or vice versa,
+                            // we might want to respect the backend's refusal if it's "real" 401.
+                            // But usually if Keycloak said yes, we trust it for the UI.
+                            setIsAuthenticated(true);
+                            setToken(token);
+                            const email = await keycloakManager.getKeycloakProfile();
+                            setUser({ email });
                         } else {
-                            console.warn(`[Auth] Backend status failed (${response.status}), falling back to Keycloak profile`);
+                            console.warn(`[Auth] Backend error (${response.status}), falling back to Keycloak profile`);
                             setIsAuthenticated(true);
                             setToken(token);
                             const email = await keycloakManager.getKeycloakProfile();

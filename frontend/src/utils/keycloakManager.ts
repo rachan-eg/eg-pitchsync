@@ -66,9 +66,17 @@ class KeycloakManager {
     }
 
     private getKeycloakConfig() {
+        const url = import.meta.env.VITE_KEYCLOAK_URL || "";
+        const realm = import.meta.env.VITE_KEYCLOAK_REALM || "";
+
+        // Basic validation
+        if (!url || !realm) {
+            console.warn("[Keycloak] Configuration missing! Check VITE_KEYCLOAK_URL and VITE_KEYCLOAK_REALM.");
+        }
+
         return {
-            url: import.meta.env.VITE_KEYCLOAK_URL || "https://egauth.cto.aks.egdev.eu",
-            realm: import.meta.env.VITE_KEYCLOAK_REALM || "",
+            url: url.replace(/\/$/, ''), // Strip trailing slash
+            realm: realm,
             clientId: this.getClientId(),
         };
     }
@@ -98,19 +106,22 @@ class KeycloakManager {
         // Start a new initialization process
         this.initPromise = (async () => {
             try {
-                // Check for mock session bypass (only if allowed by environment)
                 const isBypassAllowed = import.meta.env.VITE_ALLOW_BYPASS === 'true';
+
+                // 1. PRIORITY BYPASS: check this BEFORE any instances
                 if (isBypassAllowed && localStorage.getItem('isMockSession') === 'true') {
-                    console.log("[Keycloak] Mock session active, bypassing initialization");
+                    console.log("[Keycloak] 🧪 Mock session active, skipping all Keycloak logic");
                     this.initialized = true;
                     return true;
                 } else if (!isBypassAllowed) {
-                    // Safety: clear mock session if bypass is no longer allowed
                     localStorage.removeItem('isMockSession');
                 }
 
                 const kc = this.getKeycloakInstance();
-                console.log("[Keycloak] Instance created, checking stored session...");
+
+                // 2. SPEED UP DEV: 2s timeout if bypass allowed, otherwise 10s
+                const timeoutMs = isBypassAllowed ? 2000 : 10000;
+                console.log(`[Keycloak] Instance created, checking session (timeout: ${timeoutMs}ms)...`);
 
                 // Check if we have a stored session to hydrate
                 const sessionData = localStorage.getItem(KEYCLOAK_SESSION_KEY);
@@ -118,8 +129,6 @@ class KeycloakManager {
                     try {
                         const parsed = JSON.parse(sessionData);
                         if (this.isSessionValid(parsed)) {
-                            console.log("[Keycloak] Valid stored session found, hydrating...");
-                            // Only set if not already set by a previous init
                             if (!kc.token) {
                                 kc.token = parsed.token;
                                 kc.refreshToken = parsed.refreshToken;
@@ -128,7 +137,6 @@ class KeycloakManager {
                                 kc.authenticated = parsed.authenticated;
                             }
 
-                            // Wrap init in timeout
                             const initPromise = kc.init({
                                 onLoad: 'check-sso',
                                 token: parsed.token,
@@ -140,12 +148,10 @@ class KeycloakManager {
                             });
 
                             const timeoutPromise = new Promise((_, reject) =>
-                                setTimeout(() => reject(new Error("Keycloak init timeout (hydration)")), 10000)
+                                setTimeout(() => reject(new Error("Keycloak hydration timeout")), timeoutMs)
                             );
 
                             await Promise.race([initPromise, timeoutPromise]);
-
-                            console.log("[Keycloak] Hydration successful");
                             this.initialized = true;
                             this.startTokenRefresh(kc);
                             return true;
@@ -156,31 +162,38 @@ class KeycloakManager {
                     }
                 }
 
-                console.log("[Keycloak] Performing fresh init (check-sso)...");
-                // Fresh init or redirect callback
-                const initPromise = kc.init({
-                    onLoad: "check-sso",
-                    flow: "standard",
-                    redirectUri: window.location.origin + redirectPath,
-                    pkceMethod: 'S256',
-                    checkLoginIframe: false,
-                    scope: 'openid profile email'
-                });
+                console.log(`[Keycloak] Performing fresh init...`);
+                try {
+                    const freshInitPromise = kc.init({
+                        onLoad: "check-sso",
+                        flow: "standard",
+                        redirectUri: window.location.origin + redirectPath,
+                        pkceMethod: 'S256',
+                        checkLoginIframe: false,
+                        scope: 'openid profile email'
+                    });
 
-                const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("Keycloak init timeout (fresh)")), 10000)
-                );
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error("Keycloak timeout")), timeoutMs)
+                    );
 
-                const authenticated = await Promise.race([initPromise, timeoutPromise]) as boolean;
+                    const authenticated = await Promise.race([freshInitPromise, timeoutPromise]) as boolean;
 
-                console.log(`[Keycloak] Init complete, authenticated: ${authenticated}`);
-                this.initialized = true;
-                if (authenticated) {
-                    this.saveSession(kc);
-                    this.startTokenRefresh(kc);
+                    console.log(`[Keycloak] Init complete, authenticated: ${authenticated}`);
+                    this.initialized = true;
+                    if (authenticated) {
+                        this.saveSession(kc);
+                        this.startTokenRefresh(kc);
+                    }
+                    return authenticated;
+                } catch (err) {
+                    if (isBypassAllowed) {
+                        console.warn("[Keycloak] Connection failed in Dev Mode. Enabling auto-bypass...");
+                        this.setMockSession();
+                        return true;
+                    }
+                    throw err;
                 }
-
-                return authenticated;
             } catch (error) {
                 console.error("[Keycloak] Keycloak initialize error:", error);
                 // We clear promise so it can be retried, but we don't set initialized=true
@@ -378,6 +391,17 @@ class KeycloakManager {
     setMockSession(): void {
         localStorage.setItem('isMockSession', 'true');
         this.initialized = true;
+
+        // Populate the instance with mock data so AuthProvider is happy
+        const kc = this.getKeycloakInstance();
+        kc.authenticated = true;
+        kc.token = "mock-dev-token";
+        (kc as any).idTokenParsed = {
+            email: "dev-user@example.com",
+            name: "Dev User",
+            preferred_username: "devuser",
+            sub: "mock-sub-123"
+        };
     }
 }
 

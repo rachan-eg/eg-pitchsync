@@ -94,6 +94,11 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 def get_keycloak_client() -> KeycloakOpenID:
     """Create and return a Keycloak client instance."""
+    if not settings.KEYCLOAK_SERVER_URL or not settings.KEYCLOAK_REALM:
+        logger.error("[Auth] Cannot initialize Keycloak: KEYCLOAK_SERVER_URL or KEYCLOAK_REALM is missing")
+        # In test mode this shouldn't be called, but if it is, we should know
+        raise ValueError("Keycloak configuration incomplete")
+
     logger.debug(f"[Auth] Initializing Keycloak: URL={settings.KEYCLOAK_SERVER_URL}, Realm={settings.KEYCLOAK_REALM}, Client={settings.KEYCLOAK_CLIENT_ID}")
     return KeycloakOpenID(
         server_url=settings.KEYCLOAK_SERVER_URL,
@@ -126,7 +131,11 @@ async def authenticate_user(
     
     try:
         token = credentials.credentials
-        keycloak_client = get_keycloak_client()
+        try:
+            keycloak_client = get_keycloak_client()
+        except ValueError as ve:
+            logger.error(f"[Auth] Configuration error: {ve}")
+            raise HTTPException(status_code=500, detail="SSO configuration error")
         
         # Validate token and get user info
         user_info = keycloak_client.userinfo(token)
