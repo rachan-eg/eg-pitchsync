@@ -13,8 +13,8 @@ services:
       - .env
     environment:
       - GENERATED_DIR=/app/generated
-      # Database stored in container - wiped on each deployment for fresh start
-      - DATABASE_URL=sqlite:////app/gum_app.db
+      # Database persisted via volume for production reliability (EC2)
+      - DATABASE_URL=sqlite:////app/data/gum_app.db
       - PYTHONPATH=/app
       - WORKERS=${WORKERS:-4}
       # Higher timeout for long AI calls (Red Team eval can take 30s+)
@@ -36,6 +36,7 @@ services:
       - AWS_DEFAULT_REGION=${AWS_REGION:-eu-central-1}
     volumes:
       - generated_data:/app/generated
+      - db_data:/app/data
       # Mount .env file so Python can read it directly (read-only)
       - ./.env:/app/.env:ro
       # Mount vault for phase definitions and assets (read-only)
@@ -70,3 +71,4 @@ services:
 
 volumes:
   generated_data:
+  db_data:
