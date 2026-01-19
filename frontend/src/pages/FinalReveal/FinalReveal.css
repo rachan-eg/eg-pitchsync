@@ -236,7 +236,7 @@
 }
 
 .final-reveal__score-val {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     line-height: 1;
     font-weight: 900;
     font-family: 'JetBrains Mono', monospace;
@@ -247,7 +247,7 @@
 }
 
 .final-reveal__score-label {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     color: var(--text-dim);
     letter-spacing: 0.1rem;
     text-transform: uppercase;
