@@ -707,7 +707,11 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     setCuratedPrompt(data.curated_prompt || '');
                     setSession(prev => prev ? {
                         ...prev,
-                        final_output: { ...prev.final_output, image_prompt: data.curated_prompt },
+                        final_output: {
+                            ...prev.final_output,
+                            image_prompt: data.curated_prompt,
+                            generated_at: new Date().toISOString()
+                        },
                         extra_ai_tokens: data.extra_ai_tokens
                     } : null);
                     setLoading(false);
