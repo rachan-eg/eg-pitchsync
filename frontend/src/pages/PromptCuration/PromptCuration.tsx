@@ -87,7 +87,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
     isLoading
 }) => {
     const navigate = useNavigate();
-    const { regeneratePrompt, submitPitchImage, totalTokens, uploadedImages, setActiveRevealImage } = useApp();
+    const { regeneratePrompt, submitPitchImage, totalTokens, uploadedImages, setActiveRevealImage, curatePrompt } = useApp();
 
     const [editedPrompt, setEditedPrompt] = useState(curatedPrompt);
     const [additionalNotes, setAdditionalNotes] = useState('');
@@ -96,6 +96,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
     const [copied, setCopied] = useState(false);
     const [statusIndex, setStatusIndex] = useState(0);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
 
     // Cycle loading statuses
     useEffect(() => {
@@ -107,6 +108,36 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
         }
         return () => clearInterval(interval);
     }, [isLoading]);
+
+    // Check for stale prompt (re-synthesize if phases updated after prompt generation)
+    useEffect(() => {
+        if (isLoading || isRegenerating || !session) return;
+
+        const checkStaleness = async () => {
+            // Get latest phase completion time
+            let lastPhaseTime = 0;
+            Object.values(session.phases).forEach(p => {
+                if (p.status === 'passed' && p.metrics?.end_time) {
+                    const t = new Date(p.metrics.end_time).getTime();
+                    if (t > lastPhaseTime) lastPhaseTime = t;
+                }
+            });
+
+            // Get curation time
+            const curationTime = session.final_output?.generated_at
+                ? new Date(session.final_output.generated_at).getTime()
+                : 0;
+
+            // If we have finalized phases AND (no curation OR curation is older than last phase)
+            // We use a 5-second buffer to prevent race conditions or clock skews
+            if (lastPhaseTime > 0 && (curationTime === 0 || lastPhaseTime > curationTime + 5000)) {
+                console.log("Found stale prompt, re-synthesizing...", { lastPhaseTime, curationTime });
+                await curatePrompt();
+            }
+        };
+
+        checkStaleness();
+    }, [session, isLoading, isRegenerating, curatePrompt]);
 
     // Update prompt when prop changes
     useEffect(() => {
@@ -128,13 +159,20 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
     // Handlers
     const handleRegenerate = async () => {
-        if (!additionalNotes.trim()) return;
         setIsRegenerating(true);
         try {
-            const newHistory = [...conversationHistory, { role: 'user' as const, content: additionalNotes.trim() }];
-            await regeneratePrompt(additionalNotes.trim(), newHistory);
-            setConversationHistory([...newHistory, { role: 'assistant' as const, content: 'Applied' }]);
-            setAdditionalNotes('');
+            if (additionalNotes.trim()) {
+                // REFINE MODE - Append to history and refine
+                const newHistory = [...conversationHistory, { role: 'user' as const, content: additionalNotes.trim() }];
+                await regeneratePrompt(additionalNotes.trim(), newHistory);
+                setConversationHistory([...newHistory, { role: 'assistant' as const, content: 'Applied' }]);
+                setAdditionalNotes('');
+            } else {
+                // REGENERATE MODE - Fresh start from current phase data
+                // This resets history and re-synthesizes from scratch
+                await curatePrompt();
+                setConversationHistory([]);
+            }
         } catch (error) {
             console.error('Regeneration failed:', error);
         } finally {
@@ -163,6 +201,43 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setSelectedFile(e.target.files[0]);
+        }
+    };
+
+    // Drag and Drop handlers
+    const handleDragEnter = (e: React.DragEvent<HTMLLabelElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (uploadedImages.length < 3) {
+            setIsDragging(true);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        if (uploadedImages.length >= 3) return;
+
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            // Validate it's an image
+            if (file.type.startsWith('image/')) {
+                setSelectedFile(file);
+            }
         }
     };
 
@@ -266,10 +341,12 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                 />
                                 <button
                                     onClick={handleRegenerate}
-                                    disabled={isRegenerating || !additionalNotes.trim()}
+                                    disabled={isRegenerating}
                                     className="curate-refine__btn"
                                 >
-                                    {isRegenerating ? '...' : <><Icons.Refresh /> Refine</>}
+                                    {isRegenerating ? '...' : (
+                                        <>{additionalNotes.trim() ? <Icons.Zap /> : <Icons.Refresh />} {additionalNotes.trim() ? 'Refine' : 'Regenerate'}</>
+                                    )}
                                 </button>
                             </div>
                             {conversationHistory.length > 0 && (
@@ -386,11 +463,15 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                 />
                                 <label
                                     htmlFor="pitch-visual-upload"
-                                    className={`curate-upload__dropzone ${uploadedImages.length >= 3 ? 'curate-upload__dropzone--frozen' : ''}`}
+                                    className={`curate-upload__dropzone ${uploadedImages.length >= 3 ? 'curate-upload__dropzone--frozen' : ''} ${isDragging ? 'curate-upload__dropzone--dragging' : ''}`}
+                                    onDragEnter={handleDragEnter}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
                                 >
                                     <div className="curate-upload__icon"><Icons.Upload /></div>
                                     <span className="curate-upload__text">
-                                        {selectedFile ? selectedFile.name : "Click to Select Image"}
+                                        {isDragging ? "Drop image here" : selectedFile ? selectedFile.name : "Click or Drag & Drop Image"}
                                     </span>
                                     <span className="curate-upload__hint">
                                         {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : "PNG, JPG up to 20MB"}
