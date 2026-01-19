@@ -16,6 +16,9 @@ services:
       # Database stored in container - wiped on each deployment for fresh start
       - DATABASE_URL=sqlite:////app/gum_app.db
       - PYTHONPATH=/app
+      - WORKERS=${WORKERS:-4}
+      # Higher timeout for long AI calls (Red Team eval can take 30s+)
+      - GUNICORN_TIMEOUT=120
       # Mode flags
       - DEBUG=${DEBUG:-false}
       - TEST_MODE=${TEST_MODE:-false}

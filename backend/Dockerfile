@@ -10,9 +10,9 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+  build-essential \
+  curl \
+  && rm -rf /var/lib/apt/lists/*
 
 # Set python path
 ENV PYTHONPATH=/app
@@ -33,5 +33,13 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/health || exit 1
 
-# Command to run the application
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default to 4 workers for production, can be overridden in docker-compose
+ENV WORKERS=4
+ENV GUNICORN_TIMEOUT=120
+
+# Command to run the application using Gunicorn for robust process management
+# -w: Number of worker processes
+# -k: Use the Uvicorn worker class for FastAPI/ASGI
+# --bind: Network interface and port
+# --timeout: Increased timeout for long AI evaluations
+CMD ["sh", "-c", "gunicorn -w ${WORKERS} -k uvicorn.workers.UvicornWorker backend.main:app --bind 0.0.0.0:8000 --timeout ${GUNICORN_TIMEOUT}"]
