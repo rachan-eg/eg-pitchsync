@@ -42,13 +42,14 @@ export const Login: React.FC = () => {
     return (
         <div className="login-container">
             <div className="login-background">
-                <div className="login-grid"></div>
-                <div className="login-gradient-orb orb-1"></div>
-                <div className="login-gradient-orb orb-2"></div>
-                <div className="login-gradient-orb orb-3"></div>
+                <div className="aurora-blob-1"></div>
+                <div className="aurora-blob-2"></div>
+                <div className="aurora-blob-3"></div>
+                <div className="aurora-blob-4"></div>
+                <div className="noise-overlay"></div>
             </div>
 
-            <div className="login-card glass-panel">
+            <div className="login-card">
                 <div className="login-header">
                     <div className="login-logo">
                         <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -138,6 +139,6 @@ export const Login: React.FC = () => {
             </div>
 
             <Branding />
-        </div>
+        </div >
     );
 };

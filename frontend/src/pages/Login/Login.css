@@ -13,58 +13,84 @@
 }
 
 /* Cinematic Background */
+/* Main Deep Background */
 .login-background {
     position: absolute;
     inset: 0;
-    pointer-events: none;
+    background: #020205;
+    /* Slightly off-black to soften contrast */
+    overflow: hidden;
     z-index: 0;
 }
 
-.login-grid {
+/* Fluid Mesh Gradients */
+/* Top-left deep purple wash */
+.aurora-blob-1 {
     position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(167, 139, 250, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(167, 139, 250, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
-    mask-image: radial-gradient(circle at center, black, transparent 80%);
-    opacity: 0.5;
+    top: -10%;
+    left: -10%;
+    width: 50vw;
+    height: 50vh;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, rgba(76, 29, 149, 0.15) 50%, transparent 75%);
+    filter: blur(80px);
+    mix-blend-mode: screen;
+    animation:
+        mesh-drift 18s infinite ease-in-out,
+        mesh-morph 15s infinite ease-in-out,
+        mesh-pulse 8s infinite ease-in-out;
 }
 
-.login-gradient-orb {
+/* Bottom-right blue glow */
+.aurora-blob-2 {
     position: absolute;
-    border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.2;
-    animation: float 20s infinite alternate;
+    bottom: -10%;
+    right: -10%;
+    width: 60vw;
+    height: 60vh;
+    background: radial-gradient(ellipse, rgba(59, 130, 246, 0.6) 0%, rgba(30, 58, 138, 0.15) 50%, transparent 75%);
+    filter: blur(90px);
+    mix-blend-mode: screen;
+    animation:
+        mesh-drift 22s infinite ease-in-out reverse,
+        mesh-morph 18s infinite ease-in-out -2s,
+        mesh-pulse 10s infinite ease-in-out -3s;
 }
 
-.orb-1 {
-    width: 500px;
-    height: 500px;
-    background: var(--primary);
-    top: -100px;
-    left: -100px;
-}
-
-.orb-2 {
-    width: 400px;
-    height: 400px;
-    background: var(--secondary);
-    bottom: -100px;
-    right: -100px;
-    animation-delay: -5s;
-}
-
-.orb-3 {
-    width: 300px;
-    height: 300px;
-    background: var(--accent);
+/* Central flowing aurora ribbon */
+.aurora-blob-3 {
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    opacity: 0.1;
-    animation-duration: 30s;
+    width: 80vw;
+    height: 40vh;
+    background: conic-gradient(from 180deg at 50% 50%,
+            rgba(139, 92, 246, 0.0) 0deg,
+            rgba(124, 58, 237, 0.6) 120deg,
+            rgba(59, 130, 246, 0.6) 240deg,
+            rgba(139, 92, 246, 0.0) 360deg);
+    filter: blur(110px);
+    mix-blend-mode: screen;
+    opacity: 0.85;
+    animation:
+        aurora-wave 12s infinite ease-in-out,
+        mesh-pulse 14s infinite ease-in-out -5s;
+}
+
+/* Accent highlight */
+.aurora-blob-4 {
+    position: absolute;
+    top: 20%;
+    right: 10%;
+    width: 30vw;
+    height: 30vw;
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.85) 0%, transparent 65%);
+    filter: blur(60px);
+    mix-blend-mode: screen;
+    animation:
+        mesh-drift 25s infinite ease-in-out,
+        mesh-morph 20s infinite ease-in-out -4s,
+        mesh-pulse 9s infinite ease-in-out -7s;
 }
 
 /* Login Card */
@@ -79,6 +105,16 @@
     gap: 2.5rem;
     opacity: 0;
     animation: reveal-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    background: linear-gradient(135deg, rgba(15, 15, 20, 0.85) 0%, rgba(5, 5, 8, 0.92) 100%);
+    backdrop-filter: blur(12px);
+    /* Adding subtle blur back with reduced opacity */
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 28px;
+    box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 40px rgba(139, 92, 246, 0.05);
+    /* Very subtle primary glow */
 }
 
 .login-header {
