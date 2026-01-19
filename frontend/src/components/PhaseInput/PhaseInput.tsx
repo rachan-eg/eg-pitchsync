@@ -62,7 +62,6 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const [interimTranscript, setInterimTranscript] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lastPhaseIdRef = useRef<string | null>(null);
-    const lastResponsesKeyRef = useRef<string | null>(null); // Track responses signature for resync
     const hintsUsedRef = useRef<boolean[]>([]);
     const currentQuestionIndexRef = useRef<number>(0);
 
@@ -133,9 +132,6 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     useEffect(() => {
         const currentId = phase.id || phase.name;
 
-        // Create a signature of the initialResponses to detect server-side updates
-        const responsesKey = initialResponses.map(r => `${r.question_id}:${r.a?.slice(0, 20)}:${r.hint_used}`).join('|');
-
         // Compute initial values from initialResponses
         const initialAnsw = phase.questions.map((q: any) => {
             const id = typeof q === 'string' ? q : q.id;
@@ -148,9 +144,8 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
             return prev?.hint_used || false;
         });
 
-        // Reinitialize if phase changed OR if responses changed (e.g., returned from navigation)
-        const needsReset = currentId !== lastPhaseIdRef.current ||
-            (responsesKey !== lastResponsesKeyRef.current && lastResponsesKeyRef.current !== null);
+        // Reinitialize if phase changed
+        const needsReset = currentId !== lastPhaseIdRef.current;
 
         if (needsReset) {
             setAnswers(initialAnsw);
@@ -160,9 +155,6 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
             setCurrentQuestionIndex(0);
             lastPhaseIdRef.current = currentId;
         }
-
-        // Always update the responses key
-        lastResponsesKeyRef.current = responsesKey;
     }, [phase, initialResponses]);
 
     // Sync original answers with current answers when phase evaluation completes successfully.
