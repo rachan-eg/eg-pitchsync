@@ -1,6 +1,7 @@
 """
 Synthesis API Routes
 Final pitch generation endpoint.
+Optimized for multi-user concurrency with async AI calls.
 """
 
 import json
@@ -13,8 +14,15 @@ from backend.models import (
     PrepareSynthesisRequest, PrepareSynthesisResponse
 )
 from backend.services import (
-    get_session, update_session, synthesize_pitch, prepare_master_prompt_draft, auto_generate_pitch,
+    get_session, update_session,
     calculate_total_tokens
+)
+from backend.services.ai import (
+    auto_generate_pitch_async,
+    prepare_master_prompt_draft_async,
+    generate_customer_image_prompt_async,
+    evaluate_visual_asset_async,
+    get_client
 )
 
 router = APIRouter(prefix="/api", tags=["synthesis"])
@@ -22,12 +30,12 @@ router = APIRouter(prefix="/api", tags=["synthesis"])
 
 @router.post("/prepare-synthesis", response_model=PrepareSynthesisResponse)
 async def prepare_synthesis(req: PrepareSynthesisRequest):
-    """Generate a draft master prompt from Q&A."""
+    """Generate a draft master prompt from Q&A (async for multi-user)."""
     session = get_session(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    draft = prepare_master_prompt_draft(
+    draft = await prepare_master_prompt_draft_async(
         usecase=session.usecase,
         all_phases_data=session.phases
     )
@@ -40,14 +48,14 @@ async def prepare_synthesis(req: PrepareSynthesisRequest):
 
 @router.post("/final-synthesis", response_model=FinalSynthesisResponse)
 async def final_synthesis(req: FinalSynthesisRequest):
-    """Generate final pitch with visionary hook and image."""
+    """Generate final pitch with visionary hook and image (async for multi-user)."""
     
     session = get_session(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    # Synthesize pitch using automated flow (QnA -> Curator -> Image)
-    result = auto_generate_pitch(
+    # Synthesize pitch using automated flow (QnA -> Curator -> Image) - ASYNC
+    result = await auto_generate_pitch_async(
         usecase=session.usecase,
         all_phases_data=session.phases,
         theme=session.theme_palette
@@ -113,10 +121,9 @@ async def curate_prompt(req: PrepareSynthesisRequest):
             "total_tokens": session.total_tokens
         }
 
-    # Otherwise, generate new prompt
-    # generate_customer_image_prompt returns (Dict, Dict)
+    # Otherwise, generate new prompt - ASYNC
     additional_notes = getattr(req, 'additional_notes', None)
-    curated_prompt_struct, usage = generate_customer_image_prompt(
+    curated_prompt_struct, usage = await generate_customer_image_prompt_async(
         usecase=session.usecase,
         all_phases_data=session.phases,
         theme=session.theme_palette,
@@ -154,14 +161,12 @@ async def submit_pitch_image(
     edited_prompt: str = Form(...),
     file: UploadFile = File(...)
 ):
-    """Upload an externally generated image, evaluate it, and finalize the pitch."""
+    """Upload an externally generated image, evaluate it, and finalize the pitch (async)."""
     import shutil
     import os
     import base64
     from backend.config import GENERATED_DIR
     from backend.services.ai.image_gen import overlay_logos, get_logos_for_usecase
-    from backend.services.ai.evaluator import evaluate_visual_asset
-    from backend.services.ai.client import get_client
     
     session = get_session(session_id)
     if not session:
@@ -184,7 +189,8 @@ async def submit_pitch_image(
         if session.final_output.customer_pitch:
             context_text += f"\n\nContextual Pitch: {session.final_output.customer_pitch}"
             
-        visual_eval = evaluate_visual_asset(client, context_text, image_b64)
+        # ASYNC visual evaluation for multi-user concurrency
+        visual_eval = await evaluate_visual_asset_async(client, context_text, image_b64)
         v_result = visual_eval["result"]
         v_usage = visual_eval["usage"]
         

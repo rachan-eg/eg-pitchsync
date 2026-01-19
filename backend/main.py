@@ -1,6 +1,7 @@
 """
 Pitch-Sync Platform - FastAPI Application Entry Point
 Minimal main.py that wires together all modular components.
+Optimized for multi-user concurrency.
 """
 
 from contextlib import asynccontextmanager
@@ -14,15 +15,19 @@ from backend.config import settings, GENERATED_DIR
 from backend.database.utils import create_db_and_tables
 from backend.api import session_router, synthesis_router, leaderboard_router, admin_router, auth_router
 from backend.services.state import get_session_count
+from backend.services.ai import shutdown_ai_executor
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifecycle handler."""
     print(f"🚀 {settings.APP_NAME} v{settings.APP_VERSION} starting...")
+    print(f"🔧 Multi-user concurrency: ENABLED (async AI, WAL mode)")
     # Initialize database
     create_db_and_tables()
     yield
+    # Graceful shutdown
     print(f"👋 {settings.APP_NAME} shutting down...")
+    shutdown_ai_executor()  # Clean up AI thread pool
 
 
 # Create FastAPI application

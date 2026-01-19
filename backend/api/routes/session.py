@@ -18,10 +18,11 @@ from backend.models import (
 from backend.services import (
     create_session, get_session, update_session,
     set_phase_start_time, get_phase_start_time,
-    evaluate_phase, calculate_phase_score, calculate_total_score, calculate_total_tokens,
+    calculate_phase_score, calculate_total_score, calculate_total_tokens,
     determine_pass_threshold,
     get_or_assign_team_context, get_latest_session_for_team
 )
+from backend.services.ai import evaluate_phase_async
 
 router = APIRouter(prefix="/api", tags=["session"])
 
@@ -397,8 +398,8 @@ async def submit_phase(req: SubmitPhaseRequest):
             "improvements": ["N/A"]
         }
     else:
-        # Normal AI Evaluation
-        eval_result = evaluate_phase(
+        # Normal AI Evaluation (async for multi-user concurrency)
+        eval_result = await evaluate_phase_async(
             usecase=session.usecase,
             phase_config=phase_def,
             responses=[r.model_dump() for r in req.responses],
@@ -458,6 +459,32 @@ async def submit_phase(req: SubmitPhaseRequest):
              # We want to store the metrics of the ATTEMPT.
              history.append(existing_phase.metrics)
 
+    # --- Image Handling Optimization (Multi-User) ---
+    # Convert base64 evidence to a persisted URL to keep the DB small and fast
+    evidence_url = req.image_data
+    if req.image_data and req.image_data.startswith("data:image"):
+        try:
+            import os
+            import base64
+            from backend.config import GENERATED_DIR
+            
+            # Extract format and data
+            header, encoded = req.image_data.split(",", 1)
+            img_format = header.split("/")[1].split(";")[0]
+            img_bytes = base64.b64decode(encoded)
+            
+            # Save to disk
+            filename = f"evidence_{session.session_id[:8]}_{phase_number}_{os.urandom(2).hex()}.{img_format}"
+            filepath = GENERATED_DIR / filename
+            with open(filepath, "wb") as f:
+                f.write(img_bytes)
+            
+            evidence_url = f"/generated/{filename}"
+            print(f"📸 Saved phase evidence to {evidence_url}")
+        except Exception as e:
+            print(f"⚠️ Failed to persist phase evidence image: {e}")
+            # Fallback to keeping it in memory/DB if saving fails (not ideal but safe)
+
     # Update phase data
     phase_data = PhaseData(
         phase_id=phase_def.get("id", f"phase_{phase_number}"),
@@ -469,7 +496,7 @@ async def submit_phase(req: SubmitPhaseRequest):
         strengths=eval_result.get('strengths', []),
         improvements=eval_result.get('improvements', []),
         history=history,
-        image_data=req.image_data # Persist evidence
+        image_data=evidence_url # Store URL instead of Base64
     )
     session.phases[req.phase_name] = phase_data
     

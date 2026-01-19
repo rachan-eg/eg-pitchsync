@@ -1,13 +1,14 @@
 """
 Leaderboard API Routes
 Real-time leaderboard endpoints.
+Optimized for multi-user performance.
 """
 
 from datetime import datetime, timezone
 from fastapi import APIRouter
 
 from backend.models import LeaderboardEntry, LeaderboardResponse, USECASE_REPO, THEME_REPO
-from backend.services import get_all_sessions, get_session, get_score_tier
+from backend.services import get_leaderboard_sessions, get_session, get_score_tier
 
 router = APIRouter(prefix="/api", tags=["leaderboard"])
 
@@ -20,35 +21,16 @@ async def get_usecases():
 
 @router.get("/leaderboard", response_model=LeaderboardResponse)
 async def get_leaderboard():
-    """Get real-time leaderboard rankings (One entry per team)."""
+    """
+    Get real-time leaderboard rankings (One entry per team).
+    OPTIMIZED: Uses SQL-level ordering and deduplication.
+    """
     
-    all_sessions = get_all_sessions()
-    
-    # Group by team_id, keep latest/best session
-    team_best_sessions = {}
-    for s in all_sessions:
-        if s.team_id not in team_best_sessions:
-            team_best_sessions[s.team_id] = s
-        else:
-            # Prefer completed sessions, then higher score
-            current_best = team_best_sessions[s.team_id]
-            if (s.is_complete and not current_best.is_complete) or \
-               (s.is_complete == current_best.is_complete and s.total_score > current_best.total_score):
-                team_best_sessions[s.team_id] = s
-                
-    # Sort by completion status, then score (desc), then tokens (asc - fewer is better)
-    sorted_sessions = sorted(
-        team_best_sessions.values(),
-        key=lambda s: (
-            s.is_complete, 
-            s.total_score, 
-            -s.total_tokens if s.total_tokens > 0 else -sum(p.metrics.tokens_used for p in s.phases.values())
-        ),
-        reverse=True
-    )
+    # Use optimized query that returns best session per team, already sorted
+    best_sessions = get_leaderboard_sessions(limit=100)
     
     entries = []
-    for rank, session in enumerate(sorted_sessions, 1):
+    for rank, session in enumerate(best_sessions, 1):
         # Fallback for sessions created before the DB migration
         total_tokens = session.total_tokens
         if total_tokens == 0 and len(session.phases) > 0:

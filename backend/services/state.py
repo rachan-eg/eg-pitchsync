@@ -8,6 +8,7 @@ import json
 from datetime import datetime, timezone
 from typing import Dict, Optional, Any, List
 from sqlmodel import select, Session, func
+from sqlalchemy import and_, desc
 
 from backend.models import SessionState, PhaseData, FinalOutput
 # Import the DB persistence layer
@@ -195,6 +196,55 @@ def get_session_count() -> int:
         # Use SQL COUNT instead of loading all records (PERF-001)
         result = db.exec(select(func.count()).select_from(SessionData)).one()
         return result
+
+
+def get_leaderboard_sessions(limit: int = 100) -> list[SessionState]:
+    """
+    OPTIMIZED: Get best session per team for leaderboard.
+    Performs grouping at the SQL level to save memory.
+    """
+    with Session(engine) as db:
+        # Step 1: Find the max score for each team
+        # We use this to identify the 'best' session IDs
+        subquery = (
+            select(
+                SessionData.team_id, 
+                func.max(SessionData.total_score).label("max_score")
+            )
+            .group_by(SessionData.team_id)
+            .subquery()
+        )
+        
+        # Step 2: Join back to get the full session data for those max scores
+        # We also order by is_complete so that for a tie, a completed session wins
+        statement = (
+            select(SessionData)
+            .join(
+                subquery, 
+                and_(
+                    SessionData.team_id == subquery.c.team_id,
+                    SessionData.total_score == subquery.c.max_score
+                )
+            )
+            .order_by(
+                SessionData.is_complete.desc(),
+                SessionData.total_score.desc(),
+                SessionData.updated_at.desc() # Latest session if scores are identical
+            )
+            .limit(limit)
+        )
+        
+        results = db.exec(statement).all()
+        
+        # Final safety dedupe in case one team has multiple sessions with the exact same high score
+        seen_teams = set()
+        best_sessions = []
+        for row in results:
+            if row.team_id not in seen_teams:
+                seen_teams.add(row.team_id)
+                best_sessions.append(_db_to_domain(row))
+        
+        return best_sessions
 
 
 # --- TEAM CONTEXT MANAGEMENT ---

@@ -103,7 +103,7 @@ def get_keycloak_client() -> KeycloakOpenID:
     )
 
 
-async def authenticate_user(
+def authenticate_user(
     credentials: HTTPAuthorizationCredentials = Security(bearer_scheme)
 ) -> UserInfo:
     """
@@ -186,7 +186,7 @@ async def authenticate_user(
         )
 
 
-async def optional_authenticate_user(
+def optional_authenticate_user(
     credentials: HTTPAuthorizationCredentials = Security(bearer_scheme)
 ) -> Optional[UserInfo]:
     """
@@ -197,6 +197,6 @@ async def optional_authenticate_user(
         return None
     
     try:
-        return await authenticate_user(credentials)
+        return authenticate_user(credentials)
     except HTTPException:
         return None

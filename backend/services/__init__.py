@@ -5,7 +5,7 @@ from backend.services.scoring import (
 )
 from backend.services.state import (
     create_session, get_session, update_session, delete_session,
-    get_all_sessions, get_session_count,
+    get_all_sessions, get_session_count, get_leaderboard_sessions,
     set_phase_start_time, get_phase_start_time,
     get_or_assign_team_context, get_latest_session_for_team
 )
@@ -19,9 +19,10 @@ __all__ = [
     "determine_pass_threshold", "get_score_tier",
     # State
     "create_session", "get_session", "update_session", "delete_session",
-    "get_all_sessions", "get_session_count",
+    "get_all_sessions", "get_session_count", "get_leaderboard_sessions",
     "set_phase_start_time", "get_phase_start_time",
     "get_or_assign_team_context", "get_latest_session_for_team",
     # AI
     "evaluate_phase", "synthesize_pitch", "generate_image", "prepare_master_prompt_draft", "auto_generate_pitch"
 ]
+
