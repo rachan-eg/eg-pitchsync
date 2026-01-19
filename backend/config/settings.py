@@ -24,8 +24,8 @@ if env_file_path.exists():
     for key, value in env_vars.items():
         # Clean filter for AWS or Bedrock related keys
         if not any(aws_term in key.upper() for aws_term in ["AWS_", "BEDROCK_"]):
-            # setdefault prevents overwriting existing OS/Docker environment variables
-            os.environ.setdefault(key, value)
+            # Use direct assignment to ensure .env values override existing shell variables
+            os.environ[key] = value
 GENERATED_DIR = Path(GENERATED_DIR_PATH)
 
 # Ensure generated directory exists

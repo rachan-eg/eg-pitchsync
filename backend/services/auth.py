@@ -108,31 +108,20 @@ async def authenticate_user(
 ) -> UserInfo:
     """
     Authenticate a user via Keycloak bearer token.
-    
-    This dependency can be added to any route that requires authentication.
-    
-    Args:
-        credentials: The HTTP Authorization header with Bearer token
-        
-    Returns:
-        UserInfo containing the authenticated user's details
-        
-    Raises:
-        HTTPException: If authentication fails
     """
-    if not credentials:
-        raise HTTPException(
-            status_code=401,
-            detail="Missing authentication token"
-        )
-    
-    # Skip authentication in test mode
+    # Skip authentication in test mode (Priority #1)
     if settings.TEST_MODE:
         logger.info("Test mode: Skipping Keycloak authentication")
         return UserInfo(
             email="test@example.com",
             name="Test User",
             preferred_username="testuser"
+        )
+    
+    if not credentials:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing authentication token"
         )
     
     try:
