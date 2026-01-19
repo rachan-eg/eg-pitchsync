@@ -39,14 +39,23 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     const processedEntries = React.useMemo(() => {
         let result = [...entries];
 
+        // Basic filter: Hide zero-score empty sessions to reduce noise
+        result = result.filter(e => e.score > 0);
+
         if (track === 'LEGENDS') {
+            // Show active runs that are perfect so far
             result = result.filter(e => e.total_retries === 0);
             result.sort((a, b) => b.score - a.score || a.total_tokens - b.total_tokens);
         } else if (track === 'MINIMALIST') {
+            // Efficiency comparisons only valid for completed missions
+            result = result.filter(e => e.is_complete);
             result.sort((a, b) => a.total_tokens - b.total_tokens || b.score - a.score);
         } else if (track === 'BLITZ') {
+            // Speed comparisons only valid for completed missions
+            result = result.filter(e => e.is_complete);
             result.sort((a, b) => a.total_duration_seconds - b.total_duration_seconds || b.score - a.score);
         } else {
+            // Elite: Pure score, partial progress allowed
             result.sort((a, b) => b.score - a.score || a.total_tokens - b.total_tokens);
         }
 

@@ -52,7 +52,7 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
     if hasattr(db_session, 'uploaded_images_json') and db_session.uploaded_images_json:
         try:
             uploaded_images = json.loads(db_session.uploaded_images_json, strict=False)
-        except:
+        except (json.JSONDecodeError, TypeError, ValueError):
             uploaded_images = []
     
     # Convert ISO strings back to datetime objects
@@ -127,6 +127,46 @@ def _domain_to_db(session: SessionState) -> SessionData:
 
 # --- CORE CRUD OPERATIONS ---
 
+import logging
+import time
+from sqlalchemy.exc import OperationalError
+
+_db_logger = logging.getLogger("pitchsync.db")
+
+def _db_retry(func):
+    """Decorator to add retry logic for transient DB errors."""
+    def wrapper(*args, **kwargs):
+        max_retries = 3
+        base_delay = 0.5
+        
+        last_exception = None
+        for attempt in range(max_retries + 1):
+            try:
+                return func(*args, **kwargs)
+            except OperationalError as e:
+                last_exception = e
+                error_msg = str(e).lower()
+                
+                # Retry on lock-related errors
+                if 'locked' in error_msg or 'busy' in error_msg:
+                    if attempt < max_retries:
+                        delay = base_delay * (2 ** attempt)
+                        _db_logger.warning(f"🔒 DB locked, retry {attempt + 1}/{max_retries} in {delay:.1f}s")
+                        time.sleep(delay)
+                        continue
+                        
+                _db_logger.error(f"❌ DB error: {e}")
+                raise
+                
+            except Exception as e:
+                _db_logger.error(f"❌ Unexpected DB error: {type(e).__name__}: {e}")
+                raise
+        
+        raise last_exception or RuntimeError("DB operation failed after retries")
+    return wrapper
+
+
+@_db_retry
 def create_session(session: SessionState) -> SessionState:
     """Create and store a new session in DB."""
     db_row = _domain_to_db(session)
@@ -136,6 +176,8 @@ def create_session(session: SessionState) -> SessionState:
         db.refresh(db_row)
     return session
 
+
+@_db_retry
 def get_session(session_id: str) -> Optional[SessionState]:
     """Retrieve a session by ID from DB."""
     with Session(engine) as db:
@@ -144,15 +186,14 @@ def get_session(session_id: str) -> Optional[SessionState]:
             return _db_to_domain(db_row)
     return None
 
+
+@_db_retry
 def update_session(session: SessionState) -> SessionState:
     """Update an existing session in DB."""
     db_row = _domain_to_db(session)
-    # Merge/Update logic
     with Session(engine) as db:
-        # Check existence first or use merge
         existing = db.get(SessionData, session.session_id)
         if existing:
-            # Update fields
             existing.current_phase = db_row.current_phase
             existing.total_score = db_row.total_score
             existing.total_tokens = db_row.total_tokens
@@ -173,6 +214,8 @@ def update_session(session: SessionState) -> SessionState:
             db.commit()
     return session
 
+
+@_db_retry 
 def delete_session(session_id: str) -> bool:
     """Delete a session by ID from DB."""
     with Session(engine) as db:
@@ -200,51 +243,40 @@ def get_session_count() -> int:
 
 def get_leaderboard_sessions(limit: int = 100) -> list[SessionState]:
     """
-    OPTIMIZED: Get best session per team for leaderboard.
-    Performs grouping at the SQL level to save memory.
+    OPTIMIZED: Get best session per team for leaderboard using Window Functions.
+    Guarantees exactly one entry per team (the best one).
     """
     with Session(engine) as db:
-        # Step 1: Find the max score for each team
-        # We use this to identify the 'best' session IDs
+        # Step 1: Create a subquery that ranks sessions for each team
+        # We only need the session_id and the rank to join back
         subquery = (
             select(
-                SessionData.team_id, 
-                func.max(SessionData.total_score).label("max_score")
+                SessionData.session_id,
+                func.row_number().over(
+                    partition_by=SessionData.team_id,
+                    order_by=[
+                        desc(SessionData.total_score),
+                        desc(SessionData.is_complete),
+                        desc(SessionData.updated_at)
+                    ]
+                ).label("rank")
             )
-            .group_by(SessionData.team_id)
             .subquery()
         )
         
-        # Step 2: Join back to get the full session data for those max scores
-        # We also order by is_complete so that for a tie, a completed session wins
+        # Step 2: Join back to SessionData to get the full objects
         statement = (
             select(SessionData)
-            .join(
-                subquery, 
-                and_(
-                    SessionData.team_id == subquery.c.team_id,
-                    SessionData.total_score == subquery.c.max_score
-                )
-            )
-            .order_by(
-                SessionData.is_complete.desc(),
-                SessionData.total_score.desc(),
-                SessionData.updated_at.desc() # Latest session if scores are identical
-            )
+            .join(subquery, SessionData.session_id == subquery.c.session_id)
+            .where(subquery.c.rank == 1)
+            .order_by(desc(SessionData.total_score))
             .limit(limit)
         )
         
         results = db.exec(statement).all()
         
-        # Final safety dedupe in case one team has multiple sessions with the exact same high score
-        seen_teams = set()
-        best_sessions = []
-        for row in results:
-            if row.team_id not in seen_teams:
-                seen_teams.add(row.team_id)
-                best_sessions.append(_db_to_domain(row))
-        
-        return best_sessions
+        # Convert result objects to domain models for the frontend
+        return [_db_to_domain(row) for row in results]
 
 
 # --- TEAM CONTEXT MANAGEMENT ---

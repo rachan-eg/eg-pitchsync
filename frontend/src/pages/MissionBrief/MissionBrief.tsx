@@ -28,7 +28,7 @@ const Icons = {
 
 export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) => {
     const navigate = useNavigate();
-    const { startPhase, resetToStart } = useApp();
+    const { startPhase, resetToStart, loading } = useApp();
     const { clearTeamCode } = useAuth();
     const phaseList = Object.values(phases);
 
@@ -142,8 +142,13 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
                         >
                             <Icons.ArrowLeft /> Change Team
                         </button>
-                        <button onClick={handleStart} className="btn-primary mission-brief__launch-btn">
-                            <Icons.Rocket /> Launch Mission
+                        <button
+                            onClick={handleStart}
+                            className="btn-primary mission-brief__launch-btn"
+                            disabled={loading}
+                        >
+                            {loading ? <div className="loading-spinner--small" /> : <Icons.Rocket />}
+                            {loading ? 'Initializing...' : 'Launch Mission'}
                         </button>
                     </div>
                     <p className="mission-brief__status">Systems ready • AI synthesis active</p>

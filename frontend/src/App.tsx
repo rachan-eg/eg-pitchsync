@@ -140,9 +140,13 @@ const WarRoomPage: React.FC = () => {
         currentPhaseResponses,
         loading
     } = useApp();
-
     if (!session) {
-        return <Navigate to="/login" replace />;
+        return (
+            <div className="flex items-center justify-center h-screen flex-col gap-4">
+                <div className="loading-spinner"></div>
+                <p className="text-white/60">Recalibrating war room state...</p>
+            </div>
+        );
     }
 
     const currentPhase = phaseConfig[session.current_phase];
@@ -172,7 +176,12 @@ const PromptCurationPage: React.FC = () => {
     const { session, curatedPrompt, loading } = useApp();
 
     if (!session) {
-        return <Navigate to="/login" replace />;
+        return (
+            <div className="flex items-center justify-center h-screen flex-col gap-4">
+                <div className="loading-spinner"></div>
+                <p className="text-white/60">Accessing strategic assets...</p>
+            </div>
+        );
     }
 
     return (
@@ -193,7 +202,12 @@ const FinalRevealPage: React.FC = () => {
     const { session, activeRevealImage } = useApp();
 
     if (!session) {
-        return <Navigate to="/login" replace />;
+        return (
+            <div className="flex items-center justify-center h-screen flex-col gap-4">
+                <div className="loading-spinner"></div>
+                <p className="text-white/60">Preparing briefing finalization...</p>
+            </div>
+        );
     }
 
     // Determine the best image URL to show (current selection OR session default)
@@ -211,7 +225,12 @@ const PresentationModePage: React.FC = () => {
     const { session, generatedImageUrl } = useApp();
 
     if (!session) {
-        return <Navigate to="/login" replace />;
+        return (
+            <div className="flex items-center justify-center h-screen flex-col gap-4">
+                <div className="loading-spinner"></div>
+                <p className="text-white/60">Synchronizing presentation deck...</p>
+            </div>
+        );
     }
 
     return (
@@ -226,12 +245,10 @@ const LeaderboardPage: React.FC = () => {
     const { leaderboard, session } = useApp();
 
     return (
-        <div className="full-screen-overlay animate-fadeIn overflow-y-auto custom-scrollbar">
-            <Leaderboard
-                entries={leaderboard}
-                currentTeamId={session?.team_id}
-            />
-        </div>
+        <Leaderboard
+            entries={leaderboard}
+            currentTeamId={session?.team_id}
+        />
     );
 };
 

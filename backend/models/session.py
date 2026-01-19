@@ -100,5 +100,6 @@ class SessionState(BaseModel):
     is_complete: bool = False
     uploaded_images: List[str] = []  # NEW: For persisting multiple pitch visuals
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = {
+        "arbitrary_types_allowed": True
+    }

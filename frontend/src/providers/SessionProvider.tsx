@@ -12,11 +12,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getApiUrl, getFullUrl } from '../utils';
+import { useAuth } from './AuthProvider';
 import { useTimer } from './TimerProvider';
 import { useUI } from './UIProvider';
 import type {
     UseCase, Theme, SessionState, PhaseDefinition, ScoringInfo,
-    InitResponse, StartPhaseResponse, SubmitPhaseResponse, PhaseResponse
+    InitResponse, StartPhaseResponse, SubmitPhaseResponse, PhaseResponse,
+    PhaseStatus, PhaseMetrics
 } from '../types';
 
 // =============================================================================
@@ -92,6 +94,7 @@ const SessionContext = createContext<SessionContextType | null>(null);
 // =============================================================================
 export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
+    const { token } = useAuth();
     const { startTimer, pauseTimer, resumeTimer, stopTimer, elapsedSeconds } = useTimer();
     const { loading, setLoading, setError } = useUI();
 
@@ -382,7 +385,10 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         try {
             const res = await fetch(getApiUrl('/api/init'), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
                     team_id: teamId,
                     usecase_id: selectedUsecase.id,
@@ -390,7 +396,10 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 })
             });
 
-            if (!res.ok) throw new Error('Failed to initialize session');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Failed to initialize session');
+            }
 
             const data: InitResponse = await res.json();
             const result = processInitResponse(data, teamId);
@@ -412,15 +421,20 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         try {
             const res = await fetch(getApiUrl('/api/init'), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
                     team_id: teamName,
                     usecase_id: usecaseId,
-                    // theme_id will be inferred from usecase on the backend
                 })
             });
 
-            if (!res.ok) throw new Error('Failed to initialize session');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Failed to initialize session');
+            }
 
             const data: InitResponse = await res.json();
             const result = processInitResponse(data, teamName);
@@ -439,13 +453,18 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         const leavingPhaseNum = session.current_phase;
         const leavingElapsed = elapsedSeconds;
+
+        setLoading(true); // Mark as loading during transition
         pauseTimer();
         setPhaseResult(null);
 
         try {
             const res = await fetch(getApiUrl('/api/start-phase'), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
                     session_id: session.session_id,
                     phase_number: phaseNum,
@@ -483,9 +502,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                                         retry_penalty: 0,
                                         hint_penalty: 0,
                                         efficiency_bonus: 0
-                                    } as any
+                                    } as PhaseMetrics
                                 }),
-                                status: 'in_progress' as any,
+                                status: 'in_progress' as PhaseStatus,
                                 responses: data.previous_responses,
                                 feedback: existingPhase?.feedback || '',
                                 rationale: existingPhase?.rationale || '',
@@ -510,107 +529,142 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 }
             } else {
                 console.error('Failed to start phase, status:', res.status);
+                const errorData = await res.json().catch(() => ({}));
+                setError(errorData.detail || `Server error: ${res.status}`);
             }
         } catch (e) {
             console.error("Failed to start phase", e);
+            setError("Network error establishing phase connection.");
+        } finally {
+            setLoading(false);
         }
-    }, [session, elapsedSeconds, currentPhaseResponses, pauseTimer, startTimer, stopTimer]);
+    }, [session, token, elapsedSeconds, currentPhaseResponses, pauseTimer, startTimer, stopTimer, setLoading, setError]);
 
     const submitPhase = useCallback(async (responses: PhaseResponse[]) => {
         if (!session) return;
         setLoading(true);
         stopTimer(); // Complete stop during evaluation as requested
 
-        try {
-            const currentPhaseDef = phaseConfig[session.current_phase];
-            const res = await fetch(getApiUrl('/api/submit-phase'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    session_id: session.session_id,
-                    phase_name: currentPhaseDef.name,
-                    responses: responses,
-                    time_taken_seconds: elapsedSeconds
-                })
-            });
+        // Retry configuration for resilience
+        const maxRetries = 2;
+        let lastError: Error | null = null;
 
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                const detail = errData.detail;
-                let message = 'Submission failed';
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const currentPhaseDef = phaseConfig[session.current_phase];
+                const res = await fetch(getApiUrl('/api/submit-phase'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: session.session_id,
+                        phase_name: currentPhaseDef.name,
+                        responses: responses,
+                        time_taken_seconds: elapsedSeconds
+                    })
+                });
 
-                if (detail) {
-                    if (typeof detail === 'string') {
-                        message = detail;
-                    } else {
-                        message = JSON.stringify(detail);
-                    }
-                }
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    const detail = errData.detail;
+                    let message = 'Submission failed';
 
-                throw new Error(message);
-            }
-
-            const result: SubmitPhaseResponse = await res.json();
-
-            // Update session with backend-provided values (backend is authoritative)
-            setSession(prev => {
-                if (!prev) return null;
-
-                const currentPhaseDef = phaseConfig[prev.current_phase];
-
-                return {
-                    ...prev,
-                    total_score: result.total_score,
-                    total_tokens: result.total_tokens || prev.total_tokens,
-                    extra_ai_tokens: result.extra_ai_tokens || prev.extra_ai_tokens,
-                    phase_scores: {
-                        ...prev.phase_scores,
-                        [currentPhaseDef.name]: result.phase_score
-                    },
-                    phases: {
-                        ...prev.phases,
-                        [currentPhaseDef.name]: {
-                            phase_id: currentPhaseDef.id,
-                            status: (result.passed ? 'passed' : 'failed') as any,
-                            responses: responses,
-                            metrics: {
-                                ai_score: result.ai_score,
-                                weighted_score: result.phase_score,
-                                start_time: null,
-                                end_time: new Date().toISOString(),
-                                duration_seconds: elapsedSeconds,
-                                retries: result.metrics.retries,
-                                tokens_used: result.metrics.tokens_used,
-                                time_penalty: result.metrics.time_penalty,
-                                retry_penalty: result.metrics.retry_penalty,
-                                hint_penalty: result.metrics.hint_penalty,
-                                efficiency_bonus: result.metrics.efficiency_bonus,
-                                input_tokens: result.metrics.input_tokens,
-                                output_tokens: result.metrics.output_tokens
-                            },
-                            feedback: result.feedback,
-                            rationale: result.rationale,
-                            strengths: result.strengths,
-                            improvements: result.improvements,
-                            history: result.history || []
+                    if (detail) {
+                        if (typeof detail === 'string') {
+                            message = detail;
+                        } else {
+                            message = JSON.stringify(detail);
                         }
                     }
-                };
-            });
 
-            if (result.passed) {
-                setHighestUnlockedPhase(prev => Math.max(prev, session.current_phase + 1));
+                    // Check if retryable (5xx errors)
+                    if (res.status >= 500 && attempt < maxRetries) {
+                        console.log(`🔄 Retry ${attempt + 1}/${maxRetries} after server error...`);
+                        await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                        continue;
+                    }
+
+                    throw new Error(message);
+                }
+
+                const result: SubmitPhaseResponse = await res.json();
+
+                // Update session with backend-provided values (backend is authoritative)
+                setSession(prev => {
+                    if (!prev) return null;
+
+                    const currentPhaseDef = phaseConfig[prev.current_phase];
+
+                    return {
+                        ...prev,
+                        total_score: result.total_score,
+                        total_tokens: result.total_tokens || prev.total_tokens,
+                        extra_ai_tokens: result.extra_ai_tokens || prev.extra_ai_tokens,
+                        phase_scores: {
+                            ...prev.phase_scores,
+                            [currentPhaseDef.name]: result.phase_score
+                        },
+                        phases: {
+                            ...prev.phases,
+                            [currentPhaseDef.name]: {
+                                phase_id: currentPhaseDef.id,
+                                status: (result.passed ? 'passed' : 'failed') as PhaseStatus,
+                                responses: responses,
+                                metrics: {
+                                    ai_score: result.ai_score,
+                                    weighted_score: result.phase_score,
+                                    start_time: null,
+                                    end_time: new Date().toISOString(),
+                                    duration_seconds: elapsedSeconds,
+                                    retries: result.metrics.retries,
+                                    tokens_used: result.metrics.tokens_used,
+                                    time_penalty: result.metrics.time_penalty,
+                                    retry_penalty: result.metrics.retry_penalty,
+                                    hint_penalty: result.metrics.hint_penalty,
+                                    efficiency_bonus: result.metrics.efficiency_bonus,
+                                    input_tokens: result.metrics.input_tokens,
+                                    output_tokens: result.metrics.output_tokens
+                                },
+                                feedback: result.feedback,
+                                rationale: result.rationale,
+                                strengths: result.strengths,
+                                improvements: result.improvements,
+                                history: result.history || []
+                            }
+                        }
+                    };
+                });
+
+                if (result.passed) {
+                    setHighestUnlockedPhase(prev => Math.max(prev, session.current_phase + 1));
+                }
+
+                setPhaseResult(result);
+                setCurrentPhaseResponsesInternal(responses);
+                stopTimer();
+                setLoading(false);
+                return; // Success - exit the retry loop
+
+            } catch (err) {
+                lastError = err instanceof Error ? err : new Error('Unknown error');
+
+                // If this was the last attempt, throw
+                if (attempt >= maxRetries) {
+                    setError(lastError.message);
+                    resumeTimer(); // Resume timer if submission failed so player can fix and retry
+                    setLoading(false);
+                    return;
+                }
+
+                // Otherwise, retry after delay
+                console.log(`🔄 Retry ${attempt + 1}/${maxRetries} after error: ${lastError.message}`);
+                await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
             }
-
-            setPhaseResult(result);
-            setCurrentPhaseResponsesInternal(responses);
-            stopTimer();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error submitting phase');
-            resumeTimer(); // Resume timer if submission failed so player can fix and retry
-        } finally {
-            setLoading(false);
         }
+
+        // If we get here, all retries failed
+        setError(lastError?.message || 'Submission failed after multiple attempts');
+        resumeTimer();
+        setLoading(false);
     }, [session, phaseConfig, elapsedSeconds, pauseTimer, resumeTimer, stopTimer, setLoading, setError]);
 
     const handleFeedbackAction = useCallback(async (action: 'CONTINUE' | 'RETRY'): Promise<{ navigateTo?: string }> => {
@@ -638,28 +692,45 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const curatePrompt = useCallback(async () => {
         if (!session) return;
         setLoading(true);
-        try {
-            const res = await fetch(getApiUrl('/api/curate-prompt'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: session.session_id })
-            });
 
-            if (res.ok) {
-                const data = await res.json();
-                setCuratedPrompt(data.curated_prompt || '');
-                setSession(prev => prev ? {
-                    ...prev,
-                    final_output: { ...prev.final_output, image_prompt: data.curated_prompt },
-                    extra_ai_tokens: data.extra_ai_tokens
-                } : null);
+        const maxRetries = 2;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const res = await fetch(getApiUrl('/api/curate-prompt'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: session.session_id })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setCuratedPrompt(data.curated_prompt || '');
+                    setSession(prev => prev ? {
+                        ...prev,
+                        final_output: { ...prev.final_output, image_prompt: data.curated_prompt },
+                        extra_ai_tokens: data.extra_ai_tokens
+                    } : null);
+                    setLoading(false);
+                    return;  // Success
+                }
+
+                // Retry on server errors
+                if (res.status >= 500 && attempt < maxRetries) {
+                    console.log(`🔄 Retry ${attempt + 1}/${maxRetries} for curate-prompt...`);
+                    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                    continue;
+                }
+
+                throw new Error(`Server error: ${res.status}`);
+            } catch (e) {
+                console.error("Failed to curate prompt", e);
+                if (attempt >= maxRetries) {
+                    setError('Failed to generate prompt. Please try again.');
+                }
             }
-        } catch (e) {
-            console.error("Failed to curate prompt", e);
-        } finally {
-            setLoading(false);
         }
-    }, [session, setLoading]);
+        setLoading(false);
+    }, [session, setLoading, setError]);
 
     const regeneratePrompt = useCallback(async (
         additionalNotes: string,
@@ -668,92 +739,124 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (!session) return;
         setLoading(true);
 
-        try {
-            const historyContext = conversationHistory
-                .filter(m => m.role === 'user')
-                .map(m => m.content)
-                .join(' | ');
+        const maxRetries = 2;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const historyContext = conversationHistory
+                    .filter(m => m.role === 'user')
+                    .map(m => m.content)
+                    .join(' | ');
 
-            const fullNotes = historyContext
-                ? `${historyContext}${additionalNotes ? ' | ' + additionalNotes : ''}`
-                : additionalNotes;
+                const fullNotes = historyContext
+                    ? `${historyContext}${additionalNotes ? ' | ' + additionalNotes : ''}`
+                    : additionalNotes;
 
-            const res = await fetch(getApiUrl('/api/curate-prompt'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    session_id: session.session_id,
-                    additional_notes: fullNotes || null
-                })
-            });
+                const res = await fetch(getApiUrl('/api/curate-prompt'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: session.session_id,
+                        additional_notes: fullNotes || null
+                    })
+                });
 
-            if (res.ok) {
-                const data = await res.json();
-                setCuratedPrompt(data.curated_prompt || '');
-                setSession(prev => prev ? {
-                    ...prev,
-                    final_output: { ...prev.final_output, image_prompt: data.curated_prompt },
-                    extra_ai_tokens: data.extra_ai_tokens,
-                    total_tokens: data.total_tokens
-                } : null);
+                if (res.ok) {
+                    const data = await res.json();
+                    setCuratedPrompt(data.curated_prompt || '');
+                    setSession(prev => prev ? {
+                        ...prev,
+                        final_output: { ...prev.final_output, image_prompt: data.curated_prompt },
+                        extra_ai_tokens: data.extra_ai_tokens,
+                        total_tokens: data.total_tokens
+                    } : null);
+                    setLoading(false);
+                    return; // Success
+                }
+
+                // Retry on server errors
+                if (res.status >= 500 && attempt < maxRetries) {
+                    console.log(`🔄 Retry ${attempt + 1}/${maxRetries} for prompt refinement...`);
+                    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                    continue;
+                }
+
+                throw new Error(`Server error: ${res.status}`);
+            } catch (e) {
+                console.error("Failed to regenerate prompt", e);
+                if (attempt >= maxRetries) {
+                    setError('Failed to refine prompt. Please try again.');
+                }
             }
-        } catch (e) {
-            console.error("Failed to regenerate prompt", e);
-        } finally {
-            setLoading(false);
         }
-    }, [session, setLoading]);
+        setLoading(false);
+    }, [session, setLoading, setError]);
 
     const submitPitchImage = useCallback(async (finalPrompt: string, file: File) => {
         if (!session) return;
         setLoading(true);
 
-        try {
-            const formData = new FormData();
-            formData.append('session_id', session.session_id);
-            formData.append('edited_prompt', finalPrompt);
-            formData.append('file', file);
+        const maxRetries = 2;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const formData = new FormData();
+                formData.append('session_id', session.session_id);
+                formData.append('edited_prompt', finalPrompt);
+                formData.append('file', file);
 
-            const res = await fetch(getApiUrl('/api/submit-pitch-image'), {
-                method: 'POST',
-                body: formData
-            });
+                const res = await fetch(getApiUrl('/api/submit-pitch-image'), {
+                    method: 'POST',
+                    body: formData
+                });
 
-            if (res.ok) {
-                const data = await res.json();
-                const url = getFullUrl(data.image_url || '');
+                if (res.ok) {
+                    const data = await res.json();
+                    const url = getFullUrl(data.image_url || '');
 
-                setGeneratedImageUrl(url);
-                setCuratedPrompt(data.prompt_used || finalPrompt);
+                    setGeneratedImageUrl(url);
+                    setCuratedPrompt(data.prompt_used || finalPrompt);
 
-                // Backend provides authoritative totals
-                setSession(prev => prev ? {
-                    ...prev,
-                    total_score: data.total_score,
-                    total_tokens: data.total_tokens,
-                    is_complete: true,
-                    final_output: {
-                        ...prev.final_output,
-                        image_url: url,
-                        image_prompt: data.prompt_used || finalPrompt,
-                        generated_at: new Date().toISOString(),
-                        visual_score: data.visual_metrics?.score,
-                        visual_feedback: data.visual_metrics?.feedback,
-                        visual_alignment: data.visual_metrics?.alignment
-                    },
-                    extra_ai_tokens: data.extra_ai_tokens,
-                    uploadedImages: [...(prev.uploadedImages || []), url].slice(-3)
-                } : null);
+                    // Backend provides authoritative totals
+                    setSession(prev => prev ? {
+                        ...prev,
+                        total_score: data.total_score,
+                        total_tokens: data.total_tokens,
+                        is_complete: true,
+                        final_output: {
+                            ...prev.final_output,
+                            image_url: url,
+                            image_prompt: data.prompt_used || finalPrompt,
+                            generated_at: new Date().toISOString(),
+                            visual_score: data.visual_metrics?.score,
+                            visual_feedback: data.visual_metrics?.feedback,
+                            visual_alignment: data.visual_metrics?.alignment
+                        },
+                        extra_ai_tokens: data.extra_ai_tokens,
+                        uploadedImages: [...(prev.uploadedImages || []), url].slice(-3)
+                    } : null);
 
-                setUploadedImages(prev => [...prev, url].slice(-3));
-                setActiveRevealImage(url);
+                    setUploadedImages(prev => [...prev, url].slice(-3));
+                    setActiveRevealImage(url);
+                    setLoading(false);
+                    return;  // Success
+                }
+
+                // Retry on server errors
+                if (res.status >= 500 && attempt < maxRetries) {
+                    console.log(`🔄 Retry ${attempt + 1}/${maxRetries} for pitch image upload...`);
+                    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                    continue;
+                }
+
+                throw new Error(`Upload failed: ${res.status}`);
+            } catch (e) {
+                console.error("Failed to submit pitch image", e);
+                if (attempt >= maxRetries) {
+                    setError('Failed to upload image. Please try again.');
+                }
             }
-        } catch (e) {
-            console.error("Failed to submit pitch image", e);
-        } finally {
-            setLoading(false);
         }
-    }, [session, setLoading]);
+        setLoading(false);
+    }, [session, setLoading, setError]);
 
     const resetToStart = useCallback(() => {
         localStorage.removeItem('pitch_sync_session');

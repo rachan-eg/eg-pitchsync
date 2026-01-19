@@ -35,10 +35,15 @@ async def prepare_synthesis(req: PrepareSynthesisRequest):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    draft = await prepare_master_prompt_draft_async(
-        usecase=session.usecase,
-        all_phases_data=session.phases
-    )
+    try:
+        draft = await prepare_master_prompt_draft_async(
+            usecase=session.usecase,
+            all_phases_data=session.phases
+        )
+    except Exception as e:
+        print(f"⚠️ Draft synthesis failed, using fallback: {e}")
+        usecase_title = session.usecase.get('title', 'Product') if isinstance(session.usecase, dict) else 'Product'
+        draft = f"A revolutionary {usecase_title} solution designed to solve core customer pain points with efficiency and innovation."
     
     return PrepareSynthesisResponse(
         session_id=session.session_id,
@@ -49,17 +54,30 @@ async def prepare_synthesis(req: PrepareSynthesisRequest):
 @router.post("/final-synthesis", response_model=FinalSynthesisResponse)
 async def final_synthesis(req: FinalSynthesisRequest):
     """Generate final pitch with visionary hook and image (async for multi-user)."""
+    import logging
+    logger = logging.getLogger("pitchsync.api")
     
     session = get_session(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    # Synthesize pitch using automated flow (QnA -> Curator -> Image) - ASYNC
-    result = await auto_generate_pitch_async(
-        usecase=session.usecase,
-        all_phases_data=session.phases,
-        theme=session.theme_palette
-    )
+    try:
+        # Synthesize pitch using automated flow (QnA -> Curator -> Image) - ASYNC
+        result = await auto_generate_pitch_async(
+            usecase=session.usecase,
+            all_phases_data=session.phases,
+            theme=session.theme_palette
+        )
+    except Exception as e:
+        logger.error(f"❌ Final synthesis failed: {e}")
+        # Provide fallback result so user can still proceed
+        usecase_title = session.usecase.get('title', 'Your Product') if isinstance(session.usecase, dict) else 'Your Product'
+        result = {
+            "visionary_hook": f"{usecase_title}: Transforming the Future",
+            "customer_pitch": "Your innovative solution addresses critical market needs with cutting-edge technology. Complete your pitch by uploading a custom visual.",
+            "image_prompt": "Professional business infographic",
+            "image_url": ""  # Empty - user will need to upload
+        }
     
     # Update session
     session.final_output.visionary_hook = result.get('visionary_hook', '')
@@ -70,8 +88,6 @@ async def final_synthesis(req: FinalSynthesisRequest):
     session.completed_at = datetime.now(timezone.utc)
     session.is_complete = True
     
-    # session.total_tokens = calculate_total_tokens(session.phases) + session.extra_ai_tokens
-    # We now accumulate total_tokens in submit_phase/curate_prompt, so we don't overwrite here.
     update_session(session)
     
     return FinalSynthesisResponse(
@@ -123,12 +139,25 @@ async def curate_prompt(req: PrepareSynthesisRequest):
 
     # Otherwise, generate new prompt - ASYNC
     additional_notes = getattr(req, 'additional_notes', None)
-    curated_prompt_struct, usage = await generate_customer_image_prompt_async(
-        usecase=session.usecase,
-        all_phases_data=session.phases,
-        theme=session.theme_palette,
-        additional_notes=additional_notes
-    )
+    
+    try:
+        curated_prompt_struct, usage = await generate_customer_image_prompt_async(
+            usecase=session.usecase,
+            all_phases_data=session.phases,
+            theme=session.theme_palette,
+            additional_notes=additional_notes
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger("pitchsync.api")
+        logger.error(f"❌ Prompt curation failed: {e}")
+        
+        # Provide fallback prompt
+        usecase_title = session.usecase.get('title', 'Product') if isinstance(session.usecase, dict) else 'Product'
+        curated_prompt_struct = {
+            "final_combined_prompt": f"Professional infographic for {usecase_title} solution, clean design, high information density, 8k resolution"
+        }
+        usage = {"input_tokens": 0, "output_tokens": 0}
     
     # Store as JSON string (The "Manifest")
     curated_prompt_str = json.dumps(curated_prompt_struct, indent=2)

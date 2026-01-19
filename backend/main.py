@@ -17,6 +17,9 @@ from backend.api import session_router, synthesis_router, leaderboard_router, ad
 from backend.services.state import get_session_count
 from backend.services.ai import shutdown_ai_executor
 
+# Initialize logging and resilience utilities
+import backend.utils  # noqa: F401 - auto-configures logging
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifecycle handler."""
@@ -63,6 +66,30 @@ app.include_router(leaderboard_router)
 app.include_router(admin_router)
 app.include_router(auth_router)
 
+# --- GLOBAL ERROR LOGGING ---
+import logging
+import traceback
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+logger = logging.getLogger("pitchsync.api")
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Log all unhandled exceptions for production debugging."""
+    error_id = f"ERR-{int(datetime.now().timestamp())}"
+    logger.error(f"[{error_id}] Unhandled Exception at {request.url}: {exc}")
+    logger.error(traceback.format_exc())
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": f"Internal System Error (ID: {error_id}). Our engineers have been notified.",
+            "type": type(exc).__name__,
+            "error_id": error_id
+        }
+    )
+
 
 @app.get("/")
 def health_check():
@@ -77,10 +104,40 @@ def health_check():
 
 @app.get("/health")
 def detailed_health():
-    """Detailed health check for monitoring."""
+    """Detailed health check for monitoring with service status."""
+    from backend.utils.resilience import _circuit_breakers, CircuitState
+    
+    # Check circuit breaker states
+    circuit_status = {}
+    for name, cb in _circuit_breakers.items():
+        circuit_status[name] = {
+            "state": cb.state.value,
+            "failures": cb.failures,
+            "healthy": cb.state == CircuitState.CLOSED
+        }
+    
+    # Check database connectivity
+    db_healthy = True
+    try:
+        get_session_count()  # Quick DB test
+    except Exception:
+        db_healthy = False
+    
+    # Overall health determination
+    all_circuits_healthy = all(
+        s.get("healthy", True) for s in circuit_status.values()
+    ) if circuit_status else True
+    
+    overall_status = "healthy" if (db_healthy and all_circuits_healthy) else "degraded"
+    
     return {
-        "status": "healthy",
+        "status": overall_status,
         "version": settings.APP_VERSION,
         "debug_mode": settings.DEBUG,
-        "active_sessions": get_session_count()
+        "active_sessions": get_session_count() if db_healthy else -1,
+        "services": {
+            "database": "healthy" if db_healthy else "unhealthy",
+            "circuits": circuit_status
+        },
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }

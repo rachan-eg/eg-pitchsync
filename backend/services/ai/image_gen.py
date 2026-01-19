@@ -178,6 +178,11 @@ def generate_image(prompt: str, usecase: Dict[str, Any] = None) -> str:
     """
     Generate a visual asset using FLUX.2 via Azure AI Studio endpoint.
     
+    Features:
+    - Automatic retry with exponential backoff
+    - Detailed error logging
+    - Graceful timeout handling
+    
     Args:
         prompt: Detailed image generation prompt
         usecase: Optional usecase dictionary for asset injection (logos)
@@ -185,65 +190,106 @@ def generate_image(prompt: str, usecase: Dict[str, Any] = None) -> str:
     Returns:
         URL path to the generated image
     """
+    import logging
+    import time
+    from requests.exceptions import Timeout, ConnectionError as RequestsConnectionError
+    
+    logger = logging.getLogger("pitchsync.image")
+    
     if not settings.FLUX_API_KEY:
-        print("WARNING: FLUX_API_KEY not found! Generation will fail.")
+        logger.error("FLUX_API_KEY not configured!")
         raise ValueError("Missing FLUX_API_KEY")
 
-    # The verified working endpoint from Azure AI Studio
     url = settings.FLUX_ENDPOINT
     
-    # Auth headers for Foundry MaaS endpoints
     headers = {
         "Authorization": f"Bearer {settings.FLUX_API_KEY}",
         "Content-Type": "application/json"
     }
     
-    # Payload follows OpenAI format but may require specific 'model' key
-    # Using 'aspect_ratio' as it's the verified method for Flux to produce non-square images
     payload = {
         "model": settings.FLUX_DEPLOYMENT_NAME,
         "prompt": prompt,
         "n": 1,
-        "aspect_ratio": "21:9", # Widest supported aspect ratio
+        "aspect_ratio": "21:9",
         "response_format": "b64_json"
     }
     
-    print(f"DEBUG: Calling Flux at {url} with model {payload['model']}")
+    # Retry configuration
+    max_retries = 2
+    base_delay = 3.0
+    request_timeout = 120  # Image gen can be slow
     
-    try:
-        # Using requests directly for Azure Foundry MaaS as the path structure 
-        # is often model-specific and differs from standard OpenAI sub-paths.
-        response = requests.post(url, headers=headers, json=payload, timeout=90)
-        
-        if response.status_code != 200:
-            print(f"Flux API Error ({response.status_code}): {response.text}")
-            raise Exception(f"Flux API returned {response.status_code}: {response.text}")
+    last_exception = None
+    for attempt in range(max_retries + 1):
+        try:
+            logger.debug(f"Flux API call attempt {attempt + 1}/{max_retries + 1}")
+            
+            response = requests.post(
+                url, 
+                headers=headers, 
+                json=payload, 
+                timeout=request_timeout
+            )
+            
+            # Handle specific HTTP status codes
+            if response.status_code == 429:  # Rate limited
+                retry_after = int(response.headers.get('Retry-After', base_delay * 2))
+                logger.warning(f"🚦 Flux rate limited. Waiting {retry_after}s...")
+                if attempt < max_retries:
+                    time.sleep(retry_after)
+                    continue
+                    
+            if response.status_code >= 500:  # Server error
+                logger.warning(f"📡 Flux server error ({response.status_code})")
+                if attempt < max_retries:
+                    time.sleep(base_delay * (2 ** attempt))
+                    continue
+            
+            if response.status_code != 200:
+                error_msg = f"Flux API error ({response.status_code}): {response.text[:500]}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
 
-        data = response.json()
-        
-        # Azure Foundry returns OpenAI-style 'data' list
-        if not data.get('data') or not data['data'][0].get('b64_json'):
-            raise ValueError("No image data (b64_json) received in API response.")
+            data = response.json()
+            
+            if not data.get('data') or not data['data'][0].get('b64_json'):
+                raise ValueError("No image data in Flux response")
 
-        # Decode and save
-        image_bytes = base64.b64decode(data['data'][0]['b64_json'])
-        
-        # Generate unique filename
-        filename = f"pitch_{os.urandom(4).hex()}.png"
-        filepath = GENERATED_DIR / filename
-        
-        with open(str(filepath), "wb") as f:
-            f.write(image_bytes)
-        
-        print(f"DEBUG: Flux image successfully saved to {filename}")
-        
-        # Overlay logos on the bottom of the image
-        logos_to_overlay = get_logos_for_usecase(usecase)
-        overlay_logos(str(filepath), logos_to_overlay)
-        
-        return f"/generated/{filename}"
-
-    except Exception as e:
-        print(f"Flux Generation Error: {e}")
-        raise e
+            # Decode and save
+            image_bytes = base64.b64decode(data['data'][0]['b64_json'])
+            
+            filename = f"pitch_{os.urandom(4).hex()}.png"
+            filepath = GENERATED_DIR / filename
+            
+            with open(str(filepath), "wb") as f:
+                f.write(image_bytes)
+            
+            logger.info(f"✅ Image generated: {filename}")
+            
+            # Overlay logos
+            try:
+                logos_to_overlay = get_logos_for_usecase(usecase)
+                overlay_logos(str(filepath), logos_to_overlay)
+            except Exception as logo_err:
+                logger.warning(f"Logo overlay failed (non-critical): {logo_err}")
+            
+            return f"/generated/{filename}"
+            
+        except (Timeout, RequestsConnectionError) as e:
+            last_exception = e
+            logger.warning(f"⏱️ Network error on attempt {attempt + 1}: {e}")
+            if attempt < max_retries:
+                delay = base_delay * (2 ** attempt)
+                time.sleep(delay)
+                
+        except Exception as e:
+            last_exception = e
+            logger.error(f"❌ Flux error on attempt {attempt + 1}: {type(e).__name__}: {e}")
+            if attempt < max_retries:
+                time.sleep(base_delay)
+    
+    # All retries exhausted
+    logger.error("❌ All retries exhausted for Flux image generation")
+    raise last_exception or RuntimeError("Image generation failed after retries")
 

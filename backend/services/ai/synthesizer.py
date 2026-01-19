@@ -352,10 +352,10 @@ Make sure the image prompt strongly emphasizes and incorporates these refinement
     brand_colors = _load_brand_colors(usecase, theme)
     
     prompt = f"""
-ACT AS A SENIOR INFORMATION DESIGNER.
-Your goal is to create a prompt for a **DENSE, TEXT-HEAVY INFOGRAPHIC SLIDE**.
-The user wants an image that looks like a "High-Information Density" slide from a technical whitepaper or a complex dashboard.
-It must NOT be minimal. It must be PACKED with text and data derived from the user's inputs.
+ACT AS A CUSTOMER EXPERIENCE STRATEGIST & VISUAL DESIGNER.
+Your goal is to create a prompt for a **CUSTOMER-CENTRIC VALUE VISUALIZATION**.
+The user wants an image that visualizes the **CUSTOMER JOURNEY**, **VALUE REALIZATION**, and **TANGIBLE OUTCOMES** of the product.
+It should be "High-Information Density" but focused on **BENEFITS**, **SUCCESS METRICS**, and **USER IMPACT**, rather than just dry technical specs.
 
 {refinement_instruction}
 
@@ -368,36 +368,36 @@ DOMAIN: {usecase_domain}
 
 === BRAND COLOR PALETTE ===
 {brand_colors}
-(Use these for headers, diagrams, and highlights)
+(Use these for primary elements and highlights)
 
-=== CREATIVE DIRECTION (DENSE INFOGRAPHIC STYLE) ===
+=== CREATIVE DIRECTION (CUSTOMER-CENTRIC STYLE) ===
 1. **LAYOUT**:
-   - **Header**: Large Title "{usecase_title}" + Subtitle.
-   - **Structure**: 3-Column or Grid layout packed with content.
-   - **Density**: VERY HIGH. Fill the white space with text, charts, and diagrams.
+   - **Header**: Compelling Value Headline (e.g., "Transforming {usecase_domain}").
+   - **Structure**: Journey Map, Value Pillar Grid, or "Before/After" split layout.
+   - **Density**: High. Rich with proof points, metrics, and success indicators.
 
-2. **TEXT CONTENT (CRITICAL)**:
-   - The image MUST appear to have ACTUAL READABLE TEXT (or convincingly detailed pseudo-text blocks).
-   - INSTRUCTIONS: "Include detailed text blocks summarizing the {problem_context[:50]}...", "Add bulleted lists of features", "Show data tables".
-   - Do NOT ask for "lorem ipsum". Ask for "detailed technical specifications", "feature lists", "problem statements".
-   - **Use the User's exact words** from the Data Stream where possible as text labels.
+2. **TEXT CONTENT (CRITICAL - CUSTOMER LENS)**:
+   - The image MUST appear to have ACTUAL READABLE TEXT visualizing the CUSTOMER'S WIN.
+   - INSTRUCTIONS: "Show metrics like '50% Efficiency Gain'", "List key user benefits", "Display 'Current Pain' vs 'Future Gain'".
+   - Do NOT use generic placeholder text. Use specific **User Outcomes** and **Business Value** derived from the inputs.
+   - Focus on: "Time Saved", "Revenue Increased", "Risk Reduced", "Experience Improved".
 
 3. **VISUALS**:
-   - Complex flowcharts connecting multiple nodes.
-   - Data tables / Grids with rows and columns.
-   - Technical diagrams with annotated callouts.
-   - Flat 2D vector style, professional, white/light background.
+   - **User Flow Diagrams**: Showing the seamless experience.
+   - **Success Dashboards**: Simulating the user seeing their results.
+   - **Icons & Illustrations**: Represents people, interactions, and success states (not just server racks).
+   - **Style**: Professional, Modern, Clean, potentially 2.5D or Isometric to show depth of value.
 
 4. **STYLE**:
-   - "Complex Infographic", "Technical Whitepaper Diagram", "System Architecture Blueprint".
-   - Clean, sharp, vectors.
-   - **NO 3D**. **NO Photorealism**. Think "Stripe Documentation" or "AWS Architecture Diagram".
+   - "Strategic Value Map", "Customer Success Blueprint", "Modern SaaS Product Landing Page".
+   - Vibrant, engaging, human-centric.
+   - **NO** dry abstract topology diagrams. **NO** chaotic 3D renders. Think "McKinsey Digital" meets "Stripe Landing Page".
 
 === REQUIRED PROMPT STRUCTURE (JSON) ===
 Return a JSON object with a 'final_combined_prompt' that follows this structure:
 
 {{
-  "final_combined_prompt": "A high-density technical infographic slide for '{usecase_title}'. + [LAYOUT: Complex grid layout, white background, high information density] + [HEADER: Bold title '{usecase_title}' and domain subtitle] + [CONTENT: Detailed text blocks describing problem and solution, long bullet lists of features] + [DIAGRAMS: Central complex architecture flowchart with labeled nodes] + [DATA: Stylized data tables and metric dashboards] + [TEXT: 'Problem: ...', 'Solution: ...', 'Benefits: ...' (simulated detailed text)] + [STYLE: AWS Architecture Diagram style, flat vector graphics, professional, clean lines, distinct colors: {brand_colors}]"
+  "final_combined_prompt": "A customer-centric value visualization for '{usecase_title}'. + [LAYOUT: Modern split-screen or journey map layout, clean white background] + [HEADER: Bold benefit-driven headline for '{usecase_title}'] + [CONTENT: text blocks highlighting 'User Benefits', 'Efficiency Gains', and 'Success Metrics'] + [VISUALS: Central illustration of user success/process, icons representing happy users/outcomes, stylized dashboard metrics showing growth] + [TEXT: 'Benefit 1...', 'Outcome 2...', 'ROI...' (simulated readable text)] + [STYLE: Modern SaaS landing page style, isometric or flat vector, vibrant, engaging colors: {brand_colors}]"
 }}
 
 === OUTPUT FORMAT ===

@@ -39,6 +39,22 @@ async def get_leaderboard():
         total_retries = sum(p.metrics.retries for p in session.phases.values())
         total_duration = sum(p.metrics.duration_seconds for p in session.phases.values())
 
+        # Map phase scores: names (Strategic Strategy) -> numbers ('1') for tactical breakdown logic
+        mapped_phase_scores = {}
+        for phase_name, p_data in session.phases.items():
+            # Use phase_id (e.g., "phase_1") to extract the number
+            p_id = p_data.phase_id if hasattr(p_data, 'phase_id') else ""
+            if p_id.startswith("phase_"):
+                try:
+                    p_num = p_id.split("_")[1]
+                    mapped_phase_scores[p_num] = session.phase_scores.get(phase_name, 0)
+                except (IndexError, ValueError):
+                    pass
+            elif phase_name in session.phase_scores:
+                # Fallback if phase_id is not standard but we have a score
+                # This helps with legacy data or custom IDs
+                mapped_phase_scores[phase_name] = session.phase_scores[phase_name]
+
         usecase_title = (
             session.usecase.get('title', 'Unknown')
             if isinstance(session.usecase, dict)
@@ -53,7 +69,7 @@ async def get_leaderboard():
             total_tokens=total_tokens,
             total_retries=total_retries,
             total_duration_seconds=total_duration,
-            phase_scores=session.phase_scores or {},
+            phase_scores=mapped_phase_scores,
             is_complete=session.is_complete
         ))
     

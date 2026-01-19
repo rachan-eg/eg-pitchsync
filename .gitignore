@@ -22,6 +22,7 @@ gum_app.db-shm
 gum_app.db-wal
 claude_debug.log
 credentials
+backend/scripts/
 
 bin/
 

@@ -53,13 +53,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState<UserInfo | null>(null);
     const [token, setToken] = useState<string | null>(null);
-    const [teamCodeInfo, setTeamCodeInfo] = useState<TeamCodeInfo | null>(null);
-    const [teamCodeValidated, setTeamCodeValidated] = useState(false);
+    const [teamCodeInfo, setTeamCodeInfo] = useState<TeamCodeInfo | null>(() => {
+        const saved = sessionStorage.getItem('pitch_sync_team_info');
+        try { return saved ? JSON.parse(saved) : null; } catch { return null; }
+    });
+    const [teamCodeValidated, setTeamCodeValidated] = useState<boolean>(() => {
+        return sessionStorage.getItem('pitch_sync_team_validated') === 'true';
+    });
 
     // Check for existing session or handle redirect on mount
     useEffect(() => {
         const checkAuth = async () => {
             console.log('[Auth] Starting checkAuth...');
+
             try {
                 // Determine if we are on the login page or returning from redirect
                 const isReturningFromAuth = window.location.href.includes('state=') || window.location.href.includes('code=');
@@ -249,12 +255,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const data = await response.json();
 
             if (data.valid) {
-                setTeamCodeInfo({
+                const info = {
                     teamName: data.team_name,
                     usecaseId: data.usecase_id,
                     description: data.description
-                });
+                };
+                setTeamCodeInfo(info);
                 setTeamCodeValidated(true);
+
+                // Persist team validation
+                sessionStorage.setItem('pitch_sync_team_info', JSON.stringify(info));
+                sessionStorage.setItem('pitch_sync_team_validated', 'true');
+
                 return { valid: true };
             } else {
                 return { valid: false, message: data.message || 'Invalid team code' };
@@ -269,6 +281,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const clearTeamCode = useCallback(() => {
         setTeamCodeInfo(null);
         setTeamCodeValidated(false);
+        sessionStorage.removeItem('pitch_sync_team_info');
+        sessionStorage.removeItem('pitch_sync_team_validated');
     }, []);
 
     const value = useMemo(() => ({

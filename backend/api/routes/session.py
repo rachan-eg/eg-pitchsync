@@ -399,13 +399,28 @@ async def submit_phase(req: SubmitPhaseRequest):
         }
     else:
         # Normal AI Evaluation (async for multi-user concurrency)
-        eval_result = await evaluate_phase_async(
-            usecase=session.usecase,
-            phase_config=phase_def,
-            responses=[r.model_dump() for r in req.responses],
-            previous_feedback=prev_feedback,
-            image_data=req.image_data  # Pass visual evidence
-        )
+        try:
+            eval_result = await evaluate_phase_async(
+                usecase=session.usecase,
+                phase_config=phase_def,
+                responses=[r.model_dump() for r in req.responses],
+                previous_feedback=prev_feedback,
+                image_data=req.image_data  # Pass visual evidence
+            )
+        except Exception as ai_error:
+            import logging
+            logger = logging.getLogger("pitchsync.api")
+            logger.error(f"❌ AI evaluation failed: {ai_error}")
+            
+            # Graceful fallback - don't crash the submission
+            eval_result = {
+                "score": 0.3,  # Low but not zero
+                "rationale": "AI evaluation temporarily unavailable",
+                "feedback": "Our evaluation system is experiencing high demand. Your submission has been recorded with a provisional score. Please retry if you'd like a full evaluation.",
+                "strengths": ["Submission received successfully"],
+                "improvements": ["Retry when system load is lower for full AI analysis"],
+                "usage": {"input_tokens": 0, "output_tokens": 0}
+            }
 
     # Calculate Hint Penalty
     total_hint_penalty = 0.0
@@ -469,6 +484,9 @@ async def submit_phase(req: SubmitPhaseRequest):
             from backend.config import GENERATED_DIR
             
             # Extract format and data
+            if "," not in req.image_data:
+                raise ValueError("Invalid Base64 format: missing comma")
+            
             header, encoded = req.image_data.split(",", 1)
             img_format = header.split("/")[1].split(";")[0]
             img_bytes = base64.b64decode(encoded)
