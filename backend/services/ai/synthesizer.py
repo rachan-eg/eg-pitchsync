@@ -395,7 +395,8 @@ Create a prompt that generates a **COHESIVE SOLUTION MOCKUP** showing:
   • Dashboard or interface mockup showing the product in use
 - **COLORS**: Dominant use of the brand palette specified above
 - **TEXT**: Include readable headlines/metrics that tell the value story
-- **AVOID**: Abstract shapes without meaning, generic stock imagery, cluttered designs
+- **AVOID**: Abstract shapes without meaning, generic stock imagery, cluttered designs.
+- **NO BRAND LOGOS**: DO NOT include any specific mentions of "EG", "Expedia", or "EG Logo" in the text of the prompt. Use generic placeholders like "Company Logo" or "Brand Mark" only if absolutely necessary for the layout.
 
 === OUTPUT FORMAT (JSON) ===
 Return ONLY a JSON object with 'final_combined_prompt' containing a detailed, specific prompt:

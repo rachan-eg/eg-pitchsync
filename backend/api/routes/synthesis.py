@@ -113,8 +113,19 @@ async def curate_prompt(req: PrepareSynthesisRequest):
     # Sort phases to ensure consistent hash
     for p_name in sorted(session.phases.keys()):
         p_data = session.phases[p_name]
-        for resp in p_data.responses:
-            all_answers.append(str(resp.a))
+        
+        # Robust responses retrieval
+        responses = []
+        if isinstance(p_data, dict):
+            responses = p_data.get('responses', [])
+        else:
+            responses = getattr(p_data, 'responses', [])
+            
+        for resp in responses:
+            if isinstance(resp, dict):
+                all_answers.append(str(resp.get('a', '')))
+            else:
+                all_answers.append(str(getattr(resp, 'a', '')))
     
     current_hash = hashlib.md5("|".join(all_answers).encode()).hexdigest()
     

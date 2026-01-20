@@ -140,22 +140,28 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         });
         const initialHints = phase.questions.map((q: any) => {
             const id = typeof q === 'string' ? q : q.id;
-            const prev = initialResponses.find(r => r.question_id === id);
-            return prev?.hint_used || false;
+            const prev = initialResponses.find(r => r.hint_used === true && r.question_id === id);
+            return !!prev;
         });
 
-        // Reinitialize if phase changed
-        const needsReset = currentId !== lastPhaseIdRef.current;
+        // Reinitialize if:
+        // 1. Phase changed (currentId !== lastPhaseIdRef.current)
+        // 2. Initial responses changed and the user hasn't made any local edits (anyChanges is false)
+        const phaseChanged = currentId !== lastPhaseIdRef.current;
+        const shouldSyncServerData = !anyChanges && initialResponses.length > 0;
 
-        if (needsReset) {
+        if (phaseChanged || shouldSyncServerData) {
             setAnswers(initialAnsw);
             setHintsUsed(initialHints);
             setOriginalAnswers([...initialAnsw]);
             setOriginalHintsUsed([...initialHints]);
-            setCurrentQuestionIndex(0);
-            lastPhaseIdRef.current = currentId;
+
+            if (phaseChanged) {
+                setCurrentQuestionIndex(0);
+                lastPhaseIdRef.current = currentId;
+            }
         }
-    }, [phase, initialResponses]);
+    }, [phase, initialResponses, anyChanges]);
 
     // Sync original answers with current answers when phase evaluation completes successfully.
     // This ensures that after clicking "Back" on the feedback modal, anyChanges = false,
