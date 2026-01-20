@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../AppContext';
 import type { SessionState } from '../../types';
@@ -21,9 +21,67 @@ const Icons = {
     )
 };
 
+const SLIDE_INTERVAL = 5000; // 5 seconds
+const TOTAL_SLIDES = 3;
+
 export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl }) => {
     const navigate = useNavigate();
     const { totalTokens, phaseConfig } = useApp();
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+    const [dragStart, setDragStart] = useState<number | null>(null);
+    const [dragOffset, setDragOffset] = useState(0);
+
+    const goToSlide = useCallback((index: number) => {
+        setCurrentSlide(index);
+        setDragOffset(0);
+    }, []);
+
+    const nextSlide = useCallback(() => {
+        setCurrentSlide((prev) => (prev + 1) % TOTAL_SLIDES);
+        setDragOffset(0);
+    }, []);
+
+    const prevSlide = useCallback(() => {
+        setCurrentSlide((prev) => (prev - 1 + TOTAL_SLIDES) % TOTAL_SLIDES);
+        setDragOffset(0);
+    }, []);
+
+    // Auto-advance slides every 5 seconds
+    useEffect(() => {
+        if (isPaused || dragStart !== null) return;
+        const timer = setInterval(nextSlide, SLIDE_INTERVAL);
+        return () => clearInterval(timer);
+    }, [isPaused, nextSlide, dragStart]);
+
+    // Drag handlers
+    const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        setDragStart(clientX);
+        setIsPaused(true);
+    };
+
+    const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+        if (dragStart === null) return;
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const offset = clientX - dragStart;
+        setDragOffset(offset);
+    };
+
+    const handleDragEnd = () => {
+        if (dragStart === null) return;
+
+        const threshold = 100; // px to trigger slide change
+        if (dragOffset < -threshold) {
+            nextSlide();
+        } else if (dragOffset > threshold) {
+            prevSlide();
+        }
+
+        setDragStart(null);
+        setDragOffset(0);
+        setIsPaused(false);
+    };
 
     const getScoreTier = (score: number) => {
         if (score >= 900) return { label: 'S', name: 'S-TIER', class: 'final-reveal__tier-seal--s' };
@@ -107,110 +165,185 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl }) =
                             </div>
                         </div>
 
-                        <div className="final-reveal__panels">
-                            {/* Phase Scores */}
-                            <div className="final-reveal__panel">
-                                <h3 className="final-reveal__panel-title">Phase Performance</h3>
-                                <div className="final-reveal__results-list">
-                                    {Object.entries(session.phase_scores).map(([name, score]) => {
-                                        const pDef = Object.values(phaseConfig).find(p => p.name === name);
-                                        const maxScore = Math.round(1000 * (pDef?.weight || 0.33));
-                                        return (
-                                            <div key={name} className="final-reveal__result-item">
-                                                <div className="final-reveal__result-meta">
-                                                    <span className="final-reveal__phase-label">{name.replace('Phase ', '')}</span>
-                                                    <span className="final-reveal__phase-score">{Math.round(score)}/{maxScore} <small>PTS</small></span>
+                        {/* Carousel Container */}
+                        <div
+                            className={`final-reveal__carousel ${dragStart !== null ? 'is-dragging' : ''}`}
+                            onMouseEnter={() => setIsPaused(true)}
+                            onMouseLeave={() => {
+                                handleDragEnd();
+                                if (!dragStart) setIsPaused(false);
+                            }}
+                            onMouseDown={handleDragStart}
+                            onMouseMove={handleDragMove}
+                            onMouseUp={handleDragEnd}
+                            onTouchStart={handleDragStart}
+                            onTouchMove={handleDragMove}
+                            onTouchEnd={handleDragEnd}
+                        >
+                            <div
+                                className="final-reveal__slides"
+                                style={{
+                                    transform: `translateX(calc(-${currentSlide * 100}% + ${dragOffset}px))`,
+                                    transition: dragStart !== null ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
+                                }}
+                            >
+                                {/* Slide 1: Phase Performance */}
+                                <div className="final-reveal__slide">
+                                    <div className="final-reveal__panel final-reveal__panel--full">
+                                        <div className="final-reveal__slide-header">
+                                            <h3 className="final-reveal__panel-title">Phase Performance</h3>
+                                            <span className="final-reveal__slide-tag">Mission Progress</span>
+                                        </div>
+
+                                        <div className="final-reveal__results-list">
+                                            {Object.entries(session.phase_scores).map(([name, score]) => {
+                                                const pDef = Object.values(phaseConfig).find(p => p.name === name);
+                                                const maxScore = Math.round(1000 * (pDef?.weight || 0.33));
+                                                return (
+                                                    <div key={name} className="final-reveal__result-item">
+                                                        <div className="final-reveal__result-meta">
+                                                            <span className="final-reveal__phase-label">{name.replace('Phase ', '')}</span>
+                                                            <span className="final-reveal__phase-score">{Math.round(score)}/{maxScore} <small>PTS</small></span>
+                                                        </div>
+                                                        <div className="final-reveal__result-bar">
+                                                            <div className="final-reveal__result-fill" style={{ width: `${Math.min(100, (score / maxScore) * 100)}%` }} />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="final-reveal__sub-section">
+                                            <h4 className="final-reveal__sub-title">Mission Context</h4>
+                                            <div className="final-reveal__brief-grid">
+                                                <div className="final-reveal__brief-item">
+                                                    <label>DOMAIN</label>
+                                                    <span>{session.usecase.domain}</span>
                                                 </div>
-                                                <div className="final-reveal__result-bar">
-                                                    <div className="final-reveal__result-fill" style={{ width: `${Math.min(100, (score / maxScore) * 100)}%` }} />
+                                                <div className="final-reveal__brief-item">
+                                                    <label>SCENARIO</label>
+                                                    <span>{session.usecase.title}</span>
                                                 </div>
                                             </div>
-                                        );
-                                    })}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="final-reveal__sub-section">
-                                    <h4 className="final-reveal__sub-title">Context</h4>
-                                    <div className="final-reveal__brief">
-                                        <div className="final-reveal__brief-item">
-                                            <label>DOMAIN</label>
-                                            <span>{session.usecase.domain}</span>
+                                {/* Slide 2: Visual Intelligence */}
+                                <div className="final-reveal__slide">
+                                    <div className="final-reveal__panel final-reveal__panel--full final-reveal__panel--vision">
+                                        <div className="final-reveal__slide-header">
+                                            <h3 className="final-reveal__panel-title" style={{ color: 'var(--accent)' }}>Visual Intelligence</h3>
+                                            <span className="final-reveal__slide-tag" style={{ background: 'rgba(var(--accent-rgb), 0.2)', color: 'var(--accent)' }}>AI Analysis</span>
                                         </div>
-                                        <div className="final-reveal__brief-item">
-                                            <label>SCENARIO</label>
-                                            <span>{session.usecase.title}</span>
+
+                                        <div className="final-reveal__metrics-grid">
+                                            <div className="final-reveal__metric-card">
+                                                <span className="final-reveal__metric-label">ALIGNMENT</span>
+                                                <span className="final-reveal__metric-value" style={{
+                                                    color: session.final_output.visual_alignment === 'High' ? 'var(--success)' :
+                                                        session.final_output.visual_alignment === 'Critical Mismatch' ? 'var(--danger)' : 'var(--warning)'
+                                                }}>
+                                                    {session.final_output.visual_alignment || 'N/A'}
+                                                </span>
+                                            </div>
+                                            <div className="final-reveal__metric-card">
+                                                <span className="final-reveal__metric-label">MATCH SCORE</span>
+                                                <span className="final-reveal__metric-value">
+                                                    {typeof session.final_output.visual_score === 'number'
+                                                        ? Math.round(session.final_output.visual_score * 100)
+                                                        : '0'}%
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="final-reveal__ai-report">
+                                            <h4 className="final-reveal__sub-title">Analysis Highlights</h4>
+                                            <div className="final-reveal__feedback-container">
+                                                {session.final_output.visual_feedback ? (
+                                                    session.final_output.visual_feedback.split('. ').map((point, idx) => point.trim() && (
+                                                        <div key={idx} className="final-reveal__feedback-point">
+                                                            <div className="final-reveal__point-bullet" />
+                                                            <p>{point}{point.endsWith('.') ? '' : '.'}</p>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="final-reveal__feedback-placeholder">No visual feedback available</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Slide 3: Efficiency Metrics */}
+                                <div className="final-reveal__slide">
+                                    <div className="final-reveal__panel final-reveal__panel--full">
+                                        <div className="final-reveal__slide-header">
+                                            <h3 className="final-reveal__panel-title">Efficiency Metrics</h3>
+                                            <span className="final-reveal__slide-tag">Operational Data</span>
+                                        </div>
+
+                                        <div className="final-reveal__efficiency-layout">
+                                            <div className="final-reveal__metrics-section">
+                                                <h4 className="final-reveal__metrics-sub">Resource Utilization</h4>
+                                                <div className="final-reveal__stat-grid">
+                                                    <div className="final-reveal__mini-stat">
+                                                        <label>TEAM ID</label>
+                                                        <span>{session.team_id}</span>
+                                                    </div>
+                                                    <div className="final-reveal__mini-stat">
+                                                        <label>AI USAGE</label>
+                                                        <span style={{ color: 'var(--primary)' }}>{totalTokens.total.toLocaleString()} <small>Tokens</small></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="final-reveal__metrics-section">
+                                                <h4 className="final-reveal__metrics-sub">Performance Deductions</h4>
+                                                <div className="final-reveal__penalty-list">
+                                                    <div className="final-reveal__penalty-item">
+                                                        <span className="final-reveal__penalty-label">TIME</span>
+                                                        <span className="final-reveal__penalty-value" style={{ color: timePenalty > 0 ? 'var(--warning)' : 'var(--text-dim)' }}>
+                                                            {timePenalty > 0 ? `-${timePenalty}` : '0'} <small>PTS</small>
+                                                        </span>
+                                                    </div>
+                                                    <div className="final-reveal__penalty-item">
+                                                        <span className="final-reveal__penalty-label">HINTS</span>
+                                                        <span className="final-reveal__penalty-value" style={{ color: hintPenalty > 0 ? 'var(--danger)' : 'var(--text-dim)' }}>
+                                                            {hintPenalty > 0 ? `-${hintPenalty}` : '0'} <small>PTS</small>
+                                                        </span>
+                                                    </div>
+                                                    <div className="final-reveal__penalty-item">
+                                                        <span className="final-reveal__penalty-label">RETRIES</span>
+                                                        <span className="final-reveal__penalty-value" style={{ color: retryPenalty > 0 ? 'var(--danger)' : 'var(--text-dim)' }}>
+                                                            {retryCount}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Visual Forensics Panel - NEW */}
-                            <div className="final-reveal__panel" style={{ borderColor: 'var(--accent)', background: 'rgba(var(--accent-rgb), 0.03)' }}>
-                                <h3 className="final-reveal__panel-title" style={{ color: 'var(--accent)' }}>Visual Intelligence</h3>
-                                <div className="final-reveal__metrics-group">
-                                    <div className="final-reveal__stat-row">
-                                        <span className="final-reveal__stat-label">VISUAL ALIGNMENT</span>
-                                        <span className="final-reveal__stat-value" style={{
-                                            color: session.final_output.visual_alignment === 'High' ? 'var(--success)' :
-                                                session.final_output.visual_alignment === 'Critical Mismatch' ? 'var(--danger)' : 'var(--warning)'
-                                        }}>
-                                            {session.final_output.visual_alignment || 'N/A'}
-                                        </span>
-                                    </div>
-                                    <div className="final-reveal__stat-row">
-                                        <span className="final-reveal__stat-label">EVIDENCE SCORE</span>
-                                        <span className="final-reveal__stat-value">
-                                            {typeof session.final_output.visual_score === 'number'
-                                                ? Math.round(session.final_output.visual_score * 100)
-                                                : '0'}/100
-                                        </span>
-                                    </div>
-                                    {session.final_output.visual_feedback && (
-                                        <div className="final-reveal__feedback-box" style={{ marginTop: '1rem', fontSize: '0.8rem', opacity: 0.8, fontStyle: 'italic' }}>
-                                            "{session.final_output.visual_feedback}"
-                                        </div>
-                                    )}
-                                </div>
+                            {/* Navigation Dots */}
+                            <div className="final-reveal__carousel-nav">
+                                {[0, 1, 2].map((index) => (
+                                    <button
+                                        key={index}
+                                        className={`final-reveal__carousel-dot ${currentSlide === index ? 'final-reveal__carousel-dot--active' : ''}`}
+                                        onClick={() => goToSlide(index)}
+                                        aria-label={`Go to slide ${index + 1}`}
+                                    />
+                                ))}
                             </div>
 
-                            {/* Metrics */}
-                            <div className="final-reveal__panel">
-                                <h3 className="final-reveal__panel-title">Efficiency Metrics</h3>
-
-                                <div className="final-reveal__metrics-group">
-                                    <div className="final-reveal__metrics-sub">Resources</div>
-                                    <div className="final-reveal__stat-row">
-                                        <span className="final-reveal__stat-label">TEAM</span>
-                                        <span className="final-reveal__stat-value">{session.team_id}</span>
-                                    </div>
-                                    <div className="final-reveal__stat-row">
-                                        <span className="final-reveal__stat-label">AI TOKENS</span>
-                                        <span className="final-reveal__stat-value" style={{ color: 'var(--primary)' }}>{totalTokens.total.toLocaleString()}</span>
-                                    </div>
-                                </div>
-
-                                <div className="final-reveal__metrics-group">
-                                    <div className="final-reveal__metrics-sub">Deductions</div>
-                                    <div className="final-reveal__stat-row">
-                                        <span className="final-reveal__stat-label">TIME PENALTY</span>
-                                        <span className="final-reveal__stat-value" style={{ color: timePenalty > 0 ? 'var(--warning)' : 'var(--text-dim)' }}>
-                                            {timePenalty > 0 ? `-${timePenalty}` : '0'} <small>PTS</small>
-                                        </span>
-                                    </div>
-                                    <div className="final-reveal__stat-row">
-                                        <span className="final-reveal__stat-label">HINT PENALTY</span>
-                                        <span className="final-reveal__stat-value" style={{ color: hintPenalty > 0 ? 'var(--danger)' : 'var(--text-dim)' }}>
-                                            {hintPenalty > 0 ? `-${hintPenalty}` : '0'} <small>PTS</small>
-                                        </span>
-                                    </div>
-                                    <div className="final-reveal__stat-row">
-                                        <span className="final-reveal__stat-label">RETRIES</span>
-                                        <span className="final-reveal__stat-value" style={{ color: retryPenalty > 0 ? 'var(--danger)' : 'var(--text-dim)' }}>
-                                            {/* {retryCount} ({retryPenalty > 0 ? `-${retryPenalty}` : '0'} <small>PTS</small>) */}
-                                            {retryCount}
-                                        </span>
-                                    </div>
-                                </div>
+                            {/* Progress Bar */}
+                            <div className="final-reveal__carousel-progress">
+                                <div
+                                    className={`final-reveal__carousel-progress-bar ${isPaused ? 'paused' : ''}`}
+                                    key={currentSlide}
+                                />
                             </div>
                         </div>
                     </aside>
