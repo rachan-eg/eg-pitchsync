@@ -8,7 +8,7 @@ from typing import Dict, Any, Tuple
 from pathlib import Path
 
 
-from backend.services.ai.client import get_client
+from backend.services.ai.client import get_client, get_creative_client
 from backend.services.ai.image_gen import generate_image
 
 # Asset paths - Vault root contains usecase folders with their own assets
@@ -409,9 +409,10 @@ BE SPECIFIC! Pull actual details from the Q&A context - names, numbers, features
 DO NOT be vague. The mockup should tell a clear, cohesive story specific to THIS solution.
 """
 
-    client = get_client()
+    # Use Claude Sonnet 4.5 for creative image prompt generation
+    client = get_creative_client()
     try:
-        print(f"DEBUG: Generating coherent customer solution mockup prompt for {usecase_title}...")
+        print(f"DEBUG: Generating coherent customer solution mockup prompt for {usecase_title} using Claude Sonnet 4.5...")
         
         response_text, usage = client.generate_content(
             prompt=prompt,
@@ -503,7 +504,8 @@ Product: {usecase_title}
 === OUTPUT FORMAT (JSON) ===
 Return ONLY `{{ "visionary_hook": "...", "customer_pitch": "..." }}`
 """
-    client = get_client()
+    # Use Claude Sonnet 4.5 for creative narrative generation
+    client = get_creative_client()
     try:
         response_text, _ = client.generate_content(prompt=prompt, temperature=0.7)
         

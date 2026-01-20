@@ -62,9 +62,23 @@ class LeadPartnerVerdict(BaseModel):
     @field_validator('score', mode='before')
     @classmethod
     def clamp_score(cls, v):
-        """Ensure score is within valid range."""
+        """
+        Ensure score is within valid 0.0-1.0 range.
+        
+        Handles common AI output variations:
+        - Already normalized (0.0-1.0): Pass through
+        - Percentage format (1-100): Normalize to 0.0-1.0
+        - Out of bounds: Clamp to valid range
+        """
         try:
             score = float(v)
+            
+            # Detect percentage format (scores > 1.0 are likely percentages)
+            # Common with newer Claude models that may return e.g. 82 instead of 0.82
+            if score > 1.0:
+                score = score / 100.0
+            
+            # Final safety clamp
             return max(0.0, min(1.0, score))
         except (TypeError, ValueError):
             return 0.0
@@ -148,6 +162,18 @@ class VisualAnalysisResult(BaseModel):
         default="",
         description="Specific feedback on the visual asset"
     )
+    
+    @field_validator('visual_score', mode='before')
+    @classmethod
+    def normalize_visual_score(cls, v):
+        """Normalize visual score to 0.0-1.0 range, handling percentage format."""
+        try:
+            score = float(v)
+            if score > 1.0:
+                score = score / 100.0
+            return max(0.0, min(1.0, score))
+        except (TypeError, ValueError):
+            return 0.0
 
 
 
