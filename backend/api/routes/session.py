@@ -231,10 +231,18 @@ async def start_phase(req: StartPhaseRequest):
                         responses=req.leaving_phase_responses
                     )
                     session.phases[l_name] = leaving_pdata
-                elif leaving_pdata.status != "passed":
-                    # Update existing entry if not passed (don't overwrite passed data with drafts)
-                    leaving_pdata.responses = req.leaving_phase_responses
-                    session.phases[l_name] = leaving_pdata
+                else:
+                    # Robust status check for both objects and dicts
+                    status = (leaving_pdata.get('status') if isinstance(leaving_pdata, dict) 
+                              else getattr(leaving_pdata, 'status', None))
+                    
+                    if status != "passed":
+                        # Update existing entry if not passed (don't overwrite passed data with drafts)
+                        if isinstance(leaving_pdata, dict):
+                            leaving_pdata['responses'] = req.leaving_phase_responses
+                        else:
+                            leaving_pdata.responses = req.leaving_phase_responses
+                        session.phases[l_name] = leaving_pdata
     
     # STEP 2: Get or initialize the target phase's data
     key = f"phase_{req.phase_number}"
@@ -280,9 +288,11 @@ async def start_phase(req: StartPhaseRequest):
     phase_name = phase_def["name"]
     if hasattr(session, 'phases') and phase_name in session.phases:
         phase_data = session.phases[phase_name]
-        if hasattr(phase_data, 'responses'):
-             # Return the list of PhaseResponse objects directly
-            previous_responses = phase_data.responses
+        # Robust access for both Pydantic models and dictionaries
+        if isinstance(phase_data, dict):
+            previous_responses = phase_data.get('responses')
+        else:
+            previous_responses = getattr(phase_data, 'responses', None)
 
     return StartPhaseResponse(
         phase_id=phase_def.get("id", f"phase_{req.phase_number}"),

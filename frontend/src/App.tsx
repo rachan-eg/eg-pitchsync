@@ -63,11 +63,15 @@ const MissionBriefPage: React.FC = () => {
     const navigate = useNavigate();
     const [isInitializing, setIsInitializing] = React.useState(false);
     const [initError, setInitError] = React.useState<string | null>(null);
+    const initAttemptedRef = React.useRef(false);
 
     // Initialize session from team code info if we don't have a session yet
     React.useEffect(() => {
         const initFromTeamCode = async () => {
             if (!session && teamCodeInfo && !isInitializing) {
+                if (initAttemptedRef.current) return;
+                initAttemptedRef.current = true;
+
                 setIsInitializing(true);
                 setInitError(null);
 
@@ -79,9 +83,11 @@ const MissionBriefPage: React.FC = () => {
 
                     if (!result.success) {
                         setInitError('Failed to initialize session. Please try again.');
+                        initAttemptedRef.current = false; // Allow retry
                     }
                 } catch (err) {
                     setInitError('An error occurred while starting your session.');
+                    initAttemptedRef.current = false; // Allow retry
                 } finally {
                     setIsInitializing(false);
                 }
@@ -120,7 +126,12 @@ const MissionBriefPage: React.FC = () => {
     }
 
     if (!session) {
-        return <Navigate to="/team-code" replace />;
+        return (
+            <div className="flex items-center justify-center h-screen flex-col gap-4">
+                <div className="loading-spinner"></div>
+                <p className="text-white/60">Synchronizing team strategy...</p>
+            </div>
+        );
     }
 
     return (
