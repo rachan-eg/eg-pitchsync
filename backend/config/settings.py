@@ -91,7 +91,8 @@ class Settings:
 
     # Keycloak SSO Configuration
     # We strip trailing slashes to avoid URL formatting issues
-    KEYCLOAK_SERVER_URL = (os.environ.get("KEYCLOAK_SERVER_URL") or os.environ.get("VITE_KEYCLOAK_URL", "")).rstrip('/')
+    _keycloak_url = os.environ.get("KEYCLOAK_SERVER_URL") or os.environ.get("VITE_KEYCLOAK_URL", "")
+    KEYCLOAK_SERVER_URL = _keycloak_url if _keycloak_url.endswith('/') else f"{_keycloak_url}/" if _keycloak_url else ""
     KEYCLOAK_REALM = os.environ.get("KEYCLOAK_REALM") or os.environ.get("VITE_KEYCLOAK_REALM", "")
     KEYCLOAK_CLIENT_ID = os.environ.get("KEYCLOAK_CLIENT_ID") or os.environ.get("VITE_KEYCLOAK_CLIENT_ID", "")
     KEYCLOAK_CLIENT_SECRET = os.environ.get("KEYCLOAK_CLIENT_SECRET") or os.environ.get("VITE_KEYCLOAK_CLIENT_SECRET", "")
