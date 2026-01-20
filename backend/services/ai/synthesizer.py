@@ -94,9 +94,9 @@ Create a 100-word "Elevator Pitch" that explains:
 3. The Massive Market Opportunity.
 
 STYLE:
-- Fast-paced, exciting, and clear.
-- No fluff.
-- This text will be the foundation for an AI Image Generator, so focusing on visualizable nouns is helpful.
+- Fast-paced, exciting, and extremely clear.
+- MAX 50 WORDS. No fluff.
+- Focus on the core 'Reason to Exist'.
 
 Return ONLY the summary text.
 """
@@ -200,9 +200,10 @@ CONTEXT: {json.dumps(usecase, indent=2) if isinstance(usecase, dict) else usecas
 
 === STYLE RULES ===
 - **Tone**: Urgent, confident, premium.
-- **Structure**: Short, punchy sentences. High narrative velocity.
-- **Focus**: OUTCOMES over features. (e.g., "Saves 10 hours" > "Has an AI algorithm").
-- **Constraint**: NO marketing fluff ("revolutionary", "game-changing"). Show, don't tell.
+- **Structure**: Short, punchy sentences (MAX 60 WORDS TOTAL).
+- **Format**: Use 3 short bullet points if possible.
+- **Focus**: OUTCOMES over features.
+- **Constraint**: NO marketing fluff. Direct and bold.
 
 RETURN ONLY THE FINAL PARAGRAPH.
 """
@@ -495,10 +496,11 @@ Your goal is to synthesize the team's disparate Q&A inputs into a COHESIVE, PERS
 Product: {usecase_title}
 
 === TASKS ===
-1. **VISIONARY HOOK**: Write ONE single, punchy sentence (max 20 words) that captures the "Magic Moment" or the headline benefit.
-   - Style: Apple Keynote, provocative, confident.
-2. **CUSTOMER PITCH**: Write a 1-paragraph (100-150 words) narrative explaining the Problem, Solution, and Outcome.
-   - Style: Narrative storytelling, active voice, zero jargon.
+1. **VISIONARY HOOK**: Write ONE single, high-impact sentence (MAX 12 words).
+   - Style: Provocative and confident.
+2. **CUSTOMER PITCH**: Write 2-3 EXTREMELY SHORT bullet points (MAX 10 words per point).
+   - Style: Zero jargon, outcome-focused, punchy.
+   - Format: Return points separated by bullets (•) or on new lines.
 
 === OUTPUT FORMAT (JSON) ===
 Return ONLY `{{ "visionary_hook": "...", "customer_pitch": "..." }}`

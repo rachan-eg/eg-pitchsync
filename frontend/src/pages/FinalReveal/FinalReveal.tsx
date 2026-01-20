@@ -261,10 +261,10 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl }) =
                                             <h4 className="final-reveal__sub-title">Analysis Highlights</h4>
                                             <div className="final-reveal__feedback-container">
                                                 {session.final_output.visual_feedback ? (
-                                                    session.final_output.visual_feedback.split('. ').map((point, idx) => point.trim() && (
+                                                    session.final_output.visual_feedback.split(/[.!?]\s+/).filter(p => p.trim()).map((point, idx) => (
                                                         <div key={idx} className="final-reveal__feedback-point">
                                                             <div className="final-reveal__point-bullet" />
-                                                            <p>{point}{point.endsWith('.') ? '' : '.'}</p>
+                                                            <p>{point.trim()}{point.trim().match(/[.!?]$/) ? '' : '.'}</p>
                                                         </div>
                                                     ))
                                                 ) : (
