@@ -10,13 +10,13 @@ from typing import Dict, Any, List, Optional
 from backend.config import settings
 
 class ClaudeClient:
-    """Client for interacting with Claude Haiku 4.5 on AWS Bedrock."""
+    """Client for interacting with Claude Sonnet 4 on AWS Bedrock."""
     def __init__(self):
         """Initialize the Bedrock runtime client."""
         from botocore.config import Config
         self.region = settings.AWS_REGION
-        # Cross-region inference profile for Claude Haiku 4.5 (EU region)
-        self.model_id = 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
+        # Use Claude Sonnet 4 (released May 2025)
+        self.model_id = 'eu.anthropic.claude-sonnet-4-20250514-v1:0'
         
         # Configure timeouts for production-grade reliability
         config = Config(
@@ -168,16 +168,29 @@ class ClaudeClient:
 
 class Models:
     """AI Model identifiers."""
-    CLAUDE = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
+    # Default for evaluation (balanced)
+    CLAUDE = "eu.anthropic.claude-sonnet-4-20250514-v1:0"
+    # Creative model for synthesis/image prompts (more creative)
+    CLAUDE_CREATIVE = "eu.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
-# Singleton instance
+# Singleton instances
 _client = None
+_creative_client = None
 
 def get_client() -> ClaudeClient:
+    """Get the default Claude client (Sonnet 4 for evaluation)."""
     global _client
     if _client is None:
         _client = ClaudeClient()
     return _client
+
+def get_creative_client() -> ClaudeClient:
+    """Get the creative Claude client (Sonnet 4.5 for synthesis/image prompts)."""
+    global _creative_client
+    if _creative_client is None:
+        _creative_client = ClaudeClient()
+        _creative_client.model_id = Models.CLAUDE_CREATIVE
+    return _creative_client
 
 # Keep get_ai_client for compatibility during transition
 def get_ai_client() -> ClaudeClient:

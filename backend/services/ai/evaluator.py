@@ -32,7 +32,7 @@ def evaluate_phase(
     image_data: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Evaluate team responses with rigorous, phase-specific criteria using Claude Haiku 4.5.
+    Evaluate team responses with rigorous, phase-specific criteria using Claude Sonnet 4.
     Now supports Multi-Modal Visual Analysis.
     """
     client = get_client()
@@ -55,71 +55,55 @@ def evaluate_phase(
     
     prompt = _build_evaluation_prompt(usecase, phase_config, questions_with_criteria, previous_feedback)
 
-    try:
-        # STEP 1: THE RED TEAM AGENT (CRITIC)
-        # Goal: Find flaws, logical gaps, and buzzwords vs reality.
-        # This agent is extremely hostile and cynical.
-        red_team_result = _run_red_team_agent(client, prompt)
+    # STEP 1: THE RED TEAM AGENT (CRITIC)
+    # Goal: Find flaws, logical gaps, and buzzwords vs reality.
+    # This agent is extremely hostile and cynical.
+    red_team_result = _run_red_team_agent(client, prompt)
+    
+    # STEP 2: THE LEAD PARTNER AGENT (JUDGE)
+    # Goal: Synthesize the Red Team's report with the original idea to make a final decision.
+    # This agent balances the critique with the potential upside.
+    final_result = _run_lead_partner_agent(client, prompt, red_team_result["report"])
+    
+    # STEP 3: THE VISUAL ANALYST (FORENSICS)
+    # Goal: Evaluate the uploaded evidence (if any) for alignment, depth, and fit.
+    visual_result_data = None
+    if image_data:
+        visual_result_data = evaluate_visual_asset(client, prompt, image_data)
+        visual_metrics = visual_result_data["result"]
         
-        # STEP 2: THE LEAD PARTNER AGENT (JUDGE)
-        # Goal: Synthesize the Red Team's report with the original idea to make a final decision.
-        # This agent balances the critique with the potential upside.
-        final_result = _run_lead_partner_agent(client, prompt, red_team_result["report"])
+        # MERGE SCORES
+        # Formula: Final = TextScore + (VisualScore - 0.5) * 0.2
+        # This allows a boost of +0.1 or a penalty of -0.1
+        v_score_norm = visual_metrics.visual_score # 0.0 to 1.0
+        modifier = (v_score_norm - 0.5) * 0.2
         
-        # STEP 3: THE VISUAL ANALYST (FORENSICS)
-        # Goal: Evaluate the uploaded evidence (if any) for alignment, depth, and fit.
-        visual_result_data = None
-        if image_data:
-            visual_result_data = evaluate_visual_asset(client, prompt, image_data)
-            visual_metrics = visual_result_data["result"]
-            
-            # MERGE SCORES
-            # Formula: Final = TextScore + (VisualScore - 0.5) * 0.2
-            # This allows a boost of +0.1 or a penalty of -0.1
-            v_score_norm = visual_metrics.visual_score # 0.0 to 1.0
-            modifier = (v_score_norm - 0.5) * 0.2
-            
-            # Apply modifier
-            original_score = final_result["score"]
-            new_score = max(0.0, min(1.0, original_score + modifier))
-            
-            final_result["score"] = new_score
-            
-            # Append Visual Feedback
-            final_result["feedback"] += f"\n\n[VISUAL INTEL]: {visual_metrics.feedback} (Alignment: {visual_metrics.alignment_rating})"
-            final_result["visual_metrics"] = {
-                "visual_score": v_score_norm,
-                "visual_feedback": visual_metrics.feedback,
-                "visual_alignment": visual_metrics.alignment_rating
-            }
-            
-            # Combine token usage
-            final_result["usage"]["input_tokens"] += visual_result_data["usage"].get("input_tokens", 0)
-            final_result["usage"]["output_tokens"] += visual_result_data["usage"].get("output_tokens", 0)
+        # Apply modifier
+        original_score = final_result["score"]
+        new_score = max(0.0, min(1.0, original_score + modifier))
+        
+        final_result["score"] = new_score
+        
+        # Append Visual Feedback
+        final_result["feedback"] += f"\n\n[VISUAL INTEL]: {visual_metrics.feedback} (Alignment: {visual_metrics.alignment_rating})"
+        final_result["visual_metrics"] = {
+            "visual_score": v_score_norm,
+            "visual_feedback": visual_metrics.feedback,
+            "visual_alignment": visual_metrics.alignment_rating
+        }
+        
+        # Combine token usage
+        final_result["usage"]["input_tokens"] += visual_result_data["usage"].get("input_tokens", 0)
+        final_result["usage"]["output_tokens"] += visual_result_data["usage"].get("output_tokens", 0)
 
-        # Combine usage metrics
-        combined_usage = {
-            "input_tokens": red_team_result["usage"].get("input_tokens", 0) + final_result["usage"].get("input_tokens", 0),
-            "output_tokens": red_team_result["usage"].get("output_tokens", 0) + final_result["usage"].get("output_tokens", 0)
-        }
-        
-        final_result["usage"] = combined_usage
-        return final_result
-        
-    except Exception as e:
-        import traceback
-        print(f"Claude Agentic Evaluation Error: {type(e).__name__}: {e}")
-        print(f"Full traceback:")
-        traceback.print_exc()
-        # Return a safe fallback rather than crashing the game
-        return {
-            "score": 0.0,
-            "rationale": "AI Neural Link Unstable - Scoring N/A",
-            "feedback": "Our scoring systems encountered high-dimensional interference. Results are inconclusive (0 pts). Please refine and resubmit.",
-            "strengths": ["Resilience"],
-            "improvements": ["Try submitting again"],
-            "usage": {"input_tokens": 0, "output_tokens": 0}
-        }
+    # Combine usage metrics
+    combined_usage = {
+        "input_tokens": red_team_result["usage"].get("input_tokens", 0) + final_result["usage"].get("input_tokens", 0),
+        "output_tokens": red_team_result["usage"].get("output_tokens", 0) + final_result["usage"].get("output_tokens", 0)
+    }
+    
+    final_result["usage"] = combined_usage
+    return final_result
 
 
 def _build_evaluation_prompt(

@@ -176,7 +176,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
                         onClick={handleLogoClick}
                         className="global-header__logo-container"
                     >
-                        <Branding isInline showTitle={true} />
+                        <Branding isHeader showTitle={true} />
                     </button>
                 </div>
 

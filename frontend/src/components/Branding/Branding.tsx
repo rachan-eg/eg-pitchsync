@@ -4,12 +4,13 @@ import './Branding.css';
 interface BrandingProps {
     className?: string;
     isInline?: boolean;
+    isHeader?: boolean;
     showTitle?: boolean;
 }
 
-export const Branding: React.FC<BrandingProps> = ({ className, isInline, showTitle }) => {
+export const Branding: React.FC<BrandingProps> = ({ className, isInline, isHeader, showTitle }) => {
     return (
-        <div className={`${isInline ? 'branding-inline' : 'branding-overlay'} ${className || ''}`}>
+        <div className={`${isHeader ? 'branding-header' : isInline ? 'branding-inline' : 'branding-overlay'} ${className || ''}`}>
             <div className="branding-logo-wrapper">
                 <svg className="branding-logo-svg" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 499.55688 506.16563">
                     <path d="M215.93231,222.59806c-17.43729,1.5397-42.56995,4.10273-95.91153,4.10273C56.4209,226.70079,0,216.44239,0,162.58767V63.59988C0,9.74516,56.93098,0,120.53401,0c53.34158,0,77.96101,2.56302,95.39829,4.10273,6.6689.51323,9.74516,2.04979,9.74516,6.15567v27.18245c0,3.5894-4.10273,6.15557-9.74516,6.15557h-100.01426c-23.59601,0-31.80147,4.61596-31.80147,20.00346v27.18245h127.713c5.64243,0,9.74516,2.56302,9.74516,6.15567v28.20892c0,3.07616-4.10273,6.15557-9.74516,6.15557h-127.713v31.28518c0,15.3875,8.20546,20.00346,31.80147,20.00346h100.01426c5.64243,0,9.74516,3.07941,9.74516,6.15567v27.69559c0,3.59264-3.07626,5.64243-9.74516,6.15567" fill="currentColor"></path>
