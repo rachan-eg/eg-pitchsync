@@ -32,7 +32,7 @@ def evaluate_phase(
     image_data: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Evaluate team responses with rigorous, phase-specific criteria using Claude Haiku 4.5.
+    Evaluate team responses with rigorous, phase-specific criteria using Claude Sonnet 4.
     Now supports Multi-Modal Visual Analysis.
     """
     client = get_client()
@@ -117,21 +117,12 @@ def evaluate_phase(
         
         final_result["usage"] = combined_usage
         return final_result
-        
+
     except Exception as e:
-        import traceback
-        print(f"Claude Agentic Evaluation Error: {type(e).__name__}: {e}")
-        print(f"Full traceback:")
-        traceback.print_exc()
-        # Return a safe fallback rather than crashing the game
-        return {
-            "score": 0.0,
-            "rationale": "AI Neural Link Unstable - Scoring N/A",
-            "feedback": "Our scoring systems encountered high-dimensional interference. Results are inconclusive (0 pts). Please refine and resubmit.",
-            "strengths": ["Resilience"],
-            "improvements": ["Try submitting again"],
-            "usage": {"input_tokens": 0, "output_tokens": 0}
-        }
+        import logging
+        logger = logging.getLogger("pitchsync.evaluator")
+        logger.error(f"❌ Evaluation Pipeline Failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def _build_evaluation_prompt(
@@ -231,8 +222,13 @@ def _run_lead_partner_agent(client, prompt: str, red_team_report: str) -> Dict[s
     Step 2: The Lead Partner. Final Decision.
     """
     system_prompt = f"""
-You are an ELITE SILICON VALLEY VC PARTNER (Sequioa/Benchmark).
+You are an ELITE SILICON VALLEY VC PARTNER (Sequoia/Benchmark).
 You are making the final investment decision on a startup phase.
+
+*** CORE DIRECTIVE: EXTREME CONCISSENESS ***
+- Your report will be read on a high-speed intelligence terminal.
+- Every word must earn its place. Use high-signal nouns and verbs.
+- Word counts below are HARD LIMITS.
 
 You have received a RED TEAM REPORT from your technical analysts:
 "{red_team_report}"
@@ -264,12 +260,12 @@ The user is a HUMAN typing quickly under pressure.
 OUTPUT FORMAT:
 Return PURE JSON.
 {{
-  "reasoning_trace": "Internal monologue balancing the pitch vs the critique...",
+  "reasoning_trace": "Internal monologue (MAX 2 sentences).",
   "score": (float 0.0-1.0),
-  "rationale": "One punchy sentence verdict.",
-  "feedback": "Constructive but firm feedback, referencing the Red Team's findings.",
-  "strengths": ["list"],
-  "improvements": ["list"]
+  "rationale": "STRICT PROJECT VERDICT: Max 12 words. High impact.",
+  "feedback": "DIRECT FEEDBACK: Exactly 2-3 extremely short points separated by periods. No intro. Max 10 words per point.",
+  "strengths": ["Max 2 strengths, each under 8 words"],
+  "improvements": ["Max 2 improvements, each under 8 words"]
 }}
 """
 
@@ -320,7 +316,7 @@ def evaluate_visual_asset(client, prompt: str, image_b64: str) -> Dict[str, Any]
     - visual_score: float (0.0 to 1.0)
     - rationale: string (Brief explanation of the score)
     - alignment_rating: string ("High", "Medium", "Low", "Critical Mismatch")
-    - feedback: string (Constructive feedback for the user)
+    - feedback: string (CRITICAL: Provide ONLY the points. No introductory text, no preamble. Provide EXACTLY 2-3 extremely short feedback points separated by periods. EACH point must be under 10 words. Do NOT mention hex codes or technical color data.)
     """
 
     user_message = f"""
@@ -331,17 +327,12 @@ def evaluate_visual_asset(client, prompt: str, image_b64: str) -> Dict[str, Any]
     """
     
     # --- IMAGE SIZE SAFETY CHECK ---
-    # Claude on Bedrock has a 5MB limit for images.
-    # Base64 overhead is ~33%, but the error message indicates the decoded size check.
-    # We'll compress if the base64 string is suspiciously large.
-    media_type = "image/png"  # Default
+    media_type = "image/png"
     try:
-        # Check base64 string length (approximate)
-        # 5MB in binary is ~6.7MB in base64
         if len(image_b64) > 6000000:
             print(f"⚠️ Image too large ({len(image_b64)} chars). Compressing...")
             image_b64 = _compress_image(image_b64)
-            media_type = "image/jpeg" # _compress_image returns JPEG
+            media_type = "image/jpeg"
             print(f"✅ Compressed to {len(image_b64)} chars.")
     except Exception as compress_err:
         print(f"WARNING: Compression failed: {compress_err}")
@@ -353,10 +344,10 @@ def evaluate_visual_asset(client, prompt: str, image_b64: str) -> Dict[str, Any]
         images=[{"data": image_b64, "media_type": media_type}]
     )
     
-    # Parse using robust utility (handles logic/newlines/markdown)
+    # Parse using robust utility
     result = parse_ai_response(raw_response, VisualAnalysisResult)
     
-    # Handle complete parsing failures (where utility returned an empty default)
+    # Handle complete parsing failures
     if result.visual_score == 0.0 and not result.rationale:
         print(f"⚠️ Visual Analyst Parsing FAILURE. Raw response: {raw_response[:200]}")
         result = VisualAnalysisResult(
@@ -366,20 +357,19 @@ def evaluate_visual_asset(client, prompt: str, image_b64: str) -> Dict[str, Any]
             feedback="The neural engine encountered high-dimensional noise while parsing this asset. Please try a different angle or lighting."
         )
 
-        
     return {"result": result, "usage": usage}
+
 
 def _compress_image(image_b64: str, max_size_mb: float = 3.5) -> str:
     """
     Utility to compress a base64 image to be under the API's limit.
-    Reduces dimensions and uses JPEG compression if needed.
     """
     try:
         # Decode
         img_data = base64.b64decode(image_b64)
         img = Image.open(io.BytesIO(img_data))
         
-        # Convert RGBA to RGB if necessary for JPEG
+        # Convert RGBA to RGB if necessary
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
             

@@ -8,7 +8,7 @@ from typing import Dict, Any, Tuple
 from pathlib import Path
 
 
-from backend.services.ai.client import get_client
+from backend.services.ai.client import get_client, get_creative_client
 from backend.services.ai.image_gen import generate_image
 
 # Asset paths - Vault root contains usecase folders with their own assets
@@ -94,9 +94,9 @@ Create a 100-word "Elevator Pitch" that explains:
 3. The Massive Market Opportunity.
 
 STYLE:
-- Fast-paced, exciting, and clear.
-- No fluff.
-- This text will be the foundation for an AI Image Generator, so focusing on visualizable nouns is helpful.
+- Fast-paced, exciting, and extremely clear.
+- MAX 50 WORDS. No fluff.
+- Focus on the core 'Reason to Exist'.
 
 Return ONLY the summary text.
 """
@@ -200,9 +200,10 @@ CONTEXT: {json.dumps(usecase, indent=2) if isinstance(usecase, dict) else usecas
 
 === STYLE RULES ===
 - **Tone**: Urgent, confident, premium.
-- **Structure**: Short, punchy sentences. High narrative velocity.
-- **Focus**: OUTCOMES over features. (e.g., "Saves 10 hours" > "Has an AI algorithm").
-- **Constraint**: NO marketing fluff ("revolutionary", "game-changing"). Show, don't tell.
+- **Structure**: Short, punchy sentences (MAX 60 WORDS TOTAL).
+- **Format**: Use 3 short bullet points if possible.
+- **Focus**: OUTCOMES over features.
+- **Constraint**: NO marketing fluff. Direct and bold.
 
 RETURN ONLY THE FINAL PARAGRAPH.
 """
@@ -409,9 +410,10 @@ BE SPECIFIC! Pull actual details from the Q&A context - names, numbers, features
 DO NOT be vague. The mockup should tell a clear, cohesive story specific to THIS solution.
 """
 
-    client = get_client()
+    # Use Claude Sonnet 4.5 for creative image prompt generation
+    client = get_creative_client()
     try:
-        print(f"DEBUG: Generating coherent customer solution mockup prompt for {usecase_title}...")
+        print(f"DEBUG: Generating coherent customer solution mockup prompt for {usecase_title} using Claude Sonnet 4.5...")
         
         response_text, usage = client.generate_content(
             prompt=prompt,
@@ -494,15 +496,17 @@ Your goal is to synthesize the team's disparate Q&A inputs into a COHESIVE, PERS
 Product: {usecase_title}
 
 === TASKS ===
-1. **VISIONARY HOOK**: Write ONE single, punchy sentence (max 20 words) that captures the "Magic Moment" or the headline benefit.
-   - Style: Apple Keynote, provocative, confident.
-2. **CUSTOMER PITCH**: Write a 1-paragraph (100-150 words) narrative explaining the Problem, Solution, and Outcome.
-   - Style: Narrative storytelling, active voice, zero jargon.
+1. **VISIONARY HOOK**: Write ONE single, high-impact sentence (MAX 12 words).
+   - Style: Provocative and confident.
+2. **CUSTOMER PITCH**: Write 2-3 EXTREMELY SHORT bullet points (MAX 10 words per point).
+   - Style: Zero jargon, outcome-focused, punchy.
+   - Format: Return points separated by bullets (•) or on new lines.
 
 === OUTPUT FORMAT (JSON) ===
 Return ONLY `{{ "visionary_hook": "...", "customer_pitch": "..." }}`
 """
-    client = get_client()
+    # Use Claude Sonnet 4.5 for creative narrative generation
+    client = get_creative_client()
     try:
         response_text, _ = client.generate_content(prompt=prompt, temperature=0.7)
         

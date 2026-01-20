@@ -135,14 +135,21 @@ export const PhaseFeedback: React.FC<PhaseFeedbackProps> = ({
                         <div className="phase-feedback__verdict">
                             <div className="phase-feedback__verdict-card glass-card">
                                 <div className="phase-feedback__verdict-label">AI Judge Verdict</div>
-                                <p className="phase-feedback__verdict-text">
-                                    "{result.feedback}"
-                                </p>
+                                <div className="phase-feedback__verdict-points">
+                                    {result.feedback.split(/[.!?]\s+/).filter(p => p.trim()).map((point, idx) => (
+                                        <div key={idx} className="phase-feedback__verdict-item">
+                                            <div className="phase-feedback__verdict-bullet" />
+                                            <p className="phase-feedback__verdict-text">
+                                                {point.trim()}{point.trim().match(/[.!?]$/) ? '' : '.'}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
                             {result.rationale && (
                                 <div className="phase-feedback__rationale">
-                                    <div className="phase-feedback__rationale-label">Neural Trace rationale</div>
+                                    <div className="phase-feedback__rationale-tag">NEURAL MONOLOGUE</div>
                                     <p className="phase-feedback__rationale-text">
                                         {result.rationale}
                                     </p>

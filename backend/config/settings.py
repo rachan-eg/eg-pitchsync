@@ -27,8 +27,6 @@ if env_file_path.exists():
         # Clean filter for AWS or Bedrock related keys
         if not any(aws_term in key.upper() for aws_term in ["AWS_", "BEDROCK_"]):
             # Set in environment ONLY if not already set (standard behavior)
-            # OR override if you want .env to always win. 
-            # In Docker, we usually want environment variables to win.
             if key not in os.environ:
                 os.environ[key] = value
 

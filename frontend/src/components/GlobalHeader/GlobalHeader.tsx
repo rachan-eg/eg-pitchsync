@@ -174,12 +174,10 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
                 <div className="global-header__left">
                     <button
                         onClick={handleLogoClick}
-                        className="global-header__logo"
+                        className="global-header__logo-container"
                     >
-                        <span className="text-gradient">PITCH</span>
-                        <span className="text-white">-SYNC</span>
+                        <Branding isHeader showTitle={true} />
                     </button>
-                    <Branding isInline className="header-branding" />
                 </div>
 
                 {centerContent}
