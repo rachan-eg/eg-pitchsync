@@ -206,7 +206,8 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl }) =
                                     <div className="final-reveal__stat-row">
                                         <span className="final-reveal__stat-label">RETRIES</span>
                                         <span className="final-reveal__stat-value" style={{ color: retryPenalty > 0 ? 'var(--danger)' : 'var(--text-dim)' }}>
-                                            {retryCount} ({retryPenalty > 0 ? `-${retryPenalty}` : '0'} <small>PTS</small>)
+                                            {/* {retryCount} ({retryPenalty > 0 ? `-${retryPenalty}` : '0'} <small>PTS</small>) */}
+                                            {retryCount}
                                         </span>
                                     </div>
                                 </div>

@@ -138,8 +138,18 @@ def authenticate_user(
             raise HTTPException(status_code=500, detail="SSO configuration error")
         
         # Validate token and get user info
-        user_info = keycloak_client.userinfo(token)
-        logger.debug(f"[Auth] Keycloak raw user_info: {user_info}")
+        try:
+            user_info = keycloak_client.userinfo(token)
+            logger.debug(f"[Auth] Keycloak raw user_info: {user_info}")
+        except Exception as e:
+            logger.warning(f"[Auth] userinfo endpoint failed: {str(e)}. Attempting to decode token locally.")
+            # Fallback for when userinfo endpoint is not reachable but token is valid
+            try:
+                user_info = keycloak_client.decode_token(token, options={"verify_signature": False})
+                logger.debug(f"[Auth] Decoded info from token: {user_info}")
+            except Exception as e2:
+                logger.error(f"[Auth] Both userinfo and decode_token failed. Original error: {e}, Decode error: {e2}")
+                raise e
         
         email = user_info.get("email", "")
         name = user_info.get("name")
