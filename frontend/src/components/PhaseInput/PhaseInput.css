@@ -329,61 +329,7 @@
     word-break: break-word;
 }
 
-.pi-textarea--preview {
-    cursor: text;
-    overflow-y: auto;
-    overflow-x: hidden;
-    white-space: pre-wrap;
-    background: transparent;
-}
 
-.pi-textarea--preview * {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    box-sizing: border-box;
-}
-
-/* Ensure common MD elements wrap strictly */
-.pi-textarea--preview p,
-.pi-textarea--preview h1,
-.pi-textarea--preview h2,
-.pi-textarea--preview h3,
-.pi-textarea--preview li,
-.pi-textarea--preview blockquote {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    margin-bottom: 1rem;
-}
-
-/* Stable Tables */
-.pi-textarea--preview table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    margin: 1rem 0;
-}
-
-.pi-textarea--preview td,
-.pi-textarea--preview th {
-    border: 1px solid var(--border-light);
-    padding: 0.5rem;
-    overflow-wrap: anywhere;
-}
-
-.pi-textarea--preview blockquote,
-.pi-textarea--preview pre,
-.pi-textarea--preview code {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 0.2rem 0.4rem;
-    border-radius: 4px;
-    white-space: pre-wrap;
-}
-
-.pi-textarea--preview:hover {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: var(--border-glow);
-}
 
 .pi-textarea::placeholder {
     color: var(--text-muted);
@@ -831,7 +777,7 @@
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-lg);
-    
+
     transition: all 0.3s ease;
 }
 

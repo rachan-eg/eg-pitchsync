@@ -12,6 +12,7 @@ import { confirmAudio } from '../../utils/tts';
 import { LiveTranscriptOverlay } from './LiveTranscriptOverlay';
 import { StatusStrip } from './StatusStrip';
 import './PhaseInput.css';
+import './MarkdownPreview.css';
 
 interface PhaseInputProps {
     phase: any;
@@ -245,7 +246,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
     const allAnswered = answers.every(a => a.trim().length >= 100);
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.ctrlKey && e.key === 'Enter') {
             if (currentQuestionIndex < phase.questions.length - 1) {
                 handleNext();
@@ -253,7 +254,70 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                 handleSubmit();
             }
         }
+
+        // Auto-bullet / Auto-numbering logic
+        if (e.key === 'Enter') {
+            const textarea = e.currentTarget;
+            const start = textarea.selectionStart;
+            const value = textarea.value;
+
+            // Get current line context
+            const previousLines = value.substring(0, start).split('\n');
+            const currentLine = previousLines[previousLines.length - 1];
+
+            // Regex Patterns
+            // Matches "* " or "- "
+            const bulletMatch = currentLine.match(/^(\s*)([\*\-])\s+/);
+            // Matches "1. " or "2. "
+            const numberMatch = currentLine.match(/^(\s*)(\d+)\.\s+/);
+
+            if (bulletMatch || numberMatch) {
+                e.preventDefault();
+
+                const indent = (bulletMatch || numberMatch)![1];
+                const marker = bulletMatch ? bulletMatch[2] : null;
+                const isNumber = !!numberMatch;
+
+                // If line is ONLY the bullet/number, treat double-enter as "exit list"
+                const content = currentLine.replace(bulletMatch ? /^(\s*)([\*\-])\s+/ : /^(\s*)(\d+)\.\s+/, '').trim();
+
+                if (content.length === 0) {
+                    // Remove the current empty bullet line
+                    const prefix = value.substring(0, start - currentLine.length);
+                    const suffix = value.substring(start);
+                    const newValue = prefix + suffix;
+
+                    handleChange(newValue);
+
+                    // Need to wait for React render to set cursor
+                    setTimeout(() => {
+                        textarea.setSelectionRange(prefix.length, prefix.length);
+                    }, 0);
+                    return;
+                }
+
+                // Create new list item
+                let nextMarker = '';
+                if (isNumber) {
+                    const currentNum = parseInt(numberMatch![2], 10);
+                    nextMarker = `${currentNum + 1}. `;
+                } else {
+                    nextMarker = `${marker} `;
+                }
+
+                const insertion = `\n${indent}${nextMarker}`;
+                const newValue = value.substring(0, start) + insertion + value.substring(start);
+
+                handleChange(newValue);
+
+                setTimeout(() => {
+                    const newPos = start + insertion.length;
+                    textarea.setSelectionRange(newPos, newPos);
+                }, 0);
+            }
+        }
     };
+
 
     const formatTime = (s: number) => {
         const mins = Math.floor(s / 60);

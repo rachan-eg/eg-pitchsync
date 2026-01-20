@@ -1,0 +1,272 @@
+/* =============================================================================
+   MARKDOWN PREVIEW CONFIGURATION
+   Styles for the rendered markdown content within PhaseInput.
+   
+   NOTE: Negative margins are used extensively here to counteract default 
+   layout spacing and achieve a very tight, compact "glitch/cyber" text density.
+   ============================================================================= */
+
+.pi-textarea--preview {
+    cursor: text;
+    overflow-y: auto;
+    overflow-x: auto;
+    /* Allow horizontal scroll for wide tables */
+    background: transparent;
+}
+
+.pi-textarea--preview * {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    /* Better for handling long strings in tables */
+    word-break: break-word;
+    box-sizing: border-box;
+
+    /* Global Reset for tight control */
+    margin-block-start: 0;
+    margin-block-end: 0;
+}
+
+/* =============================================================================
+   1. HEADINGS (H1 - H6)
+   ============================================================================= */
+/* =============================================================================
+   1. HEADINGS (H1 - H6)
+   ============================================================================= */
+.pi-textarea--preview h1,
+.pi-textarea--preview h2,
+.pi-textarea--preview h3,
+.pi-textarea--preview h4,
+.pi-textarea--preview h5,
+.pi-textarea--preview h6 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    /* Stronger shadow for legibility */
+}
+
+/* Distinct Shades for Hierarchy */
+/* Distinct Shades for Hierarchy (Duller/Muted) */
+.pi-textarea--preview h1 {
+    font-size: 1.5em;
+    color: var(--primary);
+    /* Keep Primary */
+}
+
+.pi-textarea--preview h2 {
+    font-size: 1.3em;
+    margin-bottom: 0.5rem;
+    color: #7dd4fcb7;
+    /* Muted Sky Blue (was #38bdf8) */
+}
+
+.pi-textarea--preview h3 {
+    font-size: 1.1em;
+    color: #c3b5fdd0;
+    /* Soft Lavender (was #c084fc) */
+}
+
+.pi-textarea--preview h4 {
+    font-size: 1em;
+    color: #5eead5a4;
+    /* Soft Teal (was #2dd4bf) */
+}
+
+.pi-textarea--preview h5,
+.pi-textarea--preview h6 {
+    font-size: 0.9em;
+    color: #94a3b8dc;
+    /* Slate */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Remove top margin for the very first element */
+.pi-textarea--preview>*:first-child {
+    margin-top: 0 !important;
+}
+
+/* =============================================================================
+   2. PARAGRAPHS & TEXT
+   ============================================================================= */
+.pi-textarea--preview p {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+    color: #cbd5e1;
+    /* Soft Grey (was #e2e8f0) */
+}
+
+/* Inline Formatting - Duller Colors */
+.pi-textarea--preview strong,
+.pi-textarea--preview b {
+    color: #fde68ac9;
+    /* Pale Amber (was #fbbf24) */
+    font-weight: 700;
+}
+
+.pi-textarea--preview em,
+.pi-textarea--preview i {
+    color: #a5b4fcc4;
+    /* Soft Periwinkle */
+    font-style: italic;
+}
+
+/* Adjacent sibling spacing adjustments */
+.pi-textarea--preview p+p {
+    margin-top: 0.2rem;
+}
+
+.pi-textarea--preview p+ul,
+.pi-textarea--preview p+ol {
+    margin-top: -0.5rem;
+}
+
+/* =============================================================================
+   3. LISTS (UL / OL)
+   ============================================================================= */
+.pi-textarea--preview ul,
+.pi-textarea--preview ol {
+    margin-top: 0.2rem;
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+    list-style-position: outside;
+    color: #cbd5e1d3;
+}
+
+.pi-textarea--preview ul {
+    list-style-type: disc;
+}
+
+.pi-textarea--preview ol {
+    list-style-type: decimal;
+}
+
+/* List Items */
+.pi-textarea--preview li {
+    margin-bottom: 0.25rem;
+    line-height: 1.5;
+    display: list-item;
+}
+
+/* Marker Colors (Muted) */
+.pi-textarea--preview ul li::marker {
+    color: #f9a8d4c0;
+    /* Soft Pink (was #f472b6) */
+}
+
+.pi-textarea--preview ol li::marker {
+    color: #7dd4fca9;
+    /* Soft Blue (was #38bdf8) */
+}
+
+/* Paragraphs INSIDE list items */
+.pi-textarea--preview li>p {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: inherit;
+}
+
+/* =============================================================================
+   4. NESTED LISTS
+   ============================================================================= */
+.pi-textarea--preview li ul,
+.pi-textarea--preview li ol {
+    padding-left: 1rem;
+    color: #94a3b8;
+}
+
+/* =============================================================================
+   5. OTHER BLOCKS
+   ============================================================================= */
+.pi-textarea--preview blockquote {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+    border-left: 3px solid #d97706;
+    /* Dark Amber */
+    background: rgba(217, 119, 6, 0.05);
+    font-style: italic;
+    color: #e2e8f0d5;
+    /* White-ish text */
+}
+
+.pi-textarea--preview pre {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 4px;
+    overflow-x: auto;
+    border: 1px solid #334155;
+}
+
+.pi-textarea--preview code {
+    background: rgba(244, 114, 182, 0.05);
+    /* Faint pink bg */
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+    color: #f9a8d4c0;
+    /* Soft Pink (was #f472b6) */
+}
+
+
+
+.pi-textarea--preview pre code {
+    background: transparent;
+    padding: 0;
+    color: #e2e8f0af;
+}
+
+/* Tables */
+.pi-textarea--preview table {
+    width: 100%;
+    table-layout: auto;
+    /* Better for fitting varied content */
+    border-collapse: collapse;
+    margin-top: -0.1rem;
+    /* Pull up slightly */
+    margin-bottom: 0.2rem;
+    /* Small positive buffer below */
+    display: table;
+    /* Ensure it treats as block */
+}
+
+.pi-textarea--preview td,
+.pi-textarea--preview th {
+    border: 1px solid var(--border-light);
+    padding: 0.3rem 0.6rem;
+    /* Balanced padding for readable data */
+    overflow-wrap: break-word;
+    font-size: 0.9em;
+    line-height: 1.25;
+    color: var(--text-secondary);
+}
+
+.pi-textarea--preview th {
+    background: rgba(255, 255, 255, 0.05);
+    font-weight: 700;
+    color: var(--primary);
+    /* Accent color for table headers */
+}
+
+/* Adjust paragraph spacing if it immediately follows a table */
+.pi-textarea--preview table+p {
+    margin-top: 0.4rem;
+}
+
+.pi-textarea--preview hr {
+    margin: 1rem 0;
+    border: 0;
+    border-top: 1px solid var(--border-light);
+    opacity: 0.3;
+}
+
+/* Hover effect */
+.pi-textarea--preview:hover {
+    background: rgba(255, 255, 255, 0.01);
+    border-color: var(--border-glow);
+}

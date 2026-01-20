@@ -415,7 +415,6 @@ DO NOT be vague. The mockup should tell a clear, cohesive story specific to THIS
         
         response_text, usage = client.generate_content(
             prompt=prompt,
-            max_tokens=2000,
             temperature=0.7
         )
         

@@ -186,6 +186,10 @@ def parse_ai_response(response_text: str, model_class: type) -> BaseModel:
         data = json.loads(text, strict=False)
         return model_class.model_validate(data)
     except (json.JSONDecodeError, Exception) as e:
-        print(f"AI response parsing warning: {e}")
+        # Log more context for debugging
+        import logging
+        logger = logging.getLogger("pitchsync.ai")
+        logger.error(f"❌ AI JSON Parse Failure: {e}")
+        logger.error(f"   Raw start: {response_text[:200]}...")
         # Return model with defaults
         return model_class()

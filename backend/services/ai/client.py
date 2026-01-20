@@ -36,7 +36,7 @@ class ClaudeClient:
         self, 
         prompt: str, 
         system_prompt: Optional[str] = None,
-        max_tokens: int = 2000,
+        max_tokens: Optional[int] = None, # Defaults to settings.MAX_OUTPUT_TOKENS
         temperature: float = 0.7,
         images: Optional[List[Dict[str, str]]] = None
     ) -> str:
@@ -80,9 +80,13 @@ class ClaudeClient:
             # Simple text content
             content_block = prompt
 
+        # Determine output token cap (Centralized Control)
+        # We ensure it is cast to int for API safety
+        effective_max_tokens = int(max_tokens if max_tokens is not None else settings.MAX_OUTPUT_TOKENS)
+
         body_dict = {
             "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": max_tokens,
+            "max_tokens": effective_max_tokens,
             "temperature": temperature,
             "messages": [
                 {
@@ -115,7 +119,7 @@ class ClaudeClient:
                 if settings.DEBUG:
                     with open("claude_debug.log", "a", encoding="utf-8") as f:
                         f.write(f"\n--- {self.model_id} Response ---\n")
-                        f.write(raw_body[:2000] + ('...[truncated]' if len(raw_body) > 2000 else ''))
+                        f.write(raw_body[:5000] + ('...[truncated]' if len(raw_body) > 5000 else ''))
                         f.write("\n---------------------------\n")
                 
                 response_body = json.loads(raw_body, strict=False)

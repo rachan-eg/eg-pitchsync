@@ -59,12 +59,24 @@ def evaluate_phase(
         # STEP 1: THE RED TEAM AGENT (CRITIC)
         # Goal: Find flaws, logical gaps, and buzzwords vs reality.
         # This agent is extremely hostile and cynical.
+        
+        import logging
+        logger = logging.getLogger("pitchsync.evaluator")
+        logger.info("🕵️ Starting Red Team Analysis...")
         red_team_result = _run_red_team_agent(client, prompt)
         
+        if red_team_result["report"] == "Analysis inconclusive.":
+             logger.warning("⚠️ Red Team Analysis failed to parse or was empty. Proceeding with limited context.")
+        else:
+             logger.info("✅ Red Team Analysis complete.")
+
         # STEP 2: THE LEAD PARTNER AGENT (JUDGE)
         # Goal: Synthesize the Red Team's report with the original idea to make a final decision.
         # This agent balances the critique with the potential upside.
+        logger.info("⚖️ Starting Lead Partner Verdict...")
         final_result = _run_lead_partner_agent(client, prompt, red_team_result["report"])
+        logger.info(f"✅ Evaluation complete. Final Score: {final_result.get('score', 0.0)}")
+        
         
         # STEP 3: THE VISUAL ANALYST (FORENSICS)
         # Goal: Evaluate the uploaded evidence (if any) for alignment, depth, and fit.
