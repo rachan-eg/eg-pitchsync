@@ -96,7 +96,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const location = useLocation();
     const { token } = useAuth();
     const { startTimer, pauseTimer, resumeTimer, stopTimer, elapsedSeconds } = useTimer();
-    const { loading, setLoading, setError } = useUI();
+    const { loading, setLoading, error, setError } = useUI();
 
     // Selection State
     const [selectedUsecase, setSelectedUsecase] = useState<UseCase | null>(null);
@@ -117,6 +117,17 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const [generatedImageUrl, setGeneratedImageUrl] = useState('');
     const [uploadedImages, setUploadedImages] = useState<string[]>([]);
     const [activeRevealImage, setActiveRevealImage] = useState('');
+
+    // Volatile states that we need in callbacks but don't want to trigger re-renders of the callbacks themselves
+    const loadingRef = useRef(loading);
+    const errorRef = useRef(error);
+    const tokenRef = useRef(token);
+    const phaseResultRef = useRef(phaseResult);
+
+    useEffect(() => { loadingRef.current = loading; }, [loading]);
+    useEffect(() => { errorRef.current = error; }, [error]);
+    useEffect(() => { tokenRef.current = token; }, [token]);
+    useEffect(() => { phaseResultRef.current = phaseResult; }, [phaseResult]);
 
     // =========================================================================
     // TOKEN CALCULATION (Display Only - Backend is authoritative)
@@ -246,7 +257,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const { timerState } = useTimer(); // Need this to check running state
 
     const setCurrentPhaseResponses = useCallback((responses: PhaseResponse[]) => {
-        if (loading || phaseResult) {
+        if (loadingRef.current || phaseResultRef.current) {
             setCurrentPhaseResponsesInternal(responses);
             return;
         }
@@ -374,7 +385,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             isComplete: data.is_complete || false,
             currentPhase: data.current_phase || 1
         };
-    }, [startTimer, stopTimer, setCurrentPhaseResponses]);
+    }, [startTimer, stopTimer]); // Removed setCurrentPhaseResponses dependency
 
     const initSession = useCallback(async (teamId: string) => {
         if (!selectedUsecase || !selectedTheme) return { success: false, isResumed: false, isComplete: false, currentPhase: 1 };
@@ -415,6 +426,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // New function: Initialize session directly from team code info
     const initSessionFromTeamCode = useCallback(async (teamName: string, usecaseId: string) => {
+        // Prevent overlapping initialization calls
+        if (loadingRef.current) return { success: false, isResumed: false, isComplete: false, currentPhase: 1 };
+
         setLoading(true);
         setError(null);
 
@@ -423,7 +437,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    ...(tokenRef.current ? { 'Authorization': `Bearer ${tokenRef.current}` } : {})
                 },
                 body: JSON.stringify({
                     team_id: teamName,
@@ -446,7 +460,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             setLoading(false);
             return { success: false, isResumed: false, isComplete: false, currentPhase: 1 };
         }
-    }, [setLoading, setError, processInitResponse]);
+    }, [setLoading, setError, processInitResponse]); // Stable dependencies
 
     const startPhase = useCallback(async (phaseNum: number) => {
         if (!session) return;
@@ -463,7 +477,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    ...(tokenRef.current ? { 'Authorization': `Bearer ${tokenRef.current}` } : {})
                 },
                 body: JSON.stringify({
                     session_id: session.session_id,
@@ -527,6 +541,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     console.log(`[Timer] Starting phase ${phaseNum} with elapsed: ${data.elapsed_seconds ?? 0}s`);
                     startTimer(data.elapsed_seconds ?? 0);
                 }
+
             } else {
                 console.error('Failed to start phase, status:', res.status);
                 const errorData = await res.json().catch(() => ({}));
@@ -538,7 +553,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         } finally {
             setLoading(false);
         }
-    }, [session, token, elapsedSeconds, currentPhaseResponses, pauseTimer, startTimer, stopTimer, setLoading, setError]);
+    }, [session, elapsedSeconds, currentPhaseResponses, pauseTimer, startTimer, stopTimer, setLoading, setError, processInitResponse]);
 
     const submitPhase = useCallback(async (responses: PhaseResponse[]) => {
         if (!session) return;
@@ -554,7 +569,10 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 const currentPhaseDef = phaseConfig[session.current_phase];
                 const res = await fetch(getApiUrl('/api/submit-phase'), {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(tokenRef.current ? { 'Authorization': `Bearer ${tokenRef.current}` } : {})
+                    },
                     body: JSON.stringify({
                         session_id: session.session_id,
                         phase_name: currentPhaseDef.name,
