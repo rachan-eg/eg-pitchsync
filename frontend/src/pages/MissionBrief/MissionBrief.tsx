@@ -151,7 +151,7 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
                             {loading ? 'Initializing...' : 'Launch Mission'}
                         </button>
                     </div>
-                    <p className="mission-brief__status">Systems ready • AI synthesis active</p>
+                    
                 </div>
             </div>
         </div>

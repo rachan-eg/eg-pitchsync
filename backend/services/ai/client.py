@@ -10,12 +10,13 @@ from typing import Dict, Any, List, Optional
 from backend.config import settings
 
 class ClaudeClient:
-    """Client for interacting with Claude 3.5 Sonnet on AWS Bedrock."""
+    """Client for interacting with Claude Haiku 4.5 on AWS Bedrock."""
     def __init__(self):
         """Initialize the Bedrock runtime client."""
         from botocore.config import Config
         self.region = settings.AWS_REGION
-        self.model_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0'
+        # Cross-region inference profile for Claude Haiku 4.5 (EU region)
+        self.model_id = 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
         
         # Configure timeouts for production-grade reliability
         config = Config(
@@ -167,7 +168,7 @@ class ClaudeClient:
 
 class Models:
     """AI Model identifiers."""
-    CLAUDE = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+    CLAUDE = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
 
 # Singleton instance
 _client = None
