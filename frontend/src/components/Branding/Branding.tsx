@@ -4,9 +4,10 @@ import './Branding.css';
 interface BrandingProps {
     className?: string;
     isInline?: boolean;
+    showTitle?: boolean;
 }
 
-export const Branding: React.FC<BrandingProps> = ({ className, isInline }) => {
+export const Branding: React.FC<BrandingProps> = ({ className, isInline, showTitle }) => {
     return (
         <div className={`${isInline ? 'branding-inline' : 'branding-overlay'} ${className || ''}`}>
             <div className="branding-logo-wrapper">
@@ -18,8 +19,16 @@ export const Branding: React.FC<BrandingProps> = ({ className, isInline }) => {
                 </svg>
             </div>
             <div className="branding-text">
-                <span className="powered-by">Powered By :</span>
-                <span className="brand-text">AI COE</span>
+                {showTitle && (
+                    <div className="branding-main-title">
+                        <span className="text-gradient">PITCH</span>
+                        <span className="text-white">-SYNC</span>
+                    </div>
+                )}
+                <div className="branding-sub-text">
+                    <span className="powered-by">Powered By :</span>
+                    <span className="brand-text">AI COE</span>
+                </div>
             </div>
         </div>
     );
