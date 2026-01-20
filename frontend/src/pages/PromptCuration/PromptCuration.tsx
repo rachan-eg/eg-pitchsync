@@ -67,13 +67,7 @@ const Icons = {
 // =============================================================================
 // HELPERS
 // =============================================================================
-const getScoreTier = (score: number): { label: string; colorClass: string } => {
-    if (score >= 900) return { label: 'S-TIER', colorClass: 'curate-analytics__stat-value--warning' };
-    if (score >= 800) return { label: 'A-TIER', colorClass: 'curate-analytics__stat-value--success' };
-    if (score >= 700) return { label: 'B-TIER', colorClass: '' };
-    if (score >= 500) return { label: 'C-TIER', colorClass: '' };
-    return { label: 'D-TIER', colorClass: '' };
-};
+
 
 // =============================================================================
 // COMPONENT
@@ -83,11 +77,10 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
     curatedPrompt,
     usecaseTitle: _usecaseTitle,
     theme: _theme,
-    totalScore,
     isLoading
 }) => {
     const navigate = useNavigate();
-    const { regeneratePrompt, submitPitchImage, totalTokens, uploadedImages, setActiveRevealImage, curatePrompt } = useApp();
+    const { regeneratePrompt, submitPitchImage, uploadedImages, setActiveRevealImage, curatePrompt } = useApp();
 
     const [editedPrompt, setEditedPrompt] = useState(curatedPrompt);
     const [additionalNotes, setAdditionalNotes] = useState('');
@@ -247,18 +240,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
         navigate('/reveal');
     };
 
-    // Computed values
-    const tier = getScoreTier(totalScore);
-    const accuracy = Math.min(100, (totalScore / 1000) * 100);
 
-    // Get phase max scores
-    const getMaxScore = (name: string): number => {
-        const n = name.toLowerCase();
-        if (n.includes("problem")) return 250;
-        if (n.includes("solution")) return 350;
-        if (n.includes("market")) return 400;
-        return 333;
-    };
 
     // Calculate penalties (clamp negative values to 0 for backwards compat with old speed bonus data)
 
@@ -364,79 +346,57 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                     {/* RIGHT COLUMN */}
                     <div className="prompt-curation__col-right">
 
-
-
-                        {/* Analytics Card */}
-                        <div className="curate-card curate-analytics">
-                            <div className="curate-analytics__header">
-                                <h3 className="curate-analytics__title">Performance</h3>
-                                <div className="curate-analytics__live">LIVE</div>
-                            </div>
-
-                            <div className="curate-analytics__phases curate-scrollbar">
-                                {Object.entries(session.phase_scores).map(([name, score]) => {
-                                    const maxScore = getMaxScore(name);
-                                    return (
-                                        <div key={name} className="curate-analytics__phase">
-                                            <div className="curate-analytics__phase-row">
-                                                <span className="curate-analytics__phase-name">{name}</span>
-                                                <span className="curate-analytics__phase-score">
-                                                    {score.toFixed(0)} <span className="curate-analytics__phase-max">/ {maxScore}</span>
-                                                </span>
-                                            </div>
-                                            <div className="curate-analytics__phase-bar">
-                                                <div
-                                                    className="curate-analytics__phase-fill"
-                                                    style={{ width: `${Math.min((score / maxScore) * 100, 100)}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="curate-analytics__summary">
-                                <div className="curate-analytics__stat">
-                                    <div className="curate-analytics__stat-label">Accuracy</div>
-                                    <div className={`curate-analytics__stat-value curate-analytics__stat-value--success`}>{accuracy.toFixed(0)}%</div>
-                                </div>
-                                <div className="curate-analytics__stat">
-                                    <div className="curate-analytics__stat-label">Tier</div>
-                                    <div className={`curate-analytics__stat-value ${tier.colorClass}`}>{tier.label}</div>
-                                </div>
-                                <div className="curate-analytics__stat">
-                                    <div className="curate-analytics__stat-label">Tokens</div>
-                                    <div className="curate-analytics__stat-value">{totalTokens.total}</div>
+                        {/* Previous Submissions Gallery */}
+                        <div className="curate-card curate-gallery">
+                            <div className="curate-gallery__header">
+                                <h3 className="curate-gallery__title">Previous Submissions</h3>
+                                <div className="curate-gallery__badge">
+                                    {uploadedImages.length}/3
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Previous Inputs Section */}
-                        {uploadedImages.length > 0 && (
-                            <div className="curate-card curate-previous">
-                                <div className="curate-refs__label-group">
-                                    <div className="curate-refs__label">Previous</div>
-                                    <div className="curate-analytics__live" style={{ background: 'rgba(139, 92, 246, 0.2)', borderColor: 'rgba(139, 92, 246, 0.4)', color: '#a78bfa' }}>
-                                        {uploadedImages.length}/3
-                                    </div>
-                                </div>
-                                <div className="curate-previous__thumbnails">
+                            {uploadedImages.length > 0 ? (
+                                <div className="curate-gallery__grid">
                                     {uploadedImages.map((img, i) => (
-                                        <img
+                                        <div
                                             key={i}
-                                            src={img}
-                                            alt={`Previous ${i}`}
-                                            className="curate-previous__thumb"
+                                            className="curate-gallery__item"
                                             onClick={() => {
                                                 setActiveRevealImage(img);
                                                 navigate('/reveal');
                                             }}
-                                            title="Click to view full size"
-                                        />
+                                        >
+                                            <img
+                                                src={img}
+                                                alt={`Submission ${i + 1}`}
+                                                className="curate-gallery__image"
+                                            />
+                                            <div className="curate-gallery__overlay">
+                                                <span className="curate-gallery__number">#{i + 1}</span>
+                                                <span className="curate-gallery__action">View Full</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {/* Empty slots */}
+                                    {Array.from({ length: 3 - uploadedImages.length }).map((_, i) => (
+                                        <div key={`empty-${i}`} className="curate-gallery__item curate-gallery__item--empty">
+                                            <div className="curate-gallery__empty-content">
+                                                <span className="curate-gallery__empty-number">#{uploadedImages.length + i + 1}</span>
+                                                <span className="curate-gallery__empty-text">Awaiting</span>
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="curate-gallery__empty-state">
+                                    <div className="curate-gallery__empty-icon">
+                                        <Icons.Upload />
+                                    </div>
+                                    <p className="curate-gallery__empty-message">No submissions yet</p>
+                                    <p className="curate-gallery__empty-hint">Upload your first pitch visual below</p>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Actions (Upload + Finalize) */}
                         <div className="curate-actions">

@@ -32,7 +32,7 @@ def evaluate_phase(
     image_data: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Evaluate team responses with rigorous, phase-specific criteria using Claude 3.5 Sonnet.
+    Evaluate team responses with rigorous, phase-specific criteria using Claude Haiku 4.5.
     Now supports Multi-Modal Visual Analysis.
     """
     client = get_client()
