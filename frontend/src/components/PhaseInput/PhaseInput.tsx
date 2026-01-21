@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useApp } from '../../AppContext';
 import { EvaluationOverlay } from './EvaluationOverlay';
-import type { PhaseResponse } from '../../types';
+import type { PhaseResponse, SubmitPhaseResponse } from '../../types';
 import {
     useVoiceInput
 } from '../../hooks/useVoiceInput';
@@ -48,7 +48,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 }) => {
     const {
         submitPhase, elapsedSeconds, scoringInfo, session, phaseConfig,
-        setCurrentPhaseResponses, resumeTimer, phaseResult
+        setCurrentPhaseResponses, resumeTimer, phaseResult, setPhaseResult
     } = useApp();
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -76,6 +76,21 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const anyChanges =
         answers.some((a, i) => originalAnswers[i] !== undefined && a !== originalAnswers[i]) ||
         hintsUsed.some((h, i) => originalHintsUsed[i] !== undefined && h !== originalHintsUsed[i]);
+
+    // Check if phase is locked (no more editing allowed)
+    // Only lock if we have a genuine pass (above score threshold) 
+    // OR if we have exhausted all available retries.
+    const phaseName = phaseConfig[phaseNumber]?.name;
+    const existingPhase = session?.phases[phaseName];
+    const isPhasePassed = existingPhase?.status === 'passed';
+    const retriesUsed = existingPhase?.metrics?.retries || 0;
+    const maxRetries = scoringInfo?.max_retries || 3;
+    const noRetriesLeft = retriesUsed >= maxRetries;
+    const passThreshold = scoringInfo?.pass_threshold || 0.65;
+    const currentScore = existingPhase?.metrics?.ai_score || 0;
+    const isRealPass = isPhasePassed && currentScore >= passThreshold;
+
+    const isLocked = isRealPass || noRetriesLeft;
 
     // Internal Sync logic (Memoized)
     const syncToProvider = useCallback((newAnswers: string[], newHints: boolean[]) => {
@@ -201,6 +216,56 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
 
     const handleSubmit = async () => {
+        // Check if we should just show the existing result instead of re-evaluating
+        const pName = phaseConfig[phaseNumber]?.name;
+        const existingPhase = session?.phases[pName];
+        const isPassed = existingPhase?.status === 'passed';
+        const isFailed = existingPhase?.status === 'failed';
+        const retriesUsed = existingPhase?.metrics?.retries || 0;
+        const maxRetries = scoringInfo?.max_retries || 3;
+        const noRetriesLeft = retriesUsed >= maxRetries;
+
+        // If phase has a final result (passed OR failed with max retries) AND no changes,
+        // just show the existing result - don't re-evaluate
+        const hasExistingResult = isPassed || (isFailed && noRetriesLeft);
+        if (hasExistingResult && !anyChanges && existingPhase) {
+            // Reconstruct the phase result from cached data to show feedback modal
+            const cachedResult: SubmitPhaseResponse = {
+                passed: isPassed,
+                ai_score: existingPhase.metrics?.ai_score || 0,
+                phase_score: existingPhase.metrics?.weighted_score || 0,
+                total_score: session?.total_score || 0,
+                feedback: existingPhase.feedback || '',
+                rationale: existingPhase.rationale || '',
+                strengths: existingPhase.strengths || [],
+                improvements: existingPhase.improvements || [],
+                metrics: {
+                    ai_quality_points: (existingPhase.metrics?.ai_score || 0) * 1000,
+                    time_penalty: existingPhase.metrics?.time_penalty || 0,
+                    retry_penalty: existingPhase.metrics?.retry_penalty || 0,
+                    retries: existingPhase.metrics?.retries || 0,
+                    hint_penalty: existingPhase.metrics?.hint_penalty || 0,
+                    efficiency_bonus: existingPhase.metrics?.efficiency_bonus || 0,
+                    phase_weight: phase.weight,
+                    duration_seconds: existingPhase.metrics?.duration_seconds || 0,
+                    tokens_used: existingPhase.metrics?.tokens_used || 0,
+                    input_tokens: existingPhase.metrics?.input_tokens || 0,
+                    output_tokens: existingPhase.metrics?.output_tokens || 0,
+                    total_ai_tokens: (existingPhase.metrics?.input_tokens || 0) + (existingPhase.metrics?.output_tokens || 0)
+                },
+                can_proceed: isPassed,
+                is_final_phase: phaseNumber >= totalPhases,
+                total_tokens: session?.total_tokens || 0,
+                extra_ai_tokens: session?.extra_ai_tokens || 0,
+                history: existingPhase.history || []
+            };
+
+            // Show the cached result
+            setPhaseResult(cachedResult);
+            return;
+        }
+
+        // Normal flow: submit for evaluation
         const responses = phase.questions.map((q: any, i: number) => {
             const question_id = typeof q === 'string' ? q : q.id;
             const question_text = typeof q === 'string' ? q : q.text || q.question;
@@ -416,7 +481,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 <span className="pi-question-text">
                                     {typeof currentQuestion === 'string' ? currentQuestion : currentQuestion.text || currentQuestion.question}
                                 </span>
-                                {!isHintUsed && typeof currentQuestion !== 'string' && currentQuestion.hint_text && (
+                                {!isHintUsed && !isLocked && typeof currentQuestion !== 'string' && currentQuestion.hint_text && (
                                     <button
                                         className="pi-hint-trigger"
                                         onClick={() => setHintModalOpen(true)}
@@ -435,8 +500,14 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                         )}
                     </div>
 
-                    <div className="pi-input-area">
-                        {isEditing ? (
+                    <div className={`pi-input-area ${isLocked ? 'pi-input-area--locked' : ''}`}>
+                        {isLocked && (
+                            <div className="pi-locked-banner">
+                                <Icons.Shield />
+                                <span>{isPhasePassed ? 'Phase Cleared - Response Locked' : 'Maximum Retries Exhausted - Response Locked'}</span>
+                            </div>
+                        )}
+                        {isEditing && !isLocked ? (
                             <textarea
                                 ref={textareaRef}
                                 className={`pi-textarea custom-scrollbar ${isListening ? 'pi-textarea--listening' : ''}`}
@@ -444,16 +515,16 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 onChange={(e) => handleChange(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 onBlur={() => !isListening && setIsEditing(false)}
-                                // Restored onBlur to allow switching back to Markdown Preview
                                 placeholder={isListening ? "" : "Type your response here (min 100 chars). Press Ctrl+Enter for next."}
                                 readOnly={isListening}
                                 onClick={handleInputClick}
                             />
                         ) : (
                             <div
-                                className="pi-textarea pi-textarea--preview custom-scrollbar"
-                                onClick={handleInputClick}
-                                title="Click to edit"
+                                className={`pi-textarea pi-textarea--preview custom-scrollbar ${isLocked ? 'pi-textarea--locked' : ''}`}
+                                onClick={isLocked ? undefined : handleInputClick}
+                                title={isLocked ? 'This phase is locked' : 'Click to edit'}
+                                style={isLocked ? { cursor: 'default', opacity: 0.8 } : undefined}
                             >
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                     {currentAnswer || ""}
@@ -496,10 +567,11 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
                             {/* Mic Button */}
                             <button
-                                className={`pi-mic-btn ${voiceState}`}
-                                onClick={handleMicClick}
-                                title={voiceState === 'listening' ? 'Stop Listening' : 'Start Voice Input'}
+                                className={`pi-mic-btn ${voiceState} ${isLocked ? 'pi-mic-btn--disabled' : ''}`}
+                                onClick={isLocked ? undefined : handleMicClick}
+                                title={isLocked ? 'Editing Disabled' : (voiceState === 'listening' ? 'Stop Listening' : 'Start Voice Input')}
                                 type="button"
+                                disabled={isLocked}
                                 style={{ transform: `scale(${voiceState === 'listening' ? 1 + (voiceVolume * 0.3) : 1})` }}
                             >
                                 {voiceState === 'listening' && (
@@ -532,7 +604,19 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             const pName = phaseConfig[phaseNumber]?.name;
                             const existing = session?.phases[pName];
                             const isPassed = existing?.status === 'passed';
-                            const showReview = isPassed && !anyChanges;
+                            const retriesUsed = existing?.metrics?.retries || 0;
+                            const maxRetries = scoringInfo?.max_retries || 3;
+                            const noRetriesLeft = retriesUsed >= maxRetries;
+
+                            const passThreshold = scoringInfo?.pass_threshold || 0.65;
+                            const currentScore = existing?.metrics?.ai_score || 0;
+                            const isRealPass = isPassed && currentScore >= passThreshold;
+
+                            // Show "Review Evaluation" for:
+                            // 1. Genuine passed phases with no changes, OR
+                            // 2. Any phase where max retries are exhausted and there are no changes
+                            const hasExistingResult = isRealPass || noRetriesLeft;
+                            const showReview = hasExistingResult && !anyChanges;
 
                             return (
                                 <button

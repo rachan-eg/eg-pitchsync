@@ -91,6 +91,15 @@ export interface PhaseData {
     history?: PhaseMetrics[];
 }
 
+export interface PitchSubmission {
+    image_url: string;
+    prompt: string;
+    visual_score: number;
+    visual_feedback: string;
+    visual_alignment: string;
+    created_at: string;
+}
+
 export interface FinalOutput {
     visionary_hook: string;
     customer_pitch: string;
@@ -118,7 +127,7 @@ export interface SessionState {
     is_complete: boolean;
     total_tokens: number;
     extra_ai_tokens?: number;
-    uploadedImages: string[]; // NEW: For persisting multiple pitch visuals
+    uploadedImages: PitchSubmission[]; // NEW: For persisting multiple pitch visuals
 }
 
 // =============================================================================
@@ -153,7 +162,7 @@ export interface InitResponse {
     phase_data?: Record<string, PhaseData>;
     final_output?: FinalOutput;
     current_server_time?: string;
-    uploadedImages?: string[];
+    uploadedImages?: PitchSubmission[];
 }
 
 export interface StartPhaseRequest {

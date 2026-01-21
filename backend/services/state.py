@@ -51,7 +51,23 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
     uploaded_images = []
     if hasattr(db_session, 'uploaded_images_json') and db_session.uploaded_images_json:
         try:
-            uploaded_images = json.loads(db_session.uploaded_images_json, strict=False)
+            raw_images = json.loads(db_session.uploaded_images_json, strict=False)
+            if isinstance(raw_images, list):
+                for img in raw_images:
+                    if isinstance(img, str):
+                        # Convert legacy string URL to PitchSubmission dict
+                        uploaded_images.append({
+                            "image_url": img,
+                            "prompt": "",
+                            "visual_score": 0.0,
+                            "visual_feedback": "",
+                            "visual_alignment": "N/A",
+                            "created_at": datetime.now(timezone.utc).isoformat()
+                        })
+                    else:
+                        uploaded_images.append(img)
+            else:
+                uploaded_images = []
         except (json.JSONDecodeError, TypeError, ValueError):
             uploaded_images = []
     
@@ -95,6 +111,7 @@ def _domain_to_db(session: SessionState) -> SessionData:
     # Use model_dump() for Pydantic v2 recursive serialization
     phases_dict = {k: v.model_dump() for k, v in session.phases.items()}
     final_dict = session.final_output.model_dump()
+    uploaded_images_list = [img.model_dump() for img in session.uploaded_images]
     
     # Serialize complex objects to JSON strings
     # We use a custom encoder or ensure dates are isoformatted
@@ -118,7 +135,7 @@ def _domain_to_db(session: SessionState) -> SessionData:
         phase_scores_json=json.dumps(session.phase_scores, default=_json_serial),
         phase_start_times_json=json.dumps(session.phase_start_times, default=_json_serial),
         phase_elapsed_seconds_json=json.dumps(session.phase_elapsed_seconds, default=_json_serial),
-        uploaded_images_json=json.dumps(session.uploaded_images, default=_json_serial),
+        uploaded_images_json=json.dumps(uploaded_images_list, default=_json_serial),
         is_complete=session.is_complete,
         created_at=session.created_at,
         updated_at=datetime.now(timezone.utc)

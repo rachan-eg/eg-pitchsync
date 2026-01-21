@@ -14,7 +14,7 @@ import React, { createContext, useContext, useMemo } from 'react';
 import { useSession, useTimer, useUI } from './providers';
 import type {
     UseCase, Theme, SessionState, PhaseDefinition, ScoringInfo,
-    SubmitPhaseResponse, PhaseResponse, LeaderboardEntry
+    SubmitPhaseResponse, PhaseResponse, LeaderboardEntry, PitchSubmission
 } from './types';
 
 // =============================================================================
@@ -44,9 +44,9 @@ export interface AppContextType {
     curatedPrompt: string;
     setCuratedPrompt: (prompt: string) => void;
     generatedImageUrl: string;
-    uploadedImages: string[];
-    activeRevealImage: string;
-    setActiveRevealImage: (url: string) => void;
+    uploadedImages: PitchSubmission[];
+    activeRevealSubmission: PitchSubmission | null;
+    setActiveRevealSubmission: (sub: PitchSubmission | null) => void;
 
     // UI State
     loading: boolean;
@@ -63,7 +63,7 @@ export interface AppContextType {
     startPhase: (phaseNum: number) => Promise<void>;
     submitPhase: (responses: PhaseResponse[]) => Promise<void>;
     handleFeedbackAction: (action: 'CONTINUE' | 'RETRY') => Promise<{ navigateTo?: string }>;
-    curatePrompt: () => Promise<void>;
+    curatePrompt: (force?: boolean) => Promise<void>;
     regeneratePrompt: (additionalNotes: string, conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>) => Promise<void>;
     submitPitchImage: (finalPrompt: string, file: File) => Promise<void>;
     resetToStart: () => void;

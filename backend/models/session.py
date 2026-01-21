@@ -62,6 +62,16 @@ class PhaseData(BaseModel):
     image_data: Optional[str] = None # Base64 encoded image evidence
 
 
+class PitchSubmission(BaseModel):
+    """Data for a single pitch visual submission."""
+    image_url: str
+    prompt: str
+    visual_score: float = 0.0
+    visual_feedback: str = ""
+    visual_alignment: str = "N/A"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 class FinalOutput(BaseModel):
     """Generated pitch assets."""
     visionary_hook: str = ""
@@ -98,7 +108,7 @@ class SessionState(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
     is_complete: bool = False
-    uploaded_images: List[str] = []  # NEW: For persisting multiple pitch visuals
+    uploaded_images: List[PitchSubmission] = []  # NEW: For persisting multiple pitch visuals with metrics
 
     model_config = {
         "arbitrary_types_allowed": True

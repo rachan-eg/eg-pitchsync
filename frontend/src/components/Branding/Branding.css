@@ -45,20 +45,6 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.branding-header .brand-title {
-    font-size: 1.1rem;
-    font-weight: 850;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-}
-
-.branding-header .branding-subtitle-group {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    margin-top: -2px;
-}
-
 .branding-header .powered-by {
     font-size: 0.65rem;
     opacity: 0.8;

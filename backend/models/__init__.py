@@ -1,7 +1,7 @@
 """Models package."""
 from backend.models.session import (
     SessionState, PhaseData, PhaseMetric, PhaseResponse,
-    PhaseStatus, FinalOutput
+    PhaseStatus, FinalOutput, PitchSubmission
 )
 from backend.models.api import (
     InitRequest, InitResponse,
@@ -23,7 +23,7 @@ from backend.models.ai_responses import (
 __all__ = [
     # Session models
     "SessionState", "PhaseData", "PhaseMetric", "PhaseResponse",
-    "PhaseStatus", "FinalOutput",
+    "PhaseStatus", "FinalOutput", "PitchSubmission",
     # API models
     "InitRequest", "InitResponse",
     "StartPhaseRequest", "StartPhaseResponse",

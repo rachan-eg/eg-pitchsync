@@ -7,6 +7,7 @@ import random
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 
 from backend.config import settings
 from backend.models import (
@@ -24,6 +25,7 @@ from backend.services import (
     get_or_assign_team_context, get_latest_session_for_team
 )
 from backend.services.ai import evaluate_phase_async
+from backend.services.ai.evaluator_streaming import evaluate_phase_streaming
 
 router = APIRouter(prefix="/api", tags=["session"])
 
@@ -306,6 +308,56 @@ async def start_phase(req: StartPhaseRequest):
     )
 
 
+@router.post("/submit-phase-stream")
+async def submit_phase_stream(req: SubmitPhaseRequest):
+    """
+    Submit answers for AI evaluation with real-time progress streaming (SSE).
+    Use this endpoint to get live updates as Red Team and Lead Partner agents run.
+    """
+    session = get_session(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Find phase config
+    phase_def = None
+    phase_number = session.current_phase
+    usecase_id = session.usecase.get('id') if isinstance(session.usecase, dict) else None
+    phases_repo = get_phases_for_usecase(usecase_id)
+    
+    for num, pdef in phases_repo.items():
+        if pdef["name"] == req.phase_name:
+            phase_def = pdef
+            phase_number = num
+            break
+    
+    if not phase_def:
+        raise HTTPException(status_code=400, detail="Unknown phase name")
+    
+    # Get retry info for previous_feedback
+    _, prev_feedback = _get_retry_info(session, req.phase_name)
+    
+    # Create streaming response
+    async def generate_stream():
+        async for chunk in evaluate_phase_streaming(
+            usecase=session.usecase,
+            phase_config=phase_def,
+            responses=[r.model_dump() for r in req.responses],
+            previous_feedback=prev_feedback,
+            image_data=req.image_data
+        ):
+            yield chunk
+    
+    return StreamingResponse(
+        generate_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )
+
+
 @router.post("/submit-phase", response_model=SubmitPhaseResponse)
 async def submit_phase(req: SubmitPhaseRequest):
     """Submit answers for AI evaluation."""
@@ -354,7 +406,10 @@ async def submit_phase(req: SubmitPhaseRequest):
     retries, prev_feedback = _get_retry_info(session, req.phase_name)
     
     # PRE-evaluation check for max retries (saves AI tokens)
-    if retries > settings.MAX_RETRIES:
+    # retries is 0-indexed (0=Initial, 1=Retry 1, ... 3=Retry 3)
+    # If returned retries is 3, it means we have fulfilled 3 retries (Initial + 3 tries = 4 total).
+    # So we should block if retries >= MAX_RETRIES.
+    if retries >= settings.MAX_RETRIES:
         raise HTTPException(status_code=400, detail=f"Maximum retries ({settings.MAX_RETRIES}) exceeded for this phase.")
     
     # Calculate token count
@@ -411,13 +466,21 @@ async def submit_phase(req: SubmitPhaseRequest):
         }
     else:
         # Normal AI Evaluation (async for multi-user concurrency)
-        eval_result = await evaluate_phase_async(
-            usecase=session.usecase,
-            phase_config=phase_def,
-            responses=[r.model_dump() for r in req.responses],
-            previous_feedback=prev_feedback,
-            image_data=req.image_data  # Pass visual evidence
-        )
+        try:
+            eval_result = await evaluate_phase_async(
+                usecase=session.usecase,
+                phase_config=phase_def,
+                responses=[r.model_dump() for r in req.responses],
+                previous_feedback=prev_feedback,
+                image_data=req.image_data  # Pass visual evidence
+            )
+        except TimeoutError as e:
+            # AI evaluation timed out - return a clean error to frontend
+            raise HTTPException(status_code=504, detail=str(e))
+        except Exception as e:
+            # Catch any other unexpected AI errors
+            print(f"❌ AI Evaluation error: {type(e).__name__}: {e}")
+            raise HTTPException(status_code=500, detail=f"AI evaluation failed: {str(e)}")
 
     # Calculate Hint Penalty
     total_hint_penalty = 0.0
@@ -580,9 +643,11 @@ def _get_retry_info(session: SessionState, phase_name: str) -> tuple[int, str | 
             if status in [PhaseStatus.PASSED, PhaseStatus.FAILED]:
                 completed_trials += 1
             
-            # The current submission will be the (completed + 1)-th attempt (0-indexed for retries)
-            # wait, if 0 trials completed, then retries=0. If 1 trial completed, retries=1.
-            retries = completed_trials
+            # The current submission will be the (completed + 1)-th attempt
+            # But "retries" implies RE-tries. So Initial attempt is retry 0 (or -1 clamped to 0).
+            # If 1 trial completed (Initial), retries = 0.
+            # If 2 trials completed (Initial + R1), retries = 1.
+            retries = max(0, completed_trials - 1)
                 
         except Exception as e:
             print(f"Retry detection error: {e}")

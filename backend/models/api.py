@@ -37,7 +37,7 @@ class InitResponse(BaseModel):
     extra_ai_tokens: int = 0
     phase_data: Optional[Dict[str, Any]] = None
     final_output: Optional[FinalOutput] = None
-    uploadedImages: Optional[List[str]] = None  # NEW: For persisting multiple pitch visuals
+    uploadedImages: Optional[List[Any]] = None  # NEW: For persisting multiple pitch visuals with metrics
     current_server_time: Optional[datetime] = None
 
 
@@ -100,6 +100,7 @@ class PrepareSynthesisRequest(BaseModel):
     """Request to prepare the master prompt."""
     session_id: str
     additional_notes: Optional[str] = None  # For regeneration with refinements
+    force_regenerate: bool = False # Bypass cache if true
 
 
 class PrepareSynthesisResponse(BaseModel):

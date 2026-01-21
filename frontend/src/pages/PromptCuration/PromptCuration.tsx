@@ -80,7 +80,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
     isLoading
 }) => {
     const navigate = useNavigate();
-    const { regeneratePrompt, submitPitchImage, uploadedImages, setActiveRevealImage, curatePrompt } = useApp();
+    const { regeneratePrompt, submitPitchImage, uploadedImages, setActiveRevealSubmission, curatePrompt } = useApp();
 
     const [editedPrompt, setEditedPrompt] = useState(curatedPrompt);
     const [additionalNotes, setAdditionalNotes] = useState('');
@@ -163,7 +163,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
             } else {
                 // REGENERATE MODE - Fresh start from current phase data
                 // This resets history and re-synthesizes from scratch
-                await curatePrompt();
+                await curatePrompt(true);
                 setConversationHistory([]);
             }
         } catch (error) {
@@ -235,6 +235,15 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
     };
 
     const handleSubmitPitch = async () => {
+        if (uploadedImages.length >= 3) {
+            // Already at max, just move to reveal with the latest submission
+            if (uploadedImages.length > 0) {
+                setActiveRevealSubmission(uploadedImages[uploadedImages.length - 1]);
+            }
+            navigate('/reveal');
+            return;
+        }
+
         if (!selectedFile) return;
         await submitPitchImage(editedPrompt, selectedFile);
         navigate('/reveal');
@@ -357,17 +366,17 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
                             {uploadedImages.length > 0 ? (
                                 <div className="curate-gallery__grid">
-                                    {uploadedImages.map((img, i) => (
+                                    {uploadedImages.map((sub, i) => (
                                         <div
                                             key={i}
                                             className="curate-gallery__item"
                                             onClick={() => {
-                                                setActiveRevealImage(img);
+                                                setActiveRevealSubmission(sub);
                                                 navigate('/reveal');
                                             }}
                                         >
                                             <img
-                                                src={img}
+                                                src={sub.image_url}
                                                 alt={`Submission ${i + 1}`}
                                                 className="curate-gallery__image"
                                             />
@@ -382,7 +391,6 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                         <div key={`empty-${i}`} className="curate-gallery__item curate-gallery__item--empty">
                                             <div className="curate-gallery__empty-content">
                                                 <span className="curate-gallery__empty-number">#{uploadedImages.length + i + 1}</span>
-                                                <span className="curate-gallery__empty-text">Awaiting</span>
                                             </div>
                                         </div>
                                     ))}
@@ -441,16 +449,15 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
                             <button
                                 onClick={handleSubmitPitch}
-                                disabled={isLoading || !selectedFile || isRegenerating || uploadedImages.length >= 3}
-                                className={`curate-finalize ${uploadedImages.length >= 3 ? 'curate-finalize--frozen' : ''}`}
-                                data-tooltip={uploadedImages.length >= 3 ? "Max limit reached" : ""}
+                                disabled={isLoading || isRegenerating || (uploadedImages.length < 3 && !selectedFile)}
+                                className="curate-finalize"
                             >
                                 {isLoading ? (
                                     <span>Processing...</span>
                                 ) : (
                                     <>
-                                        <Icons.Sparkles />
-                                        <span>{uploadedImages.length >= 3 ? "Max Limit Reached" : "Upload & Finalize"}</span>
+                                        {uploadedImages.length < 3 && <Icons.Sparkles />}
+                                        <span>{uploadedImages.length >= 3 ? "View Reveal Page" : "Upload & Finalize"}</span>
                                         <Icons.ChevronRight />
                                     </>
                                 )}

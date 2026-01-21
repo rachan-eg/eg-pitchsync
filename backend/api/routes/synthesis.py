@@ -40,6 +40,8 @@ async def prepare_synthesis(req: PrepareSynthesisRequest):
             usecase=session.usecase,
             all_phases_data=session.phases
         )
+    except TimeoutError as e:
+        raise HTTPException(status_code=504, detail=str(e))
     except Exception as e:
         print(f"⚠️ Draft synthesis failed, using fallback: {e}")
         usecase_title = session.usecase.get('title', 'Product') if isinstance(session.usecase, dict) else 'Product'
@@ -68,6 +70,8 @@ async def final_synthesis(req: FinalSynthesisRequest):
             all_phases_data=session.phases,
             theme=session.theme_palette
         )
+    except TimeoutError as e:
+        raise HTTPException(status_code=504, detail=str(e))
     except Exception as e:
         logger.error(f"❌ Final synthesis failed: {e}")
         # Provide fallback result so user can still proceed
@@ -130,10 +134,11 @@ async def curate_prompt(req: PrepareSynthesisRequest):
     current_hash = hashlib.md5("|".join(all_answers).encode()).hexdigest()
     
     # Bypass cache if additional_notes are provided (regeneration requested)
-    # OR if answers have changed
-    has_refinements = hasattr(req, 'additional_notes') and req.additional_notes
+    # OR if answers have changed OR if force_regenerate is true
+    has_refinements = bool(req.additional_notes)
+    force = getattr(req, 'force_regenerate', False)
     
-    if session.answers_hash == current_hash and session.final_output.image_prompt and not has_refinements:
+    if session.answers_hash == current_hash and session.final_output.image_prompt and not has_refinements and not force:
         # Ensure the cached prompt is a JSON string if it was stored as such
         cached_prompt_str = session.final_output.image_prompt
         if isinstance(cached_prompt_str, dict): # If it was stored as a dict for some reason
@@ -158,6 +163,8 @@ async def curate_prompt(req: PrepareSynthesisRequest):
             theme=session.theme_palette,
             additional_notes=additional_notes
         )
+    except TimeoutError as e:
+        raise HTTPException(status_code=504, detail=str(e))
     except Exception as e:
         import logging
         logger = logging.getLogger("pitchsync.api")
@@ -273,8 +280,29 @@ async def submit_pitch_image(
         if not hasattr(session, 'uploaded_images') or session.uploaded_images is None:
             session.uploaded_images = []
         
-        if image_url not in session.uploaded_images:
-            session.uploaded_images.append(image_url)
+        # Create submission object for history
+        from backend.models.session import PitchSubmission
+        new_submission = PitchSubmission(
+            image_url=image_url,
+            prompt=edited_prompt,
+            visual_score=v_result.visual_score,
+            visual_feedback=v_result.feedback,
+            visual_alignment=v_result.alignment_rating,
+            created_at=datetime.now(timezone.utc)
+        )
+        
+        # Check if already in history (by URL)
+        exists = False
+        for i, s in enumerate(session.uploaded_images):
+            # Handle both dicts and objects for safety
+            s_url = s.get('image_url') if isinstance(s, dict) else s.image_url
+            if s_url == image_url:
+                session.uploaded_images[i] = new_submission
+                exists = True
+                break
+        
+        if not exists:
+            session.uploaded_images.append(new_submission)
             session.uploaded_images = session.uploaded_images[-3:]
         
         update_session(session)

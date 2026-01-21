@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../AppContext';
-import type { SessionState } from '../../types';
+import type { SessionState, PitchSubmission } from '../../types';
 import './FinalReveal.css';
 
 interface FinalRevealProps {
     session: SessionState;
     imageUrl: string;
+    selectedSubmission?: PitchSubmission | null;
 }
 
 const Icons = {
@@ -24,7 +25,7 @@ const Icons = {
 const SLIDE_INTERVAL = 5000; // 5 seconds
 const TOTAL_SLIDES = 3;
 
-export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl }) => {
+export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, selectedSubmission }) => {
     const navigate = useNavigate();
     const { totalTokens, phaseConfig } = useApp();
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -241,18 +242,20 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl }) =
                                             <div className="final-reveal__metric-card">
                                                 <span className="final-reveal__metric-label">ALIGNMENT</span>
                                                 <span className="final-reveal__metric-value" style={{
-                                                    color: session.final_output.visual_alignment === 'High' ? 'var(--success)' :
-                                                        session.final_output.visual_alignment === 'Critical Mismatch' ? 'var(--danger)' : 'var(--warning)'
+                                                    color: (selectedSubmission?.visual_alignment || session.final_output.visual_alignment) === 'High' ? 'var(--success)' :
+                                                        (selectedSubmission?.visual_alignment || session.final_output.visual_alignment) === 'Critical Mismatch' ? 'var(--danger)' : 'var(--warning)'
                                                 }}>
-                                                    {session.final_output.visual_alignment || 'N/A'}
+                                                    {selectedSubmission?.visual_alignment || session.final_output.visual_alignment || 'N/A'}
                                                 </span>
                                             </div>
                                             <div className="final-reveal__metric-card">
                                                 <span className="final-reveal__metric-label">MATCH SCORE</span>
                                                 <span className="final-reveal__metric-value">
-                                                    {typeof session.final_output.visual_score === 'number'
-                                                        ? Math.round(session.final_output.visual_score * 100)
-                                                        : '0'}%
+                                                    {selectedSubmission
+                                                        ? Math.round((selectedSubmission.visual_score || 0) * 100)
+                                                        : (typeof session.final_output.visual_score === 'number'
+                                                            ? Math.round(session.final_output.visual_score * 100)
+                                                            : '0')}%
                                                 </span>
                                             </div>
                                         </div>
@@ -260,8 +263,8 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl }) =
                                         <div className="final-reveal__ai-report">
                                             <h4 className="final-reveal__sub-title">Analysis Highlights</h4>
                                             <div className="final-reveal__feedback-container">
-                                                {session.final_output.visual_feedback ? (
-                                                    session.final_output.visual_feedback.split(/[.!?]\s+/).filter(p => p.trim()).map((point, idx) => (
+                                                {(selectedSubmission?.visual_feedback || session.final_output.visual_feedback) ? (
+                                                    (selectedSubmission?.visual_feedback || session.final_output.visual_feedback || '').split(/[.!?]\s+/).filter(p => p.trim()).map((point, idx) => (
                                                         <div key={idx} className="final-reveal__feedback-point">
                                                             <div className="final-reveal__point-bullet" />
                                                             <p>{point.trim()}{point.trim().match(/[.!?]$/) ? '' : '.'}</p>

@@ -499,14 +499,6 @@
     font-family: 'JetBrains Mono', monospace;
 }
 
-.curate-gallery__empty-text {
-    font-size: 0.55rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.15);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-}
-
 /* Empty State (No Images) */
 .curate-gallery__empty-state {
     flex: 1;

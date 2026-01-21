@@ -19,6 +19,7 @@ import { ErrorModal } from './components/ErrorModal/ErrorModal';
 import { PhaseFeedback } from './components/PhaseFeedback/PhaseFeedback';
 import { PhaseInput } from './components/PhaseInput/PhaseInput';
 import { AuthLoading } from './components/AuthLoading/AuthLoading';
+import { TacticalLoader } from './components/TacticalLoader';
 
 
 // =============================================================================
@@ -99,12 +100,7 @@ const MissionBriefPage: React.FC = () => {
 
     // Show loading while initializing
     if (isInitializing || (!session && teamCodeInfo)) {
-        return (
-            <div className="flex items-center justify-center h-screen flex-col gap-4">
-                <div className="loading-spinner"></div>
-                <p className="text-white/60">Preparing your mission...</p>
-            </div>
-        );
+        return <TacticalLoader message="Preparing Mission" subMessage="Establishing secure uplink with command center..." />;
     }
 
     // Show error if initialization failed
@@ -126,12 +122,7 @@ const MissionBriefPage: React.FC = () => {
     }
 
     if (!session) {
-        return (
-            <div className="flex items-center justify-center h-screen flex-col gap-4">
-                <div className="loading-spinner"></div>
-                <p className="text-white/60">Synchronizing team strategy...</p>
-            </div>
-        );
+        return <TacticalLoader message="Syncing Strategy" subMessage="Loading team configuration..." />;
     }
 
     return (
@@ -152,12 +143,7 @@ const WarRoomPage: React.FC = () => {
         loading
     } = useApp();
     if (!session) {
-        return (
-            <div className="flex items-center justify-center h-screen flex-col gap-4">
-                <div className="loading-spinner"></div>
-                <p className="text-white/60">Recalibrating war room state...</p>
-            </div>
-        );
+        return <TacticalLoader message="War Room" subMessage="Recalibrating tactical interface..." />;
     }
 
     const currentPhase = phaseConfig[session.current_phase];
@@ -187,12 +173,7 @@ const PromptCurationPage: React.FC = () => {
     const { session, curatedPrompt, loading } = useApp();
 
     if (!session) {
-        return (
-            <div className="flex items-center justify-center h-screen flex-col gap-4">
-                <div className="loading-spinner"></div>
-                <p className="text-white/60">Accessing strategic assets...</p>
-            </div>
-        );
+        return <TacticalLoader message="Vision Curation" subMessage="Accessing strategic assets..." />;
     }
 
     return (
@@ -210,24 +191,20 @@ const PromptCurationPage: React.FC = () => {
 import { getFullUrl } from './utils';
 
 const FinalRevealPage: React.FC = () => {
-    const { session, activeRevealImage } = useApp();
+    const { session, activeRevealSubmission } = useApp();
 
     if (!session) {
-        return (
-            <div className="flex items-center justify-center h-screen flex-col gap-4">
-                <div className="loading-spinner"></div>
-                <p className="text-white/60">Preparing briefing finalization...</p>
-            </div>
-        );
+        return <TacticalLoader message="Final Reveal" subMessage="Preparing briefing finalization..." />;
     }
 
     // Determine the best image URL to show (current selection OR session default)
-    const effectiveImageUrl = activeRevealImage || (session.final_output?.image_url ? getFullUrl(session.final_output.image_url) : '');
+    const effectiveImageUrl = activeRevealSubmission?.image_url || (session.final_output?.image_url ? getFullUrl(session.final_output.image_url) : '');
 
     return (
         <FinalReveal
             session={session}
             imageUrl={effectiveImageUrl}
+            selectedSubmission={activeRevealSubmission}
         />
     );
 };
@@ -236,12 +213,7 @@ const PresentationModePage: React.FC = () => {
     const { session, generatedImageUrl } = useApp();
 
     if (!session) {
-        return (
-            <div className="flex items-center justify-center h-screen flex-col gap-4">
-                <div className="loading-spinner"></div>
-                <p className="text-white/60">Synchronizing presentation deck...</p>
-            </div>
-        );
+        return <TacticalLoader message="Presentation" subMessage="Synchronizing presentation deck..." />;
     }
 
     return (

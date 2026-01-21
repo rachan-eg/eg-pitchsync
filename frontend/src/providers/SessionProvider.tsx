@@ -18,7 +18,7 @@ import { useUI } from './UIProvider';
 import type {
     UseCase, Theme, SessionState, PhaseDefinition, ScoringInfo,
     InitResponse, StartPhaseResponse, SubmitPhaseResponse, PhaseResponse,
-    PhaseStatus, PhaseMetrics
+    PhaseStatus, PhaseMetrics, PitchSubmission
 } from '../types';
 
 // =============================================================================
@@ -68,9 +68,9 @@ interface SessionContextType {
     curatedPrompt: string;
     setCuratedPrompt: (prompt: string) => void;
     generatedImageUrl: string;
-    uploadedImages: string[];
-    activeRevealImage: string;
-    setActiveRevealImage: (url: string) => void;
+    uploadedImages: PitchSubmission[];
+    activeRevealSubmission: PitchSubmission | null;
+    setActiveRevealSubmission: (sub: PitchSubmission | null) => void;
 
     // Token Usage (display only - calculated by backend)
     totalTokens: { payload: number; ai: number; total: number };
@@ -81,7 +81,7 @@ interface SessionContextType {
     startPhase: (phaseNum: number) => Promise<void>;
     submitPhase: (responses: PhaseResponse[]) => Promise<void>;
     handleFeedbackAction: (action: 'CONTINUE' | 'RETRY') => Promise<{ navigateTo?: string }>;
-    curatePrompt: () => Promise<void>;
+    curatePrompt: (force?: boolean) => Promise<void>;
     regeneratePrompt: (additionalNotes: string, conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>) => Promise<void>;
     submitPitchImage: (finalPrompt: string, file: File) => Promise<void>;
     resetToStart: () => void;
@@ -115,8 +115,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Prompt & Image State
     const [curatedPrompt, setCuratedPrompt] = useState('');
     const [generatedImageUrl, setGeneratedImageUrl] = useState('');
-    const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-    const [activeRevealImage, setActiveRevealImage] = useState('');
+    const [uploadedImages, setUploadedImages] = useState<PitchSubmission[]>([]);
+    const [activeRevealSubmission, setActiveRevealSubmission] = useState<PitchSubmission | null>(null);
 
     // Volatile states that we need in callbacks but don't want to trigger re-renders of the callbacks themselves
     const loadingRef = useRef(loading);
@@ -191,9 +191,24 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     }
 
                     if (parsedSession.uploadedImages) {
-                        const urls = parsedSession.uploadedImages.map((u: string) => getFullUrl(u));
-                        setUploadedImages(urls);
-                        if (urls.length > 0) setActiveRevealImage(urls[urls.length - 1]);
+                        const submissions = parsedSession.uploadedImages.map((s: any) => {
+                            if (typeof s === 'string') {
+                                return {
+                                    image_url: getFullUrl(s),
+                                    prompt: '',
+                                    visual_score: 0,
+                                    visual_feedback: '',
+                                    visual_alignment: 'N/A',
+                                    created_at: new Date().toISOString()
+                                };
+                            }
+                            return {
+                                ...s,
+                                image_url: getFullUrl(s.image_url)
+                            };
+                        });
+                        setUploadedImages(submissions);
+                        if (submissions.length > 0) setActiveRevealSubmission(submissions[submissions.length - 1]);
                     }
 
                     const unlocked = calculateHighestUnlockedPhase(
@@ -256,6 +271,18 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // =========================================================================
     const { timerState } = useTimer(); // Need this to check running state
 
+    // Ref to track if we need to start timer after state update (avoids setState during render)
+    const pendingTimerStartRef = useRef<{ shouldStart: boolean; baseline: number }>({ shouldStart: false, baseline: 0 });
+
+    // Effect to handle deferred timer start (prevents setState-during-render warning)
+    useEffect(() => {
+        if (pendingTimerStartRef.current.shouldStart) {
+            console.log(`[Timer] Deferred start from baseline: ${pendingTimerStartRef.current.baseline}s`);
+            startTimer(pendingTimerStartRef.current.baseline);
+            pendingTimerStartRef.current = { shouldStart: false, baseline: 0 };
+        }
+    });
+
     const setCurrentPhaseResponses = useCallback((responses: PhaseResponse[]) => {
         if (loadingRef.current || phaseResultRef.current) {
             setCurrentPhaseResponsesInternal(responses);
@@ -273,7 +300,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             const updatedPhases = { ...prev.phases };
             const phaseData = updatedPhases[phaseName];
 
-            // Timer logic moved inside to be safe
+            // Timer logic: detect edits on passed phases
+            // NOTE: We can't call startTimer here directly (causes setState-during-render)
+            // Instead, we flag it for the next effect cycle
             if (phaseData?.status === 'passed') {
                 const existingResponses = phaseData.responses || [];
                 const hasChanges = responses.some((r, i) => {
@@ -283,9 +312,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
                 if (hasChanges && timerState !== 'RUNNING') {
                     const storedDuration = phaseData.metrics?.duration_seconds || 0;
-                    console.log(`[Timer] Edit detected on passed phase, starting timer from baseline: ${storedDuration}s`);
-                    // We call startTimer here - it's stable
-                    startTimer(Math.round(storedDuration));
+                    // Defer timer start to useEffect
+                    pendingTimerStartRef.current = { shouldStart: true, baseline: Math.round(storedDuration) };
                 }
             }
 
@@ -309,11 +337,28 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const processInitResponse = useCallback((data: InitResponse, teamId: string) => {
         const isResumedSession = !!(data.phase_scores && Object.keys(data.phase_scores).length > 0);
 
+        const initialSubmissions: PitchSubmission[] = (data.uploadedImages || []).map((s: any) => {
+            if (typeof s === 'string') {
+                return {
+                    image_url: getFullUrl(s),
+                    prompt: '',
+                    visual_score: 0,
+                    visual_feedback: '',
+                    visual_alignment: 'N/A',
+                    created_at: new Date().toISOString()
+                };
+            }
+            return {
+                ...s,
+                image_url: getFullUrl(s.image_url)
+            };
+        });
+
         const newSession: SessionState = {
             session_id: data.session_id,
             team_id: teamId,
             usecase: data.usecase,
-            usecase_context: data.usecase.target_market,
+            usecase_context: data.usecase.target_market || '',
             current_phase: data.current_phase || 1,
             phases: data.phase_data || {},
             theme_palette: data.theme,
@@ -324,14 +369,14 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 image_url: '',
                 generated_at: null
             },
-            total_score: Object.values(data.phase_scores || {}).reduce((a, b) => a + b, 0),
+            total_score: Object.values(data.phase_scores || {}).reduce((a, b) => (a as number) + (b as number), 0) as number,
             phase_scores: data.phase_scores || {},
             created_at: new Date().toISOString(),
             completed_at: null,
             is_complete: data.is_complete || false,
             total_tokens: data.total_tokens || 0,
             extra_ai_tokens: data.extra_ai_tokens || 0,
-            uploadedImages: data.uploadedImages || []
+            uploadedImages: initialSubmissions
         };
 
         setSession(newSession);
@@ -342,10 +387,21 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         if (data.final_output) {
             if (data.final_output.image_prompt) setCuratedPrompt(data.final_output.image_prompt);
-            if (data.final_output.image_url) {
-                const url = getFullUrl(data.final_output.image_url);
-                setGeneratedImageUrl(url);
-                setActiveRevealImage(url);
+            const url = getFullUrl(data.final_output.image_url);
+            setGeneratedImageUrl(url);
+
+            setUploadedImages(initialSubmissions);
+            if (initialSubmissions.length > 0) {
+                setActiveRevealSubmission(initialSubmissions[initialSubmissions.length - 1]);
+            } else if (data.final_output && data.final_output.image_url) {
+                setActiveRevealSubmission({
+                    image_url: url,
+                    prompt: data.final_output.image_prompt,
+                    visual_score: data.final_output.visual_score || 0,
+                    visual_feedback: data.final_output.visual_feedback || '',
+                    visual_alignment: data.final_output.visual_alignment || 'N/A',
+                    created_at: data.final_output.generated_at || new Date().toISOString()
+                });
             }
         }
 
@@ -353,7 +409,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setHighestUnlockedPhase(unlocked);
 
         // Timer initialization - handle both new and resumed sessions
-        const phaseDef = data.phases[data.current_phase || 1];
+        const targetPhase = data.current_phase || 1;
+        const phaseDef = data.phases[targetPhase];
         const phaseData = phaseDef ? data.phase_data?.[phaseDef.name] : null;
         const isPhaseComplete = phaseData?.status === 'passed';
 
@@ -363,29 +420,28 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             const serverStartTime = new Date(data.current_phase_started_at).getTime();
             const serverNow = data.current_server_time ? new Date(data.current_server_time).getTime() : Date.now();
             const elapsedSecs = Math.max(0, Math.floor((serverNow - serverStartTime) / 1000));
-            console.log(`[Timer] Resuming session, elapsed: ${elapsedSecs}s`);
             startTimer(elapsedSecs);
         } else {
-            console.log('[Timer] Starting fresh timer for new session');
             startTimer(0);
         }
 
         if (isResumedSession && data.phase_data) {
-            const phaseDef = data.phases[data.current_phase || 1];
-            if (phaseDef) {
-                const phaseData = data.phase_data[phaseDef.name];
-                if (phaseData?.responses) {
-                    setCurrentPhaseResponses(phaseData.responses);
+            const currentPhaseDef = data.phases[targetPhase];
+            if (currentPhaseDef) {
+                const currentPhaseData = data.phase_data[currentPhaseDef.name];
+                if (currentPhaseData?.responses) {
+                    setCurrentPhaseResponsesInternal(currentPhaseData.responses);
                 }
             }
         }
 
         return {
             isResumed: isResumedSession,
-            isComplete: data.is_complete || false,
+            isComplete: !!data.is_complete,
             currentPhase: data.current_phase || 1
         };
-    }, [startTimer, stopTimer]); // Removed setCurrentPhaseResponses dependency
+    }, [startTimer, stopTimer]);
+    // Removed setCurrentPhaseResponses dependency
 
     const initSession = useCallback(async (teamId: string) => {
         if (!selectedUsecase || !selectedTheme) return { success: false, isResumed: false, isComplete: false, currentPhase: 1 };
@@ -707,7 +763,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }, [phaseResult, session, phaseConfig, startPhase, stopTimer]);
 
-    const curatePrompt = useCallback(async () => {
+    const curatePrompt = useCallback(async (force?: boolean) => {
         if (!session) return;
         setLoading(true);
 
@@ -717,7 +773,10 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 const res = await fetch(getApiUrl('/api/curate-prompt'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: session.session_id })
+                    body: JSON.stringify({
+                        session_id: session.session_id,
+                        force_regenerate: force || false
+                    })
                 });
 
                 if (res.ok) {
@@ -834,8 +893,14 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     const data = await res.json();
                     const url = getFullUrl(data.image_url || '');
 
-                    setGeneratedImageUrl(url);
-                    setCuratedPrompt(data.prompt_used || finalPrompt);
+                    const newSubmission: PitchSubmission = {
+                        image_url: url,
+                        prompt: data.prompt_used || finalPrompt,
+                        visual_score: data.visual_metrics?.score || 0,
+                        visual_feedback: data.visual_metrics?.feedback || '',
+                        visual_alignment: data.visual_metrics?.alignment || 'N/A',
+                        created_at: new Date().toISOString()
+                    };
 
                     // Backend provides authoritative totals
                     setSession(prev => prev ? {
@@ -853,11 +918,12 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                             visual_alignment: data.visual_metrics?.alignment
                         },
                         extra_ai_tokens: data.extra_ai_tokens,
-                        uploadedImages: [...(prev.uploadedImages || []), url].slice(-3)
+                        uploadedImages: [...(prev.uploadedImages || []), newSubmission].slice(-3)
                     } : null);
 
-                    setUploadedImages(prev => [...prev, url].slice(-3));
-                    setActiveRevealImage(url);
+                    setUploadedImages(prev => [...prev, newSubmission].slice(-3));
+                    setActiveRevealSubmission(newSubmission);
+                    setGeneratedImageUrl(url);
                     setLoading(false);
                     return;  // Success
                 }
@@ -916,8 +982,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             setCuratedPrompt,
             generatedImageUrl,
             uploadedImages,
-            activeRevealImage,
-            setActiveRevealImage,
+            activeRevealSubmission,
+            setActiveRevealSubmission,
             totalTokens,
             initSession,
             initSessionFromTeamCode,
