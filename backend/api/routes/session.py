@@ -405,19 +405,49 @@ async def submit_phase(req: SubmitPhaseRequest):
     # Check for retries
     retries, prev_feedback = _get_retry_info(session, req.phase_name)
     
+    # Check for redundant submission (identical answers to a previously passed phase)
+    existing_phase = session.phases.get(req.phase_name)
+    
     # PRE-evaluation check for max retries (saves AI tokens)
     # retries is 0-indexed (0=Initial, 1=Retry 1, ... 3=Retry 3)
     # If returned retries is 3, it means we have fulfilled 3 retries (Initial + 3 tries = 4 total).
-    # So we should block if retries >= MAX_RETRIES.
-    if retries >= settings.MAX_RETRIES:
-        raise HTTPException(status_code=400, detail=f"Maximum retries ({settings.MAX_RETRIES}) exceeded for this phase.")
+    # So we should block if retries > MAX_RETRIES.
+    if retries > settings.MAX_RETRIES:
+        # Instead of 400 Error, return a logical Failure response so the UI shows "FAILED" page
+        return SubmitPhaseResponse(
+            passed=False,
+            ai_score=0,
+            phase_score=0,
+            total_score=session.total_score,
+            feedback="Maximum retries exceeded for this phase.",
+            rationale="The allowed number of attempts has been used without achieving a passing score.",
+            strengths=[],
+            improvements=["Review phase requirements and try again."],
+            metrics={
+                "ai_quality_points": 0,
+                "time_penalty": 0,
+                "retry_penalty": 0,
+                "retries": retries,
+                "hint_penalty": 0,
+                "efficiency_bonus": 0,
+                "phase_weight": phase_def.get("weight", 0.33),
+                "duration_seconds": total_elapsed_seconds,
+                "tokens_used": 0,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_ai_tokens": 0
+            },
+            can_proceed=(retries >= settings.MAX_RETRIES or settings.ALLOW_FAIL_PROCEED),
+            is_final_phase=phase_number >= len(phases_repo),
+            total_tokens=session.total_tokens,
+            extra_ai_tokens=session.extra_ai_tokens,
+            history=existing_phase.history if existing_phase else []
+        )
     
     # Calculate token count
     total_chars = sum(len(r.a) for r in req.responses)
     tokens = total_chars // 4
 
-    # Check for redundant submission (identical answers to a previously passed phase)
-    existing_phase = session.phases.get(req.phase_name)
     if existing_phase and existing_phase.status == "passed":
         current_answers = [(r.a, r.hint_used) for r in req.responses]
         existing_answers = [(r.a, r.hint_used) for r in existing_phase.responses]
@@ -587,10 +617,13 @@ async def submit_phase(req: SubmitPhaseRequest):
     
     # Check if final phase
     is_final = phase_number >= len(phases_repo)
-    can_proceed = passed and not is_final
+    # Determine if user can move to THE NEXT phase (or curation)
+    # They can proceed if they passed OR they've exhausted retries OR we allow fail-proceed
+    is_exhausted = retries >= settings.MAX_RETRIES
+    can_proceed = (passed or is_exhausted or settings.ALLOW_FAIL_PROCEED)
     
     # Prep next phase if applicable
-    if passed and not is_final:
+    if can_proceed and not is_final:
         next_phase = phase_number + 1
         # Record start time for next phase directly in session object
         session.phase_start_times[f"phase_{next_phase}"] = datetime.now(timezone.utc)
@@ -644,10 +677,10 @@ def _get_retry_info(session: SessionState, phase_name: str) -> tuple[int, str | 
                 completed_trials += 1
             
             # The current submission will be the (completed + 1)-th attempt
-            # But "retries" implies RE-tries. So Initial attempt is retry 0 (or -1 clamped to 0).
-            # If 1 trial completed (Initial), retries = 0.
-            # If 2 trials completed (Initial + R1), retries = 1.
-            retries = max(0, completed_trials - 1)
+            # "retries" implies the count of previous attempts. 
+            # Initial attempt (0 previous) -> retries = 0.
+            # Retry 1 (1 previous) -> retries = 1.
+            retries = completed_trials
                 
         except Exception as e:
             print(f"Retry detection error: {e}")

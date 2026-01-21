@@ -208,30 +208,35 @@ export const PhaseFeedback: React.FC<PhaseFeedbackProps> = ({
                     </div>
 
                     <div className="phase-feedback__action-buttons">
-                        {!isSuccess ? (
-                            <button
-                                onClick={onRetry}
-                                className="phase-feedback__btn phase-feedback__btn--retry btn-primary"
-                            >
+                        {/* WARNING MESSAGE (Failure Proceed) */}
+                        {!isSuccess && result.can_proceed && (
+                            <div className="phase-feedback__proceed-warning">
+                                Note: Proceeding without achieving target clearance.
+                            </div>
+                        )}
+
+                        {/* SECONDARY ACTION: BACK */}
+                        {onClose && (isSuccess || result.can_proceed) && (
+                            <button onClick={onClose} className="phase-feedback__btn btn-secondary">
+                                Back
+                            </button>
+                        )}
+
+                        {/* SECONDARY ACTION: RETRY (Only if NOT passed and NOT exhausted, OR if ALLOW_FAIL_PROCEED is true but we still want to offer retry) */}
+                        {!isSuccess && !result.can_proceed && (
+                            <button onClick={onRetry} className="phase-feedback__btn phase-feedback__btn--retry btn-primary">
                                 RETRY PHASE
                             </button>
-                        ) : (
-                            <>
-                                {onClose && (
-                                    <button
-                                        onClick={onClose}
-                                        className="phase-feedback__btn btn-secondary"
-                                    >
-                                        Back
-                                    </button>
-                                )}
-                                <button
-                                    onClick={onContinue}
-                                    className="phase-feedback__btn phase-feedback__btn--continue btn-primary"
-                                >
-                                    {result.is_final_phase ? 'COMPLETE PHASE' : 'NEXT PHASE →'}
-                                </button>
-                            </>
+                        )}
+
+                        {/* PRIMARY ACTION: CONTINUE / NEXT */}
+                        {(isSuccess || result.can_proceed) && (
+                            <button
+                                onClick={onContinue}
+                                className="phase-feedback__btn phase-feedback__btn--continue btn-primary"
+                            >
+                                {result.is_final_phase ? 'COMPLETE PHASE' : 'NEXT PHASE →'}
+                            </button>
                         )}
                     </div>
                 </div>

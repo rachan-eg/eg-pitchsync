@@ -661,3 +661,24 @@
     padding-left: 3rem;
     padding-right: 3rem;
 }
+
+.phase-feedback__proceed-warning {
+    display: none;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 4px;
+    color: #f87171;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-right: auto;
+}
+
+@media (min-width: 1024px) {
+    .phase-feedback__proceed-warning {
+        display: flex;
+    }
+}

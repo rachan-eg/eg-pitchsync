@@ -80,17 +80,14 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     // Check if phase is locked (no more editing allowed)
     // Only lock if we have a genuine pass (above score threshold) 
     // OR if we have exhausted all available retries.
+    // Only lock if we have exhausted all available retries.
     const phaseName = phaseConfig[phaseNumber]?.name;
     const existingPhase = session?.phases[phaseName];
-    const isPhasePassed = existingPhase?.status === 'passed';
     const retriesUsed = existingPhase?.metrics?.retries || 0;
     const maxRetries = scoringInfo?.max_retries || 3;
     const noRetriesLeft = retriesUsed >= maxRetries;
-    const passThreshold = scoringInfo?.pass_threshold || 0.65;
-    const currentScore = existingPhase?.metrics?.ai_score || 0;
-    const isRealPass = isPhasePassed && currentScore >= passThreshold;
 
-    const isLocked = isRealPass || noRetriesLeft;
+    const isLocked = noRetriesLeft;
 
     // Internal Sync logic (Memoized)
     const syncToProvider = useCallback((newAnswers: string[], newHints: boolean[]) => {
@@ -216,18 +213,16 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
 
     const handleSubmit = async () => {
-        // Check if we should just show the existing result instead of re-evaluating
-        const pName = phaseConfig[phaseNumber]?.name;
-        const existingPhase = session?.phases[pName];
+        const existingPhase = session?.phases[phaseConfig[phaseNumber]?.name];
         const isPassed = existingPhase?.status === 'passed';
-        const isFailed = existingPhase?.status === 'failed';
-        const retriesUsed = existingPhase?.metrics?.retries || 0;
-        const maxRetries = scoringInfo?.max_retries || 3;
-        const noRetriesLeft = retriesUsed >= maxRetries;
 
-        // If phase has a final result (passed OR failed with max retries) AND no changes,
+        // If phase has a previously recorded result AND no changes,
         // just show the existing result - don't re-evaluate
-        const hasExistingResult = isPassed || (isFailed && noRetriesLeft);
+        const hasExistingResult = !!existingPhase && (
+            isPassed ||
+            existingPhase.status === 'failed' ||
+            (existingPhase.metrics && (existingPhase.metrics.ai_score > 0 || existingPhase.metrics.weighted_score > 0))
+        );
         if (hasExistingResult && !anyChanges && existingPhase) {
             // Reconstruct the phase result from cached data to show feedback modal
             const cachedResult: SubmitPhaseResponse = {
@@ -504,7 +499,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                         {isLocked && (
                             <div className="pi-locked-banner">
                                 <Icons.Shield />
-                                <span>{isPhasePassed ? 'Phase Cleared - Response Locked' : 'Maximum Retries Exhausted - Response Locked'}</span>
+                                <span>Maximum Retries Exhausted - Response Locked</span>
                             </div>
                         )}
                         {isEditing && !isLocked ? (
@@ -603,19 +598,14 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                         {(() => {
                             const pName = phaseConfig[phaseNumber]?.name;
                             const existing = session?.phases[pName];
-                            const isPassed = existing?.status === 'passed';
-                            const retriesUsed = existing?.metrics?.retries || 0;
-                            const maxRetries = scoringInfo?.max_retries || 3;
-                            const noRetriesLeft = retriesUsed >= maxRetries;
 
-                            const passThreshold = scoringInfo?.pass_threshold || 0.65;
-                            const currentScore = existing?.metrics?.ai_score || 0;
-                            const isRealPass = isPassed && currentScore >= passThreshold;
-
-                            // Show "Review Evaluation" for:
-                            // 1. Genuine passed phases with no changes, OR
-                            // 2. Any phase where max retries are exhausted and there are no changes
-                            const hasExistingResult = isRealPass || noRetriesLeft;
+                            // Show "Review Evaluation" for ANY phase that already has 
+                            // a recorded result (pass or fail) if no changes have been made.
+                            const hasExistingResult = !!existing && (
+                                existing.status === 'passed' ||
+                                existing.status === 'failed' ||
+                                (existing.metrics && (existing.metrics.ai_score > 0 || existing.metrics.weighted_score > 0))
+                            );
                             const showReview = hasExistingResult && !anyChanges;
 
                             return (
@@ -711,8 +701,8 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 const existing = session?.phases[pName];
                                 const displayRetries = existing?.metrics?.retries || 0;
                                 return (
-                                    <span className="pi-scoring-val" style={{ color: displayRetries > (scoringInfo?.max_retries || 3) ? 'var(--danger)' : (displayRetries > 0 ? 'var(--text-primary)' : 'var(--text-muted)') }}>
-                                        {displayRetries} <span style={{ fontSize: '0.8em', opacity: 0.7 }}>/ {scoringInfo?.max_retries || 3}</span>
+                                    <span className="pi-scoring-val" style={{ color: displayRetries >= (scoringInfo?.max_retries || 3) ? 'var(--danger)' : (displayRetries > 0 ? 'var(--text-primary)' : 'var(--text-muted)') }}>
+                                        {Math.min(displayRetries, scoringInfo?.max_retries || 3)} <span style={{ fontSize: '0.8em', opacity: 0.7 }}>/ {scoringInfo?.max_retries || 3}</span>
                                     </span>
                                 );
                             })()}
@@ -754,7 +744,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
                                 // In the case of in_progress, we prioritize showing the DRAFT if there are changes.
                                 // If no changes yet, we just show the last evaluated state as "CURRENT".
-                                const canAddDraft = anyChanges && (allAttempts.length < (scoringInfo?.max_retries || 3));
+                                const canAddDraft = anyChanges && (allAttempts.length <= (scoringInfo?.max_retries || 3));
 
                                 if (canAddDraft) {
                                     // The evaluated one is now technically previous

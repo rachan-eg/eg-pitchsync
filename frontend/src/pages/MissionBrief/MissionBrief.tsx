@@ -210,15 +210,10 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
                         <div className="mission-brief__panel-content">
                             <div className="mission-brief__summary">
                                 <div className="mission-brief__summary-header">Mission Timeline</div>
-                                {phaseList.map((phase, idx) => (
-                                    <div key={phase.id} className="mission-brief__summary-row">
-                                        <span className="label">0{idx + 1}</span>
-                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                            <span className="value">{phase.name}</span>
-                                            <span style={{ fontSize: '0.7em', color: 'rgba(255,255,255,0.4)' }}>
-                                                {Math.round(phase.weight * 100)}%
-                                            </span>
-                                        </div>
+                                {phaseList.map((phase) => (
+                                    <div key={phase.id} className="mission-brief__summary-row mission-brief__summary-row--phase">
+                                        <span className="value">{phase.name}</span>
+                                        <span className="weight">{Math.round(phase.weight * 100)}%</span>
                                     </div>
                                 ))}
                                 <div className="mission-brief__summary-row highlight">

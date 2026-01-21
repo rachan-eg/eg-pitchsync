@@ -721,10 +721,26 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             } catch (err) {
                 lastError = err instanceof Error ? err : new Error('Unknown error');
 
+                // Check if this is a "valid" API error (4xx) that shouldn't be retried
+                // If the error message came from our 4xx handler, it's likely a logic error, not transient.
+                // We'll assume if it's not a network error and not a 500 (handled above with continue), we shouldn't retry.
+                // However, detecting "network error" vs "400 error" here is tricky since we just threw Error(message).
+
+                // Simplification: If the error message starts with specific keywords or if we know it's a 400, abort.
+                // Since we threw the error ourselves from !res.ok, let's refine that throw.
+
                 // If this was the last attempt, throw
                 if (attempt >= maxRetries) {
                     setError(lastError.message);
-                    resumeTimer(); // Resume timer if submission failed so player can fix and retry
+                    resumeTimer();
+                    setLoading(false);
+                    return;
+                }
+
+                // If message indicates max retries, don't retry network
+                if (lastError.message.includes("Maximum retries") || lastError.message.includes("exceeded")) {
+                    setError(lastError.message);
+                    resumeTimer();
                     setLoading(false);
                     return;
                 }
