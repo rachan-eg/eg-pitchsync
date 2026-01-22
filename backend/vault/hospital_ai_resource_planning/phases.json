@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's healthcare AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Resource planning complexity, constraint consideration overwhelming, scenario exploration difficulty, planning iteration time consumption, optimization suboptimality",
+                "focus": "Identify the complexity burden preventing effective resource planning and scenario exploration.",
+                "hint_text": "Describe how planners juggle overwhelming constraints—staff availability, skill requirements, patient volumes, regulatory ratios, budget limits. Mention time consumed manually evaluating scenarios. Explain suboptimal plans from human capacity limits.",
+                "ideal_answer": "Hospital resource planners face overwhelming complexity balancing countless constraints—nursing staff availability, specialty skill requirements, patient census fluctuations, regulatory staffing ratios, budget limitations, shift preferences, training schedules, and operational coverage needs. Manual planning consumes days evaluating scenarios and adjusting assignments, yet produces suboptimal schedules missing efficiency opportunities that comprehensive optimization would reveal. Scenario exploration proves impractical when each iteration requires extensive manual calculation and constraint checking. When conditions change—census spikes, staff illness, emergency demands—replanning requires repeating the entire tedious process. This manual burden results in planner burnout from administrative intensity, suboptimal resource utilization from human optimization limits, delayed response to changing needs, and limited strategic planning capacity consumed by operational scheduling tasks.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Planning time reduction, resource utilization optimization, scenario exploration enablement, adaptation speed improvement, decision quality enhancement",
+                "focus": "Quantify planning efficiency and resource optimization with clear strategic capacity benefits.",
+                "hint_text": "Focus on dramatic planning time reduction enabling strategic focus. Mention resource utilization optimization within constraints. Emphasize rapid scenario exploration supporting better decisions.",
+                "ideal_answer": "Resource planners reclaim substantial time from automated constraint optimization, redirecting effort toward strategic workforce development and operational improvement rather than tedious scheduling calculations. Resource utilization improves through comprehensive optimization identifying efficient assignments manual planning overlooks while respecting all operational and regulatory constraints. Scenario exploration becomes practical with rapid iteration enabling evaluation of multiple approaches before committing to plans. Adaptation speed increases dramatically when census changes or staffing disruptions require replanning, maintaining optimization despite volatility. The operational impact manifests through improved staff satisfaction from balanced workloads and preference consideration, enhanced patient care quality from optimal skill deployment, reduced labor costs from efficiency gains, and strategic planning capacity enabling workforce development initiatives previously impossible during manual scheduling burden.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Healthcare resource planning expertise, clinical constraint understanding, optimization sophistication, regulatory compliance intelligence, iterative planning design",
+                "focus": "Highlight healthcare operations expertise and comprehensive constraint optimization that generic scheduling tools lack.",
+                "hint_text": "Highlight understanding healthcare staffing constraints versus generic workforce scheduling. Contrast comprehensive optimization with simple assignment tools. Emphasize regulatory compliance intelligence and iterative scenario planning capability.",
+                "ideal_answer": "The solution delivers superior resource planning through deep healthcare operations expertise, understanding clinical staffing requirements, regulatory ratios, specialty skill needs, and patient care continuity rather than generic workforce scheduling tools. Comprehensive constraint optimization balances multiple competing objectives—coverage requirements, budget limits, staff preferences, skill matching, training needs—producing feasible plans respecting all operational realities simultaneously. Regulatory compliance intelligence ensures plans meet staffing ratio requirements and labor regulations automatically. Iterative scenario planning design enables rapid exploration of alternatives, supporting strategic decision-making through accessible what-if analysis. The architecture learns from planning outcomes and organizational preferences, improving recommendation quality as it understands facility-specific patterns and priorities, delivering healthcare-specific intelligence rather than generic optimization requiring extensive customization.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Staff scheduling system connectivity, human resources integration, patient census data access, credential verification, time and attendance synchronization",
+                "focus": "Detail seamless connection to hospital systems and plan delivery within current workflows.",
+                "hint_text": "Explain integration with scheduling platforms, HR systems, and patient volume forecasts. Mention credential and availability verification. Describe how optimized plans flow into existing scheduling and communication tools.",
+                "ideal_answer": "The platform integrates seamlessly with existing staff scheduling systems, human resources platforms, and patient census forecasting tools through standard healthcare connectors, automatically accessing staff availability, credentials, shift preferences, and projected patient volumes without manual data consolidation. Credential verification ensures assignments respect specialty certifications and training requirements. Time and attendance synchronization incorporates actual worked hours and overtime tracking into planning constraints. Optimized resource plans export directly into scheduling systems and communication platforms staff already use, eliminating manual transcription. The architecture supports both advance planning for upcoming periods and dynamic adjustment responding to census changes or staffing disruptions, ensuring planners work within established hospital workflows and familiar scheduling infrastructure.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Planner scenario exploration ease, department manager visibility, staff schedule clarity, finance cost transparency, executive capacity oversight",
+                "focus": "Compare intuitive planner scenario exploration with department manager operational visibility and executive strategic dashboards.",
+                "hint_text": "Describe interactive scenario planning for resource planners exploring alternatives versus operational dashboards for managers. Explain staff schedule communication and executive capacity analytics.",
+                "ideal_answer": "Resource planners interact through intuitive scenario exploration interfaces, adjusting constraints and objectives to evaluate alternatives receiving optimized plans within moments rather than days of manual work. Department managers view operational dashboards showing coverage levels, skill mix adequacy, and staffing cost projections informing budget discussions and operational decisions. Clinical staff receive clear schedule communications through existing channels with visibility into assignments, shift timing, and unit placements. Finance teams access cost transparency showing labor expense implications of different staffing scenarios supporting budget planning. Executive leadership sees strategic capacity analytics quantifying resource utilization, planning efficiency improvements, and workforce optimization trends informing strategic workforce development and facility expansion decisions. Each stakeholder accesses appropriate planning intelligence supporting their decision-making needs.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Constraint validation transparency, feasibility verification, manual adjustment capability, regulatory compliance confirmation, optimization trade-off clarity",
+                "focus": "Explain constraint validation and planner control building confidence in optimized plan quality and compliance.",
+                "hint_text": "Highlight validation showing all constraints respected in optimized plans. Describe planner authority to adjust based on operational knowledge. Explain regulatory compliance verification and trade-off transparency when objectives conflict.",
+                "ideal_answer": "Every optimized plan includes constraint validation transparency showing that all operational requirements, regulatory ratios, budget limits, and staffing policies were respected in optimization. Feasibility verification confirms plans are operationally executable rather than theoretically optimal but practically impossible. Complete manual adjustment capability preserves planner authority to modify based on situational knowledge and organizational culture the system cannot fully capture. Regulatory compliance confirmation validates that staffing ratios and labor regulations are met throughout planning periods. Trade-off clarity explains when perfect optimization is impossible, showing which objectives were prioritized when constraints conflict. Planners maintain control over objective weighting and constraint priorities, ensuring optimization reflects organizational values and strategic priorities rather than imposing external optimization criteria, building confidence through transparency, validation, and preserved professional judgment authority.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Initial planning improvement, hospital-wide adoption, strategic planning enablement, resource optimization measurement, workforce transformation",
+                "focus": "Map initial planning efficiency through adoption toward strategic workforce management transformation.",
+                "hint_text": "Define progression from pilot department planning improvement to hospital-wide adoption to strategic workforce optimization. Show evolution from tactical scheduling to strategic capacity management capability.",
+                "ideal_answer": "Initial success means validating planning efficiency in pilot departments with measurable time savings, demonstrated optimization quality, and planner confidence in scenario exploration capabilities. Expansion involves hospital-wide adoption with intelligent resource planning embedded in workforce management processes, demonstrated value across diverse clinical units and operational contexts. Full maturity represents optimized resource planning as organizational standard enabling strategic workforce development, with planning capacity redirected from manual scheduling to workforce strategy. Leadership reports substantial planner productivity enhancement enabling strategic focus, improved resource utilization rates reducing labor costs while maintaining care quality, enhanced staff satisfaction from balanced workloads, and competitive positioning through workforce optimization supporting operational efficiency and financial sustainability, transforming resource planning from administrative burden to strategic workforce management capability driving organizational performance.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Healthcare sector validation, facility scale similarity, efficiency metrics documentation, compliance validation, industry recognition",
+                "focus": "Reference comparable hospital results and validated planning efficiency and resource optimization outcomes.",
+                "hint_text": "Mention deployments in similar hospitals with comparable staffing complexity. Describe validated planning time savings and utilization improvements. Reference healthcare workforce management recognition.",
+                "ideal_answer": "The platform has proven success in healthcare facilities similar to yours, with documented implementations across hospitals managing comparable clinical complexity and workforce scale. Reference organizations report substantial resource planning time reductions and improved utilization rates, with outcomes validated through workforce analytics confirming optimization effectiveness. Regulatory compliance is validated through audits confirming staffing ratio adherence. Staff satisfaction surveys document improved work-life balance from optimized scheduling. Several healthcare systems have received industry recognition for workforce management innovation and operational excellence. Healthcare references are available to discuss implementation experience, change management approaches for planner adoption, and the strategic workforce transformation achieved through intelligent resource planning eliminating manual optimization burden and enabling data-driven workforce development.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Implementation support dedication, planner training provision, constraint configuration assistance, continuous optimization improvement, performance tracking reviews",
+                "focus": "Outline dedicated healthcare workforce support and planner enablement ensuring successful adoption.",
+                "hint_text": "Detail implementation support for system integration and constraint configuration. Describe planner training on scenario exploration. Explain continuous optimization improvement and performance tracking.",
+                "ideal_answer": "Your workforce management team receives dedicated implementation support for hospital system integration, ensuring proper configuration of staffing constraints, regulatory requirements, and organizational preferences. Comprehensive training prepares resource planners to leverage scenario exploration effectively, interpret optimization recommendations, and adjust plans based on operational knowledge. Constraint configuration assistance helps translate organizational policies and regulatory requirements into optimization parameters. Continuous optimization improvement refines algorithms based on planning outcomes, organizational feedback, and evolving workforce patterns improving plan quality over time. Regular performance reviews track planning efficiency gains, resource utilization improvements, regulatory compliance maintenance, and staff satisfaction impacts, ensuring leadership visibility into how intelligent resource planning is transforming workforce management, improving operational efficiency, and enabling strategic capacity development supporting organizational growth and sustainability.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

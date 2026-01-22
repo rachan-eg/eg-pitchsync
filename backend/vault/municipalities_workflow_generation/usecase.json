@@ -1,0 +1,9 @@
+{
+    "id": "municipalities_workflow_generation",
+    "title": "AI Workflow Generation Assistant",
+    "domain": "Municipalities",
+    "complexity": "Medium",
+    "target_market": "City Administrators, IT Directors, Department Heads",
+    "theme_id": "civic_trust",
+    "description": "An AI assistant that allows municipal staff to generate complex digital workflows from simple process descriptions, accelerating digitization of citizen services."
+}

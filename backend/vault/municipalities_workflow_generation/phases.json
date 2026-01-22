@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's civic AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Workflow creation time burden, technical expertise requirements, process digitization backlog, standardization inconsistency, change adaptation difficulty",
+                "focus": "Identify the time and expertise barriers preventing municipalities from digitizing and optimizing processes.",
+                "hint_text": "Describe how workflow creation requires extensive technical knowledge and time investment. Mention backlogs of manual processes awaiting digitization. Explain difficulty adapting workflows when regulations or procedures change.",
+                "ideal_answer": "Municipal administrators face overwhelming barriers creating digital workflows for citizen services and internal processes. Workflow configuration requires technical expertise most municipal staff lack, creating dependence on limited IT resources or expensive consultants. Each new process digitization consumes weeks translating procedures into workflow logic, creating massive backlogs of manual processes awaiting automation. Standardization across departments proves difficult with inconsistent workflow design approaches. When regulations or procedures change, updating workflows requires the same technical effort as initial creation. This complexity results in prolonged reliance on inefficient manual processes, inconsistent citizen service experiences across departments, delayed service improvements from digitization backlogs, and staff frustration from administrative burden that workflow automation could eliminate if creation weren't so time-consuming and technically demanding.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Workflow creation speed improvement, technical barrier elimination, digitization backlog reduction, process consistency enhancement, adaptation agility increase",
+                "focus": "Quantify workflow creation acceleration and accessibility with clear process improvement impact.",
+                "hint_text": "Focus on dramatically faster workflow creation from description to functioning process. Mention non-technical staff empowerment. Emphasize backlog reduction enabling broader digitization and service improvement.",
+                "ideal_answer": "Municipal staff experience immediate productivity as workflows generate from simple process descriptions in minutes rather than weeks of technical configuration. Non-technical administrators create workflows independently without IT dependency, democratizing process digitization across departments. Digitization backlogs decrease rapidly as workflow creation becomes accessible rather than bottlenecked through limited technical resources. Process consistency improves through intelligent standardization while respecting departmental variations. Adaptation becomes agile with quick workflow modifications responding to regulatory changes or service improvements. The operational impact manifests through accelerated service digitization improving citizen experience, reduced administrative burden from automated processes, enhanced staff capacity from eliminated manual workflows, and improved municipal responsiveness through rapid process adaptation capability.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Municipal process understanding, regulatory compliance intelligence, citizen service expertise, workflow generation sophistication, public sector domain knowledge",
+                "focus": "Highlight municipal operations expertise and intelligent workflow generation that generic tools lack.",
+                "hint_text": "Highlight understanding municipal processes and regulatory requirements versus generic workflow builders. Contrast intelligent generation from descriptions with manual configuration. Emphasize public sector domain knowledge and compliance awareness.",
+                "ideal_answer": "The solution delivers superior workflow generation through deep municipal operations understanding, recognizing common civic processes, regulatory compliance requirements, and citizen service patterns rather than generic workflow tools requiring technical configuration. Intelligent generation interprets process descriptions in municipal terminology, creating appropriate workflow logic, approval hierarchies, and compliance controls automatically rather than requiring manual technical assembly. Public sector domain knowledge ensures generated workflows reflect best practices for transparency, accountability, and regulatory compliance. The architecture learns from municipal usage patterns, improving generation quality and recognizing organizational preferences. Integration with existing municipal systems ensures workflows connect seamlessly to permits, licensing, inspections, and other civic processes, delivering municipal-specific intelligence rather than generic automation requiring extensive customization.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Municipal system connectivity, citizen portal integration, approval system compatibility, document management synchronization, legacy system coexistence",
+                "focus": "Detail seamless connection to municipal systems and generated workflow operation within current infrastructure.",
+                "hint_text": "Explain integration with existing municipal software, citizen portals, and document systems. Mention compatibility with approval hierarchies and legacy systems. Describe how generated workflows operate within current technical infrastructure.",
+                "ideal_answer": "Generated workflows integrate seamlessly with existing municipal systems through standard government technology connectors, accessing citizen data, permit records, inspection schedules, and document repositories without requiring system replacements. Citizen portal integration enables residents to interact with new digital processes through familiar interfaces. Approval hierarchies respect existing organizational structures and delegation authorities configured in municipal systems. Document management synchronization ensures workflow-generated records flow appropriately into official archives maintaining compliance. Legacy system compatibility allows gradual digitization without requiring complete infrastructure modernization. The architecture ensures generated workflows operate within current technical environments, security frameworks, and compliance requirements, enabling process digitization without disruptive system changes or extensive IT infrastructure investment.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Administrator generation simplicity, department staff workflow usage, citizen process interaction, IT oversight capability, leadership digitization visibility",
+                "focus": "Compare simple administrator workflow generation with citizen-facing process interaction and leadership digitization progress visibility.",
+                "hint_text": "Describe intuitive workflow generation for administrators from process descriptions versus citizen interaction with resulting digital services. Explain department staff workflow execution and leadership dashboards showing digitization progress.",
+                "ideal_answer": "Municipal administrators generate workflows through simple process descriptions using familiar terminology, receiving functioning digital processes within minutes without technical training. Department staff execute workflows through intuitive interfaces appropriate to their roles, with clear task guidance and approval routing. Citizens interact with digitized services through straightforward online processes replacing complicated paper forms and in-person visits. IT teams access oversight dashboards monitoring generated workflow performance, security compliance, and system integration health without managing detailed technical configuration. Leadership views digitization progress across departments, service improvement metrics, and citizen satisfaction trends, quantifying the transformation from manual to digital service delivery. Each stakeholder experiences appropriate interaction complexity supporting their needs without unnecessary technical exposure.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Generated workflow validation, compliance verification, modification capability, approval preservation, testing support, version control",
+                "focus": "Explain workflow validation and administrator control building confidence in generated process accuracy.",
+                "hint_text": "Highlight validation showing generated workflow matches process description intent. Describe administrator modification authority. Explain compliance checking and testing capabilities before deployment.",
+                "ideal_answer": "Generated workflows include validation summaries showing how process descriptions translated into workflow logic, enabling administrators to verify accuracy before deployment. Compliance verification checks generated processes against regulatory requirements and municipal standards, flagging potential issues. Complete modification capability allows administrators to adjust generated workflows based on organizational knowledge the system cannot capture. Approval hierarchies and authorization controls are preserved from existing systems, maintaining governance and accountability. Testing support enables workflow validation with sample cases before citizen-facing deployment. Version control tracks workflow changes maintaining audit trails for compliance and enabling rollback if issues emerge. Administrative authority over deployment timing and scope ensures controlled introduction, building confidence through transparency, validation capability, and maintained organizational control over process digitization.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Initial workflow deployment, digitization acceleration, organizational adoption, citizen service transformation, operational efficiency gains",
+                "focus": "Map initial workflow deployment through digitization acceleration toward comprehensive service transformation.",
+                "hint_text": "Define progression from pilot process digitization to departmental adoption to municipal-wide digital service delivery. Show evolution from tactical automation to strategic service transformation.",
+                "ideal_answer": "Initial success means deploying pilot workflows with validated generation accuracy, measurable creation time reduction, and administrator confidence in the approach. Expansion involves departmental adoption with accelerating digitization rates as staff gain confidence generating workflows independently, demonstrating value across diverse municipal processes. Full maturity represents widespread digital workflow adoption transforming citizen service delivery, with most common processes digitized and continuous improvement embedded in operational culture. Leadership reports substantial citizen satisfaction improvement from convenient digital services, reduced administrative costs through automated processing, improved regulatory compliance transparency, and enhanced municipal agility through rapid process adaptation capability, transforming municipal governance through intelligent workflow automation.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Municipal sector validation, process complexity handling, creation speed documentation, citizen satisfaction improvement, administrative cost reduction confirmation",
+                "focus": "Reference comparable municipal organization results and validated workflow creation acceleration.",
+                "hint_text": "Mention deployments in similar municipalities with comparable process backlogs. Describe validated workflow creation speed and citizen service improvement. Reference administrative cost savings and departmental adoption rates.",
+                "ideal_answer": "Automated workflow generation has proven success in municipalities similar to yours, with documented implementations across departments managing comparable process complexity. Reference administrators report substantial workflow creation speed improvements from weeks to minutes, with outcomes validated through process throughput analysis. Citizen satisfaction improvements are documented through service feedback and reduction in manual processing times. Administrative cost savings are confirmed through resource optimization analysis. Several municipalities report rapid reduction in process digitization backlogs and accelerated digital service delivery plans. Municipal references are available to discuss implementation experience, staff empowerment strategies, and the operational improvements realized through intelligent workflow generation replacing manual technical configuration processes.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Implementation support dedication, administrator training provision, IT oversight enablement, continuous generation improvement, digitization tracking reviews",
+                "focus": "Outline dedicated municipal operations support and administrator enablement ensuring successful adoption.",
+                "hint_text": "Detail implementation support for municipal system integration. Describe administrator training on workflow generation usage. Explain continuous improvement from process feedback and digitization tracking.",
+                "ideal_answer": "Your municipal organization receives dedicated implementation support for system integration, ensuring secure connection to existing records and document systems. Administrator training prepares non-technical staff to effectively describe processes, validate generated workflows, and manage process evolution. IT oversight enablement ensures technical teams maintain control without detailed configuration burden. Continuous generation improvement refines algorithms based on municipal feedback, organizational preferences, and regulatory variations. Regular digitization tracking reviews analyze process adoption rates, citizen service improvements, and administrative efficiency gains, ensuring leadership visibility into how intelligent workflow generation is accelerating municipal digital transformation and enhancing citizen service delivery effectiveness through rapid process automation.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

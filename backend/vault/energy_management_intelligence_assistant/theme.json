@@ -1,0 +1,14 @@
+{
+    "id": "eco_professional",
+    "name": "Eco Professional",
+    "mood": "Sustainable, Clarity, Intelligence",
+    "visual_style": "Soft greens, balanced white space, natural textures, data-rich overlays",
+    "colors": {
+        "primary": "#349985",
+        "secondary": "#034439",
+        "bg": "#ffffff",
+        "success": "#00855B",
+        "error": "#D93539",
+        "warning": "#956D00"
+    }
+}

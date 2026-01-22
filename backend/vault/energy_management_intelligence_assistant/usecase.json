@@ -1,0 +1,9 @@
+{
+    "id": "energy_management_intelligence_assistant",
+    "title": "AI Energy Intelligence Assistant",
+    "domain": "Energy Management",
+    "complexity": "Medium",
+    "target_market": "Energy Managers, Sustainability Officers",
+    "theme_id": "eco_professional",
+    "description": "A conversational AI assistant that simplifies energy data access, interpretation, and report generation."
+}

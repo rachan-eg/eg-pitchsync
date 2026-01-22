@@ -1,0 +1,9 @@
+{
+    "id": "housing_maintenance_vendor_matching",
+    "title": "AI Maintenance Vendor Matching",
+    "domain": "Housing",
+    "complexity": "Medium",
+    "target_market": "Property Managers, Real Estate Firms, Maintenance Coordinators",
+    "theme_id": "urban_community",
+    "description": "An AI-driven platform that matches property maintenance requests to the most appropriate qualified vendors based on specialty, performance, and real-time availability."
+}

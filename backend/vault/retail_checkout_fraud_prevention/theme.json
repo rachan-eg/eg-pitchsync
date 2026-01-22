@@ -1,0 +1,14 @@
+{
+    "id": "secure_retail",
+    "name": "Secure Retail",
+    "mood": "Safe, Prestigious, Watchful",
+    "visual_style": "Gold accents, dark marble textures, sharp focus, security-inspired HUD elements",
+    "colors": {
+        "primary": "#C5A059",
+        "secondary": "#1A1A1A",
+        "bg": "#ffffff",
+        "success": "#00855B",
+        "error": "#D93539",
+        "warning": "#956D00"
+    }
+}

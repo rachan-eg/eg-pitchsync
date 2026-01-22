@@ -1,0 +1,14 @@
+{
+    "id": "corporate_balance",
+    "name": "Corporate Balance",
+    "mood": "Harmonious, Data-driven, Human-centric",
+    "visual_style": "Soft gradients, balanced layouts, indigo and lavender accents, clear typography",
+    "colors": {
+        "primary": "#6610f2",
+        "secondary": "#6f42c1",
+        "bg": "#fcfaff",
+        "success": "#00855B",
+        "error": "#D93539",
+        "warning": "#956D00"
+    }
+}

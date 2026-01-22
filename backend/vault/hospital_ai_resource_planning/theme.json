@@ -1,0 +1,14 @@
+{
+    "id": "clinical_clean",
+    "name": "Clinical Clean",
+    "mood": "Sterile, Trustworthy, Precision",
+    "visual_style": "High-contrast white, soft blue accents, medical iconography, thin lines",
+    "colors": {
+        "primary": "#007BFF",
+        "secondary": "#6C757D",
+        "bg": "#F8F9FA",
+        "success": "#00855B",
+        "error": "#D93539",
+        "warning": "#956D00"
+    }
+}

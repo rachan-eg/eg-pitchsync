@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's retail AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Self-checkout shrinkage magnitude, fraud detection difficulty, customer friction from interventions, manual monitoring inefficiency, loss prevention resource constraints",
+                "focus": "Identify the financial impact of self-checkout fraud and the challenge of preventing it without customer friction.",
+                "hint_text": "Describe how self-checkout enables various fraud types\u2014scan avoidance, wrong item selection, produce code manipulation. Mention difficulty detecting fraud without disrupting honest customers. Explain resource burden of manual monitoring.",
+                "ideal_answer": "Retailers experience substantial inventory shrinkage from self-checkout fraud through numerous tactics\u2014customers avoiding scanning items, selecting cheaper produce codes for expensive products, claiming scanned items didn't register, exploiting system vulnerabilities. Traditional detection relies on manual monitoring impossible to sustain across numerous stations, missing most fraudulent transactions while occasionally disrupting honest customers creating dissatisfaction. Random intervention creates friction without effective fraud prevention. Loss prevention teams cannot monitor all transactions, focusing on obvious suspicious behavior while sophisticated fraud passes undetected. The financial impact accumulates through significant inventory shrinkage eroding margins, customer dissatisfaction from intervention awkwardness, and limited scaling of self-checkout adoption due to uncontrolled loss, forcing continued staffing of traditional checkouts despite operational cost savings potential.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Shrinkage reduction quantification, fraud detection accuracy, customer experience preservation, staff efficiency improvement, self-checkout expansion enablement",
+                "focus": "Quantify shrinkage reduction and fraud prevention with clear customer experience protection.",
+                "hint_text": "Focus on detected fraud preventing inventory loss. Mention reduced false interventions improving honest customer experience. Emphasize staff efficiency from targeted intervention rather than random monitoring.",
+                "ideal_answer": "Retailers experience measurable shrinkage reduction as intelligent fraud detection identifies and prevents loss-generating behaviors that manual monitoring misses. Accurate fraud detection targets interventions appropriately, reducing false positives that frustrate honest customers while catching actual fraud attempts effectively. Customer experience improves through discrete intervention approaches and faster checkout for honest shoppers. Staff efficiency increases as targeted alerts replace inefficient broad monitoring, focusing attention where fraud risk is genuine. The financial impact manifests quickly through reduced inventory shrinkage improving margins, enhanced customer satisfaction from friction reduction, optimized loss prevention resource deployment, and confident self-checkout expansion capturing labor cost savings without uncontrolled fraud exposure.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Retail fraud pattern expertise, computer vision sophistication, false positive minimization capability, customer experience sensitivity, continuous fraud adaptation learning",
+                "focus": "Highlight retail fraud expertise and customer experience balance that generic surveillance cannot achieve.",
+                "hint_text": "Highlight training on retail fraud patterns versus generic object recognition. Contrast sophisticated behavior analysis with simple mismatch detection. Emphasize customer experience protection while preventing loss.",
+                "ideal_answer": "The solution delivers superior fraud detection through deep retail checkout fraud expertise, recognizing diverse fraud tactics and behavioral patterns rather than generic computer vision adapted for retail. Sophisticated analysis distinguishes intentional fraud from honest customer mistakes, enabling appropriate responses that prevent loss without alienating shoppers. Unlike basic item mismatch detection creating excessive false alerts, the platform considers contextual factors and behavioral signals identifying genuine fraud attempts. Customer experience sensitivity ensures intervention approaches maintain positive shopping atmosphere rather than creating confrontational interactions. Continuous learning adapts to evolving fraud tactics as customers discover new exploitation methods, maintaining detection effectiveness as fraud techniques change and providing sustainable loss prevention rather than temporary deterrence overcome by adaptation.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Point-of-sale integration, camera infrastructure compatibility, staff alert delivery, transaction system synchronization, privacy compliance architecture",
+                "focus": "Detail seamless connection to checkout systems and staff alert delivery within current workflows.",
+                "hint_text": "Explain integration with existing self-checkout systems and camera infrastructure. Mention real-time staff alerts through current communication devices. Describe transaction data synchronization and privacy protections.",
+                "ideal_answer": "The platform integrates seamlessly with existing self-checkout point-of-sale systems and store camera infrastructure through standard retail technology connectors, analyzing transactions and video in real-time without checkout process modifications or customer-facing changes. Fraud alerts deliver directly to loss prevention staff mobile devices and monitoring stations they currently use, enabling immediate appropriate response. Transaction data synchronization provides complete context for intervention decisions. Privacy-compliant architecture ensures video analysis respects customer privacy expectations and regulatory requirements, with appropriate data retention and access controls. The system operates transparently to customers while providing staff comprehensive fraud detection intelligence, ensuring loss prevention teams work within established store operations and customer service protocols.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Loss prevention staff alert clarity, store manager shrinkage visibility, customer experience transparency, corporate analytics access, intervention guidance appropriateness",
+                "focus": "Compare actionable loss prevention alerts with strategic corporate shrinkage analytics and customer experience preservation.",
+                "hint_text": "Describe specific fraud alerts for loss prevention staff with intervention recommendations versus shrinkage analytics for management. Explain customer experience transparency and corporate performance dashboards.",
+                "ideal_answer": "Loss prevention staff receive prioritized fraud alerts with specific transaction details, behavioral indicators observed, and recommended intervention approaches\u2014enabling effective response without extensive investigation. Store managers view shrinkage analytics showing fraud pattern trends, high-risk periods, and prevention effectiveness informing staffing and operational decisions. Customers experience transparent checkout without intrusive monitoring awareness, with interventions handled professionally when necessary. Corporate loss prevention teams access portfolio-wide analytics quantifying shrinkage reduction, fraud pattern evolution, and program effectiveness across locations. Intervention guidance helps staff address fraud professionally while preserving customer relationships, with escalation protocols for repeat or high-value incidents ensuring appropriate response consistency while maintaining positive store atmosphere for honest shoppers.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Detection confidence scoring, false positive tracking, staff override authority, privacy protection validation, bias monitoring, performance measurement",
+                "focus": "Explain detection confidence transparency and staff judgment primacy building operational confidence while ensuring fairness.",
+                "hint_text": "Highlight confidence scores with alerts indicating detection certainty. Describe staff authority to assess situations based on customer interaction. Explain bias monitoring ensuring fairness and privacy protections.",
+                "ideal_answer": "Every fraud alert includes confidence scoring indicating detection certainty, enabling staff to prioritize responses appropriately and understand alert reliability. Loss prevention teams retain complete authority to assess situations based on direct customer observation and interaction, with AI providing intelligence rather than dictating intervention decisions. False positive tracking monitors system accuracy, identifying improvement opportunities and validating that honest customers aren't disproportionately flagged. Privacy protections ensure video analysis complies with regulations and customer expectations, with appropriate data handling and retention policies. Bias monitoring validates that detection doesn't unfairly target specific customer demographics, ensuring fairness and legal compliance. Performance measurement tracks shrinkage reduction, detection accuracy, and customer satisfaction metrics, building confidence through demonstrated loss prevention effectiveness without negative customer experience impact.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Pilot store validation, chain-wide deployment, shrinkage reduction measurement, self-checkout expansion, operational transformation",
+                "focus": "Map pilot store validation through rollout toward loss prevention transformation and self-checkout strategy enablement.",
+                "hint_text": "Define progression from pilot location shrinkage improvement to chain-wide deployment to self-checkout expansion confidence. Show evolution from tactical fraud detection to strategic loss prevention capability.",
+                "ideal_answer": "Initial success means validating shrinkage reduction at pilot stores with measurable fraud prevention, documented staff confidence in alerts, and maintained customer satisfaction through discrete intervention. Expansion involves chain-wide deployment with demonstrated effectiveness across diverse store formats and customer demographics, fraud detection embedded in loss prevention operations. Full maturity represents intelligent fraud prevention as organizational standard enabling confident self-checkout expansion, with controlled shrinkage supporting strategic labor cost optimization. Leadership reports substantial inventory shrinkage reduction improving margins across the portfolio, maintained customer experience supporting satisfaction and loyalty, optimized loss prevention resource deployment, and competitive advantage through self-checkout scaling capturing operational efficiencies without uncontrolled loss, transforming self-checkout from risk exposure to strategic advantage through effective fraud prevention technology.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Retail sector validation, store format similarity, shrinkage metrics documentation, customer satisfaction preservation, industry recognition",
+                "focus": "Reference comparable retail environment results and validated shrinkage reduction without customer friction.",
+                "hint_text": "Mention deployments in similar retail formats with comparable self-checkout adoption. Describe validated shrinkage reduction and maintained satisfaction scores. Reference retail industry loss prevention recognition.",
+                "ideal_answer": "The platform has proven success in retail environments similar to yours, with documented implementations across store formats with comparable self-checkout adoption and customer demographics. Reference retailers report measurable shrinkage reduction validated through inventory analysis confirming fraud prevention effectiveness. Customer satisfaction metrics demonstrate maintained or improved experience despite increased fraud detection. Loss prevention teams report confidence in alert accuracy and intervention effectiveness. Several retailers have received industry recognition for innovative loss prevention approaches balancing shrinkage control with customer experience. Retail references are available to discuss implementation experience, staff training approaches for professional fraud intervention, and the financial impact realized through reduced shrinkage enabling confident self-checkout expansion and operational cost optimization.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Implementation support dedication, staff training provision, privacy compliance guidance, continuous detection optimization, performance tracking reviews",
+                "focus": "Outline dedicated retail loss prevention support and staff enablement ensuring effective deployment.",
+                "hint_text": "Detail implementation support for system integration and camera optimization. Describe loss prevention staff training on alert interpretation and intervention. Explain continuous fraud detection improvement and performance tracking.",
+                "ideal_answer": "Your loss prevention team receives dedicated implementation support for point-of-sale and camera system integration, ensuring optimal fraud detection configuration for your store layouts and checkout processes. Comprehensive training prepares loss prevention staff to interpret alerts effectively, conduct professional interventions maintaining customer relationships, and escalate appropriately. Privacy compliance guidance ensures video analysis and data handling meet regulatory requirements and customer expectations. Continuous detection optimization adapts to evolving fraud tactics observed in your stores, maintaining effectiveness as customer behavior changes. Regular performance reviews track shrinkage reduction, detection accuracy, customer satisfaction metrics, and staff confidence, ensuring leadership visibility into how intelligent fraud prevention is reducing inventory loss, enabling self-checkout expansion, and supporting operational cost optimization through controlled shrinkage risk.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

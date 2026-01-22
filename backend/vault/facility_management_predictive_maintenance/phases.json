@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's facility management solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Reactive maintenance limitations, equipment failure unpredictability, scheduled maintenance inefficiency, tenant disruption from breakdowns, asset lifespan optimization gaps",
+                "focus": "Identify the inability to predict facility equipment failures and the cost of reactive maintenance approaches.",
+                "hint_text": "Describe how property managers discover equipment issues only after failures disrupt tenants. Mention inefficient time-based maintenance servicing healthy equipment. Explain the challenge of optimizing maintenance timing across diverse building systems.",
+                "ideal_answer": "Property owners manage facilities reactively, discovering equipment failures when tenants report problems\u2014HVAC breakdowns during peak seasons, elevator outages disrupting operations, plumbing failures causing damage. Maintenance teams follow rigid schedules servicing equipment based on age rather than condition, wasting resources on systems functioning properly while missing degrading assets between service intervals. Managers lack visibility into subtle performance changes signaling impending failures across diverse building systems. This reactive approach creates tenant dissatisfaction from unexpected disruptions, emergency repair costs exceeding planned maintenance, shortened equipment lifespan from operating beyond optimal conditions, and inefficient resource deployment across property portfolios.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Maintenance cost reduction, equipment downtime decrease, tenant satisfaction improvement, asset life extension, resource efficiency gains",
+                "focus": "Quantify predictive maintenance impact on costs and tenant experience with clear timeline.",
+                "hint_text": "Focus on preventing failures before tenant disruption. Mention shift from scheduled to condition-based maintenance. Emphasize cost savings and tenant experience improvements.",
+                "ideal_answer": "Property managers experience immediate improvements as predictive alerts enable planned interventions preventing disruptive failures. Maintenance shifts from fixed schedules to condition-based deployment, focusing effort where actually needed rather than unnecessary servicing. Tenant satisfaction improves through fewer unexpected disruptions and better service reliability. Equipment lifespan extends through optimal operating conditions and timely interventions. Financial benefits manifest quickly through reduced emergency repair costs, decreased tenant turnover from service issues, deferred capital replacement from extended asset life, and optimized maintenance labor deployment across portfolios.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Facility management specialization, building system expertise, multi-asset modeling capability, property operations integration, continuous learning architecture",
+                "focus": "Highlight facility management expertise and building system knowledge that generic IoT platforms lack.",
+                "hint_text": "Highlight AI trained on building systems versus generic predictive tools. Contrast understanding of HVAC, elevators, plumbing patterns. Emphasize property management workflow integration.",
+                "ideal_answer": "The platform delivers superior predictions through AI built specifically for building systems, understanding HVAC degradation patterns, elevator wear characteristics, and plumbing failure signatures rather than generic industrial equipment models. Unlike simple threshold alerts, the solution analyzes complex interactions between systems, occupancy patterns, weather impacts, and usage intensity identifying failure risks before disruption occurs. Deep facility management expertise ensures seamless integration with property operations workflows and tenant communication systems. The architecture learns continuously from each property's unique characteristics, becoming more accurate over time rather than applying generic models across diverse building types.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Building management system connectivity, work order integration, tenant portal compatibility, sensor data ingestion, maintenance scheduling synchronization",
+                "focus": "Detail seamless connection to property systems and alert delivery within current workflows.",
+                "hint_text": "Explain connections to building management systems and work order platforms. Mention sensor data ingestion from existing equipment. Describe alert flow into maintenance dashboards.",
+                "ideal_answer": "The platform connects seamlessly to existing building management systems and work order software through standard property technology protocols, ingesting equipment performance data, maintenance histories, and tenant service requests automatically. Sensor data from HVAC, elevators, and other building systems flows continuously without infrastructure changes. Predictive maintenance alerts deliver directly into facility manager dashboards and technician mobile devices within familiar tools. Integration with tenant communication systems enables proactive service notifications when maintenance is scheduled. The architecture works with both modern smart building systems and legacy equipment, ensuring comprehensive coverage across diverse property portfolios.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Facility manager alert clarity, maintenance technician guidance detail, property owner portfolio visibility, tenant communication appropriateness",
+                "focus": "Compare actionable facility manager alerts with strategic property owner portfolio dashboards.",
+                "hint_text": "Describe maintenance alerts for facility managers with intervention timing versus portfolio analytics for owners. Explain technician diagnostic guidance and tenant communication interfaces.",
+                "ideal_answer": "Facility managers receive prioritized equipment alerts showing failure risk, recommended intervention timing, and maintenance actions needed\u2014enabling proactive scheduling without extensive investigation. Maintenance technicians access diagnostic guidance highlighting which components require inspection and what degradation patterns were detected. Property owners view portfolio-wide asset health dashboards identifying properties requiring attention and capital planning priorities. Tenant-facing communications remain appropriate and reassuring, explaining planned maintenance professionally without creating concern. Executive reporting quantifies cost savings from prevented failures, maintenance efficiency improvements, and tenant satisfaction impacts.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Prediction reasoning transparency, confidence scoring, technician override authority, performance tracking, equipment-specific validation",
+                "focus": "Explain equipment degradation transparency and technician judgment primacy building operational confidence.",
+                "hint_text": "Highlight how the system shows which equipment patterns indicate failure risk. Describe technician override authority. Explain accuracy tracking against actual equipment outcomes.",
+                "ideal_answer": "Every prediction includes transparent reasoning showing which equipment performance patterns, usage trends, or environmental factors indicate failure risk\u2014facility managers validate logic against building knowledge. Confidence scores indicate prediction certainty, with lower-confidence alerts flagged for additional review. Maintenance teams retain complete authority to adjust timing based on operational priorities and tenant schedules. Performance tracking compares predictions to actual equipment outcomes, validating accuracy over time. Equipment-specific models account for different system characteristics, and the platform flags when data quality issues might compromise reliability, building confidence through transparency and demonstrated performance.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Pilot property validation, portfolio expansion, enterprise-wide deployment, measurable performance transformation",
+                "focus": "Map pilot property milestones toward portfolio-wide predictive maintenance transformation.",
+                "hint_text": "Define progression from pilot building validation to portfolio deployment to organizational standard. Show evolution from tactical to strategic asset management.",
+                "ideal_answer": "Initial success means validating predictions at pilot properties with measurable failure prevention, documented cost savings, and facility team confidence. Expansion involves scaling across the property portfolio with demonstrated value across building types and equipment diversity. Full maturity represents enterprise-wide predictive maintenance as organizational standard, with proactive asset management embedded in operations culture. Leadership reports substantial maintenance cost reduction, improved tenant satisfaction, extended equipment lifecycles, and competitive differentiation through superior property operations that attract and retain quality tenants while optimizing ownership returns.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Property management sector relevance, portfolio scale similarity, validated cost metrics, tenant feedback, industry recognition",
+                "focus": "Reference comparable property portfolio results and validated cost reduction outcomes.",
+                "hint_text": "Mention deployments in similar property portfolios. Describe validated maintenance savings and tenant satisfaction improvements. Reference property management industry recognition.",
+                "ideal_answer": "The platform has proven success in property portfolios similar to yours, with documented implementations across commercial, residential, and mixed-use properties of comparable scale. Reference clients report measurable maintenance cost reductions and improved tenant retention, with outcomes validated through financial analysis. Tenant satisfaction improvements are documented through surveys and renewal rates. Several property management organizations have received industry recognition for operational excellence. References are available to discuss implementation experience and competitive advantages gained through predictive maintenance capabilities.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Implementation support dedication, facility team training, technical assistance accessibility, continuous optimization, performance reviews",
+                "focus": "Outline dedicated facility management team support and comprehensive enablement programs.",
+                "hint_text": "Detail implementation support from facility management experts. Describe facility manager and technician training. Explain continuous model refinement and performance reviews.",
+                "ideal_answer": "Your facility team receives dedicated implementation support from specialists with property management and building systems expertise, configuring predictions for your specific building types and equipment. Comprehensive training prepares facility managers to interpret alerts and maintenance technicians to use diagnostic guidance effectively. Continuous technical support provides rapid assistance during daily operations. Regular optimization sessions refine models based on your portfolio's characteristics and incorporate feedback from maintenance outcomes. Executive reviews track maintenance costs, tenant satisfaction, equipment performance, and portfolio-wide optimization impact, ensuring leadership visibility into operational improvements and financial returns.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

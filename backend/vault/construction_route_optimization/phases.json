@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's construction AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Manual scheduling time consumption, route optimization complexity, dynamic rescheduling difficulty, constraint consideration incompleteness, productivity loss from inefficiency",
+                "focus": "Identify the time burden and suboptimal outcomes from manual route planning processes.",
+                "hint_text": "Describe how managers spend hours manually planning routes across crews and sites. Mention difficulty optimizing for travel time, skill requirements, and priority constraints. Explain constant replanning when conditions change.",
+                "ideal_answer": "Construction managers waste substantial time manually planning crew routes across multiple jobsites, juggling travel distances, skill requirements, material availability, site access constraints, and task priorities. Optimization proves mentally overwhelming with numerous variables creating countless possible route combinations. Manual approaches produce suboptimal schedules missing efficiency opportunities that comprehensive analysis would reveal. Dynamic replanning becomes necessary when conditions change\u2014weather delays, material deliveries, priority shifts\u2014consuming more management time repeating complex scheduling decisions. Crews experience inefficient travel patterns reducing productive work time. The manual burden results in manager productivity loss on administrative tasks rather than strategic oversight, suboptimal crew utilization from inefficient routing, and limited scheduling quality from human capacity constraints when optimizing complex logistics.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Manager time savings quantification, crew productivity improvement, fuel cost reduction, schedule optimization quality, dynamic adaptation speed",
+                "focus": "Quantify manager time savings and crew efficiency with clear schedule quality improvement.",
+                "hint_text": "Focus on hours saved from automated route optimization. Mention crew productivity gains from reduced travel time. Emphasize quick adaptation when schedules require changes.",
+                "ideal_answer": "Managers reclaim substantial time previously spent on manual route planning, redirecting effort toward strategic project oversight and team development. Crew productivity improves through optimized routes minimizing unproductive travel time and maximizing billable work. Fuel costs decrease from efficient routing reducing unnecessary mileage. Schedule quality improves as comprehensive optimization identifies efficient patterns manual planning misses. Dynamic replanning happens instantly when conditions change, maintaining optimization despite disruptions. The efficiency impact manifests through enhanced manager capacity for value-adding activities, improved crew utilization rates increasing project profitability, reduced operational costs from optimized logistics, and better customer service through reliable scheduling and responsive adaptation to changing priorities.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Construction logistics understanding, constraint handling sophistication, dynamic replanning capability, crew management integration, continuous optimization intelligence",
+                "focus": "Highlight construction operations expertise and comprehensive constraint optimization that generic tools lack.",
+                "hint_text": "Highlight understanding construction routing constraints versus generic route planning. Contrast comprehensive optimization considering skills, priorities, materials. Emphasize dynamic replanning capability and crew management integration.",
+                "ideal_answer": "The solution delivers superior route optimization through deep construction operations understanding, incorporating industry-specific constraints like crew skill matching, material delivery coordination, site access requirements, and task dependencies rather than generic routing algorithms. Unlike simple travel optimization, the platform balances multiple objectives\u2014minimizing travel time while respecting priority hierarchies, skill requirements, and operational constraints unique to construction logistics. Dynamic replanning capability maintains optimization when conditions change without requiring manual rescheduling. Integration with crew management systems ensures schedules align with labor availability and project assignments. Continuous learning improves optimization as the system understands organizational preferences and operational patterns, delivering increasingly valuable routing decisions over time.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Project management system connectivity, crew scheduling integration, job site data access, real-time update capability, mobile crew visibility",
+                "focus": "Detail seamless connection to project systems and schedule delivery within current workflows.",
+                "hint_text": "Explain connection to project management platforms and crew scheduling systems. Mention automatic access to site locations, priorities, and crew availability. Describe schedule distribution to crews through existing communication channels.",
+                "ideal_answer": "The platform integrates seamlessly with existing project management and crew scheduling systems through standard connectors, automatically accessing jobsite locations, task priorities, crew assignments, and skill profiles without manual data entry. Real-time updates from project systems enable dynamic schedule adjustments responding to changing conditions. Optimized routes and schedules distribute directly to crew supervisors through existing communication channels and mobile devices they already use. Integration with navigation tools allows immediate route execution without transcription. The architecture supports both advance planning for upcoming periods and dynamic same-day optimization when urgent needs arise, ensuring managers and crews access intelligent routing within established operational workflows and familiar communication patterns.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Manager scheduling simplicity, crew route clarity, dispatcher coordination efficiency, executive productivity visibility, adjustment ease for exceptions",
+                "focus": "Compare simple manager schedule generation with clear crew route guidance and execution support.",
+                "hint_text": "Describe streamlined schedule creation for managers with constraint specification versus clear route instructions for crews. Explain adjustment capabilities for exceptions and executive visibility into efficiency gains.",
+                "ideal_answer": "Managers interact through streamlined scheduling interfaces specifying priorities, constraints, and objectives, receiving optimized routes within moments rather than spending hours on manual planning. Crew supervisors view clear route sequences with navigation integration, estimated timing, and task details enabling efficient execution without interpretation needs. Dispatchers access coordination dashboards showing all crew locations and schedules, facilitating communication and dynamic adjustments when needs arise. Exception handling remains intuitive, with managers easily adjusting priorities or constraints and receiving updated optimal schedules instantly. Executive dashboards quantify productivity improvements from optimized routing, time savings for management, and crew utilization gains, providing visibility into operational efficiency enhancements and cost reduction impacts from intelligent logistics automation.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Schedule reasoning transparency, constraint validation visibility, manual override capability, optimization trade-off clarity, performance tracking validation",
+                "focus": "Explain schedule logic transparency and manager override authority building operational confidence.",
+                "hint_text": "Highlight how the system explains routing decisions and constraint consideration. Describe manager authority to adjust schedules based on operational knowledge. Explain tracking showing efficiency improvements over time.",
+                "ideal_answer": "Every optimized schedule includes transparent reasoning showing which constraints shaped routing decisions\u2014how travel time, priorities, skill requirements, and other factors were balanced in optimization. Constraint validation is visible, ensuring managers confirm the system respected all operational requirements and business rules. Complete manual override capability preserves manager authority to adjust schedules based on situational knowledge the system cannot capture, with the platform reoptimizing around manual adjustments. Trade-off clarity shows when perfect optimization is impossible, explaining which objectives were prioritized when constraints conflict. Performance tracking compares optimized schedules against historical manual planning and actual execution outcomes, validating efficiency improvements and building confidence through demonstrated superiority over time and reliable schedule quality.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Initial efficiency validation, organization-wide adoption, operational transformation, manager productivity enhancement, measurable cost reduction",
+                "focus": "Map initial efficiency validation through adoption toward operational excellence transformation.",
+                "hint_text": "Define progression from pilot team efficiency gains to company-wide adoption to operational standard. Show evolution from manager time savings to strategic logistics optimization capability.",
+                "ideal_answer": "Initial success means validating efficiency improvements with pilot teams, documenting manager time savings, measurable crew productivity gains, and user confidence in optimized schedules. Expansion involves organization-wide adoption with intelligent routing as standard practice, demonstrated value across diverse project types and operational contexts. Full maturity represents route optimization as embedded operational capability, with managers freed from administrative scheduling burden to focus on strategic oversight. Leadership reports substantial manager productivity enhancement enabling capacity expansion, improved crew utilization rates increasing profitability, reduced fuel and travel costs from optimized logistics, and competitive advantage through operational efficiency that enables better pricing or higher margins, transforming scheduling from time-consuming burden to automated strategic advantage.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Construction sector validation, operational scale similarity, efficiency metrics documentation, manager satisfaction evidence, cost reduction confirmation",
+                "focus": "Reference comparable construction organization results and validated efficiency improvements.",
+                "hint_text": "Mention deployments in similar construction companies with comparable routing complexity. Describe validated manager time savings and crew efficiency gains. Reference cost reduction confirmation through fuel and productivity metrics.",
+                "ideal_answer": "The platform has proven success in construction organizations similar to yours, with documented implementations across companies managing comparable crew sizes, jobsite distributions, and operational complexity. Reference users report substantial manager time savings reclaimed from manual scheduling, with outcomes validated through time tracking and productivity analysis. Crew utilization improvements are documented through billable hour increases and reduced travel time. Fuel cost reductions are confirmed through expense analysis. Manager satisfaction surveys document relief from scheduling burden and confidence in optimization quality. Construction references are available to discuss implementation experience, adoption strategies that drove manager and crew acceptance, and the operational improvements realized through intelligent route optimization replacing manual planning processes.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Implementation support dedication, manager training provision, crew communication guidance, continuous optimization process, performance tracking reviews",
+                "focus": "Outline dedicated implementation support and manager enablement ensuring successful adoption.",
+                "hint_text": "Detail implementation support for system integration and constraint configuration. Describe manager training on optimization usage. Explain continuous improvement from operational feedback and performance tracking.",
+                "ideal_answer": "Your operations team receives dedicated implementation support for system integration, ensuring proper connection to project management platforms and accurate constraint configuration reflecting operational requirements. Manager training prepares scheduling leaders to effectively specify priorities and constraints, interpret optimized schedules, and handle exceptions appropriately. Crew communication guidance supports effective rollout to field teams, addressing questions about new routing processes. Continuous optimization refines algorithms based on operational feedback, organizational preferences, and actual execution patterns improving schedule quality over time. Regular performance reviews track manager time savings, crew efficiency improvements, cost reductions, and schedule quality metrics, ensuring leadership visibility into how intelligent route optimization is enhancing operational efficiency, manager productivity, and competitive cost structure through superior logistics management.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}
