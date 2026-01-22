@@ -5,7 +5,7 @@
         "description": "Establish the fundamental compliance challenges, unique security value, and EG's differentiation in the healthcare AI market.",
         "weight": 0.3,
         "time_limit_seconds": 600,
-        "contributors": "CISO, Chief Compliance Officer, CMIO, General Counsel",
+        "contributors": "Chief Medical Officer, IT Directors, Compliance Officers, Head of Patient Experience",
         "questions": [
             {
                 "id": "q1_1",
@@ -42,7 +42,7 @@
         "description": "Define the technical integration, clinical user experience, and the security controls that build institutional trust.",
         "weight": 0.3,
         "time_limit_seconds": 600,
-        "contributors": "CISO, Chief Compliance Officer, IT Infrastructure Directors, Clinical Informatics Leaders",
+        "contributors": "Chief Medical Officer, IT Directors, Compliance Officers, Head of Patient Experience",
         "questions": [
             {
                 "id": "q2_1",
@@ -79,7 +79,7 @@
         "description": "Outline the path to enterprise-wide adoption, evidence of success in regulated environments, and the long-term support model.",
         "weight": 0.4,
         "time_limit_seconds": 600,
-        "contributors": "Chief Compliance Officer, CISO, Hospital Administrator, General Counsel",
+        "contributors": "Chief Medical Officer, IT Directors, Compliance Officers, Head of Patient Experience",
         "questions": [
             {
                 "id": "q3_1",

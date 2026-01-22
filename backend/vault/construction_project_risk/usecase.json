@@ -1,0 +1,9 @@
+{
+    "id": "construction_project_risk",
+    "title": "AI Project Risk SaaS",
+    "domain": "Construction",
+    "complexity": "High",
+    "target_market": "Construction Firms",
+    "theme_id": "cyberpunk",
+    "description": "Create an AI-driven project risk platform that predicts schedule delays and cost overruns early, enabling proactive planning and execution decisions."
+}

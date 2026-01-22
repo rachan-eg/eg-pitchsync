@@ -255,7 +255,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
 
     return (
-        <div className="prompt-curation war-room-bg">
+        <div className="prompt-curation war-room-bg page-transition">
             {/* Loading Overlay */}
             {isLoading && (
                 <div className="curate-overlay">
@@ -278,7 +278,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
             {/* Main Content */}
             <div className="prompt-curation__main">
                 {/* Header */}
-                <header className="curate-header animate-slideUp">
+                <header className="curate-header animate-slideUp reactive-border reactive-border--subtle">
                     <div className="curate-header__left">
                         <button className="curate-back-btn btn-secondary" onClick={() => navigate('/war-room')}>
                             <Icons.ArrowLeft /> BACK TO PHASES
@@ -297,7 +297,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                     <div className="prompt-curation__col-left">
 
                         {/* Manifest Editor */}
-                        <div className="curate-card curate-manifest">
+                        <div className="curate-card curate-manifest reactive-border">
                             <div className="curate-manifest__header">
                                 <div className="curate-manifest__title">
                                     <div className="curate-manifest__dot" />
@@ -319,7 +319,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
 
                         {/* Refine Input */}
-                        <div className="curate-card curate-refine">
+                        <div className="curate-card curate-refine reactive-border reactive-border--subtle">
                             <div className="curate-refine__row">
                                 <input
                                     type="text"
@@ -329,6 +329,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                     placeholder="Refine: 'cinematic', 'neon glow', 'abstract'..."
                                     className="curate-refine__input"
                                     disabled={isRegenerating}
+                                    maxLength={1000}
                                 />
                                 <button
                                     onClick={handleRegenerate}
@@ -343,8 +344,8 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                             {conversationHistory.length > 0 && (
                                 <div className="curate-refine__history">
                                     {[...conversationHistory.filter(m => m.role === 'user')].reverse().slice(0, 5).map((msg, i) => (
-                                        <div key={i} className="curate-refine__tag">
-                                            <Icons.Zap /> <span>{msg.content}</span>
+                                        <div key={i} className="curate-refine__tag" title={msg.content}>
+                                            <Icons.Zap /> <span>{msg.content.split(' ').slice(0, 2).join(' ') + (msg.content.split(' ').length > 2 ? '...' : '')}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -356,7 +357,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                     <div className="prompt-curation__col-right">
 
                         {/* Previous Submissions Gallery */}
-                        <div className="curate-card curate-gallery">
+                        <div className="curate-card curate-gallery reactive-border">
                             <div className="curate-gallery__header">
                                 <h3 className="curate-gallery__title">Previous Submissions</h3>
                                 <div className="curate-gallery__badge">
@@ -408,16 +409,16 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
                         {/* Actions (Upload + Finalize) */}
                         <div className="curate-actions">
-                            <div className="curate-card curate-upload">
+                            <div className="curate-card curate-upload reactive-border">
                                 <div className="curate-upload__label">Upload Pitch Visual</div>
                                 <p className="curate-upload__instruction">
                                     Copy the prompt above and generate your image using an AI tool, then upload the result here.
                                 </p>
                                 <div className="curate-tools-row">
-                                    <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" className="curate-provider-btn curate-provider-btn--gemini">
+                                    <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" className="curate-provider-btn curate-provider-btn--gemini reactive-border reactive-border--subtle">
                                         Open Gemini
                                     </a>
-                                    <a href="https://chat.openai.com/" target="_blank" rel="noopener noreferrer" className="curate-provider-btn curate-provider-btn--chatgpt">
+                                    <a href="https://chat.openai.com/" target="_blank" rel="noopener noreferrer" className="curate-provider-btn curate-provider-btn--chatgpt reactive-border reactive-border--subtle">
                                         Open ChatGPT
                                     </a>
                                 </div>
@@ -450,7 +451,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                             <button
                                 onClick={handleSubmitPitch}
                                 disabled={isLoading || isRegenerating || (uploadedImages.length < 3 && !selectedFile)}
-                                className="curate-finalize"
+                                className="curate-finalize reactive-border reactive-border--success"
                             >
                                 {isLoading ? (
                                     <span>Processing...</span>

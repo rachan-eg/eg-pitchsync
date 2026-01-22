@@ -127,7 +127,7 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
     const retryCount = Object.values(session.phases).reduce((acc, p) => acc + (p.metrics?.retries || 0), 0);
 
     return (
-        <div className="final-reveal">
+        <div className="final-reveal page-transition">
             <div className="final-reveal__container">
 
                 {/* Header */}
@@ -148,7 +148,7 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
 
                     {/* Image Section */}
                     <section className="final-reveal__visual-deck animate-fadeIn stagger-1">
-                        <div className="final-reveal__image-frame">
+                        <div className="final-reveal__image-frame reactive-border">
                             <div className="final-reveal__corner final-reveal__corner--tl" />
                             <div className="final-reveal__corner final-reveal__corner--tr" />
                             <div className="final-reveal__corner final-reveal__corner--bl" />
@@ -191,7 +191,7 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                     <aside className="final-reveal__intelligence animate-fadeIn stagger-2">
 
                         {/* Score Card */}
-                        <div className="final-reveal__grade-card">
+                        <div className="final-reveal__grade-card reactive-border reactive-border--intense">
                             <div className="final-reveal__score-big">
                                 <span className="final-reveal__score-val">{Math.round(session.total_score)}</span>
                                 <span className="final-reveal__score-label">Performance Score</span>
@@ -225,7 +225,7 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                             >
                                 {/* Slide 1: Phase Performance */}
                                 <div className="final-reveal__slide">
-                                    <div className="final-reveal__panel final-reveal__panel--full">
+                                    <div className="final-reveal__panel final-reveal__panel--full reactive-border">
                                         <div className="final-reveal__slide-header">
                                             <h3 className="final-reveal__panel-title">Phase Performance</h3>
                                             <span className="final-reveal__slide-tag">Mission Progress</span>
@@ -267,7 +267,7 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
 
                                 {/* Slide 2: Visual Intelligence */}
                                 <div className="final-reveal__slide">
-                                    <div className="final-reveal__panel final-reveal__panel--full final-reveal__panel--vision">
+                                    <div className="final-reveal__panel final-reveal__panel--full final-reveal__panel--vision reactive-border reactive-border--accent">
                                         <div className="final-reveal__slide-header">
                                             <h3 className="final-reveal__panel-title" style={{ color: 'var(--accent)' }}>Visual Intelligence</h3>
                                             <span className="final-reveal__slide-tag" style={{ background: 'rgba(var(--accent-rgb), 0.2)', color: 'var(--accent)' }}>AI Analysis</span>
@@ -315,7 +315,7 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
 
                                 {/* Slide 3: Efficiency Metrics */}
                                 <div className="final-reveal__slide">
-                                    <div className="final-reveal__panel final-reveal__panel--full">
+                                    <div className="final-reveal__panel final-reveal__panel--full reactive-border">
                                         <div className="final-reveal__slide-header">
                                             <h3 className="final-reveal__panel-title">Efficiency Metrics</h3>
                                             <span className="final-reveal__slide-tag">Operational Data</span>

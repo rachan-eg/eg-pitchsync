@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's real estate AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "Portfolio Managers, Asset Managers, Property Directors, VP of Leasing",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Portfolio visibility fragmentation, proactive risk identification absence, market signal blindness, tenant behavior prediction gaps, financial underperformance detection delays",
+                "focus": "Identify the inability to proactively manage portfolio risks and optimize asset performance across fragmented data sources.",
+                "hint_text": "Describe how property managers discover performance issues only through lagging financial reports. Mention the fragmented data across properties making pattern identification impossible. Explain the inability to predict tenant renewals or identify underperforming assets before value erosion.",
+                "ideal_answer": "Real estate portfolio managers operate with fragmented visibility across properties, discovering performance issues only through lagging financial reports that reveal problems months after they emerge. Property-level data remains siloed in disparate systems, preventing identification of patterns signaling tenant dissatisfaction, operational inefficiencies, or market positioning problems. Managers lack tools to synthesize tenant behavior signals, maintenance patterns, local market dynamics, and comparable property performance to proactively identify risks. Tenant renewal decisions surprise teams despite warning signs in service request patterns and engagement levels. Asset underperformance goes undetected until occupancy drops or rental rates fall behind market. This reactive approach results in revenue loss from preventable tenant departures, missed repositioning opportunities, capital deployed inefficiently across the portfolio, and strategic decisions made without comprehensive performance intelligence.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Occupancy rate improvement, tenant retention enhancement, operational efficiency gains, capital allocation optimization, revenue per property increase",
+                "focus": "Quantify proactive management impact on portfolio performance and the speed of financial improvement realization.",
+                "hint_text": "Focus on how early risk identification enables retention interventions before tenants leave. Mention portfolio-wide insights optimizing capital allocation. Emphasize both revenue protection and operational efficiency from predictive intelligence.",
+                "ideal_answer": "Portfolio managers gain immediate visibility into performance patterns across properties, with early warning signals identifying tenant retention risks, operational inefficiencies, and repositioning opportunities weeks or months before financial impact appears. Property teams intervene proactively on tenant satisfaction issues, improving retention rates and reducing costly turnover. Capital allocation becomes more strategic as the platform identifies which assets justify investment and which require repositioning or disposition. Operational efficiency improves through benchmarking that highlights performance outliers and shares best practices across the portfolio. The financial impact manifests through improved occupancy rates, enhanced rental revenue from optimized pricing strategies, reduced operating costs from efficiency gains, and better portfolio returns from intelligent capital deployment.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Real estate AI specialization, multi-source data synthesis, market intelligence integration, predictive tenant modeling, property management expertise",
+                "focus": "Highlight real estate domain expertise and comprehensive data synthesis capabilities that generic analytics cannot achieve.",
+                "hint_text": "Highlight AI trained on real estate performance patterns versus generic business intelligence tools. Contrast comprehensive portfolio intelligence synthesizing operational, financial, tenant, and market data. Emphasize property management expertise and understanding of asset optimization strategies.",
+                "ideal_answer": "The solution delivers superior portfolio intelligence through AI purpose-built for real estate contexts, trained on diverse property types and market conditions rather than generic analytics adapted for real estate. Unlike basic reporting tools that display historical metrics in isolation, the platform synthesizes operational data, tenant behavior signals, maintenance patterns, local market trends, and comparable property performance\u2014identifying optimization opportunities and risk factors that fragmented analysis misses. The differentiation extends to predictive tenant modeling that forecasts renewal likelihood and revenue risk before lease expiration approaches. Deep property management expertise ensures implementation aligns with asset management workflows, leasing cycles, and capital planning processes. The system continuously learns from portfolio-specific patterns, becoming increasingly valuable as it understands unique property characteristics and market dynamics.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "Portfolio Managers, Asset Managers, Property Directors, VP of Leasing",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Property management system connectivity, financial system integration, tenant portal data access, market data incorporation, reporting tool compatibility",
+                "focus": "Detail seamless connection to existing real estate systems and performance insight delivery within current workflows.",
+                "hint_text": "Explain connections to property management platforms, accounting systems, and tenant communication tools. Mention automatic ingestion of market data and comparable property information. Describe how insights flow into asset management dashboards and reporting systems.",
+                "ideal_answer": "The platform integrates seamlessly with existing property management systems, accounting platforms, and lease administration tools through standard real estate software connectors, automatically ingesting property performance data, tenant information, maintenance records, and financial metrics without manual data consolidation. External market intelligence\u2014rental rate trends, absorption rates, demographic shifts, and economic indicators\u2014enriches analysis with contextual factors affecting portfolio performance. Performance insights and risk alerts flow directly into asset management dashboards and executive reporting tools teams use for decision-making. Integration with tenant communication platforms enables sentiment analysis from service requests and feedback. The architecture supports both property-level operational details for on-site teams and portfolio-level strategic analytics for executive leadership, ensuring stakeholders access appropriate intelligence within their existing workflows.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Property manager operational clarity, asset manager strategic visibility, leasing team tenant insight, portfolio executive performance oversight, investor reporting transparency",
+                "focus": "Compare actionable property manager tenant retention alerts with strategic portfolio executive performance dashboards.",
+                "hint_text": "Describe tenant risk alerts for property managers with recommended retention actions versus portfolio analytics for asset managers. Explain leasing team market positioning insights and executive dashboards quantifying portfolio performance and optimization opportunities.",
+                "ideal_answer": "Property managers receive prioritized alerts highlighting tenant retention risks, operational inefficiencies, and maintenance issues requiring attention\u2014specific tenants showing dissatisfaction signals, expense categories exceeding benchmarks, or service delivery gaps\u2014enabling proactive intervention at individual properties. Asset managers access strategic analytics comparing property performance against benchmarks, identifying repositioning candidates, and evaluating capital allocation priorities across the portfolio. Leasing teams gain market positioning insights showing competitive rental rate opportunities and demographic trends informing marketing strategies. Portfolio executives view comprehensive dashboards quantifying overall performance, risk concentrations, optimization opportunities, and return on investment across asset classes and markets. Investor reporting interfaces provide transparent performance documentation with market context, demonstrating active management value and strategic decision-making rationale.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Performance factor transparency, benchmark methodology clarity, prediction confidence indication, override capabilities, data source verification, sensitivity analysis access",
+                "focus": "Explain performance driver transparency and benchmark methodology clarity that build management confidence in recommendations.",
+                "hint_text": "Highlight how the system shows which specific factors are driving performance assessments and risk predictions. Describe transparent benchmark methodologies and data sources. Explain management override authority and sensitivity analysis tools showing how assumptions affect recommendations.",
+                "ideal_answer": "Every performance assessment and risk prediction includes transparent explanation showing which specific operational metrics, tenant behavior patterns, market trends, and comparable property data are driving conclusions\u2014asset managers understand the analytical basis rather than accepting black-box scores. Benchmark methodologies are clearly documented, showing which comparable properties inform assessments and how market adjustments are calculated. Predictions include confidence indicators reflecting data quality and market condition stability. Management teams retain complete override authority, applying their market knowledge and strategic priorities to recommendations. Sensitivity analysis tools enable exploration of how different market assumptions or operational scenarios affect projections. Data source verification provides transparency into information currency and reliability, and audit trails document analytical assumptions for investor reporting and fiduciary accountability.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "Portfolio Managers, Asset Managers, Property Directors, VP of Leasing",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Pilot property validation, portfolio-wide expansion, multi-market deployment, organizational capability building, measurable performance transformation",
+                "focus": "Map pilot property validation milestones toward enterprise-wide intelligent portfolio management transformation.",
+                "hint_text": "Define progression from pilot properties with validated insights to full portfolio coverage to organization-wide performance optimization standard. Show evolution from tactical property management to strategic portfolio intelligence capability.",
+                "ideal_answer": "At the initial milestone, success means validating insights on pilot properties with measurable accuracy in performance predictions, documented management confidence in recommendations, and initial improvement in tenant retention or operational efficiency. Expansion phase success involves scaling across the full portfolio with comprehensive data integration, demonstrated value across diverse property types and markets, and performance intelligence embedded in asset management workflows. Full maturity represents the platform functioning as the organization-wide standard for portfolio optimization, with data-driven decision-making embedded in investment culture. Leadership reports substantial portfolio return improvement, enhanced tenant retention rates, optimized capital deployment generating superior returns, improved operational efficiency across properties, and competitive advantage through sophisticated performance management capabilities that attract investor confidence and enable portfolio growth.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Real estate sector relevance, portfolio scale similarity, validated performance metrics, investor validation, industry recognition",
+                "focus": "Reference comparable portfolio environment results and independently validated performance improvement outcomes.",
+                "hint_text": "Mention deployments in similar real estate portfolios with comparable asset types. Describe validated occupancy improvements and operational efficiency gains. Reference investor recognition or real estate industry awards acknowledging results.",
+                "ideal_answer": "The platform has proven success in real estate portfolios similar to yours, with documented implementations across organizations managing comparable property types, market exposure, and portfolio complexity. Reference clients report measurable tenant retention improvements, enhanced occupancy rates, and optimized operational efficiency, with outcomes validated through investor reporting and financial audits confirming performance impact. Several portfolio managers have received industry recognition for asset management excellence and innovation in performance optimization. The approach has delivered consistent results across diverse real estate sectors\u2014multifamily residential, commercial office, retail, industrial\u2014demonstrating effectiveness across different asset classes and investment strategies. Real estate references are available to discuss their transformation to predictive portfolio management, the insights that drove strategic repositioning decisions, and the measurable return on investment they have achieved.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Dedicated implementation support, asset management training, technical assistance accessibility, continuous model optimization, executive success reviews",
+                "focus": "Outline dedicated real estate team support and comprehensive portfolio management enablement programs.",
+                "hint_text": "Detail implementation support from real estate analytics and asset management experts. Describe property manager and asset manager training. Explain continuous performance model refinement and regular business reviews tracking portfolio optimization impact.",
+                "ideal_answer": "Your portfolio management team receives dedicated implementation support from specialists combining data science expertise and real estate asset management experience, configuring analytics for your specific property types, markets, and investment objectives. Comprehensive training prepares property managers to leverage operational insights, asset managers to use strategic analytics for capital allocation decisions, and executives to interpret portfolio performance intelligence. Technical support provides rapid assistance whenever questions arise during analysis or decision-making. Regular optimization sessions refine prediction models based on your portfolio's evolving composition and market conditions, incorporate feedback from management experience, and identify new opportunities to enhance performance intelligence. Executive business reviews track key metrics\u2014portfolio returns, tenant retention rates, operational efficiency gains, capital deployment effectiveness\u2014ensuring leadership maintains visibility into how AI-powered portfolio management is strengthening investment performance and competitive positioning.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

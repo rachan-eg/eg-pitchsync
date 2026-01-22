@@ -78,7 +78,7 @@ interface SessionContextType {
     // Actions
     initSession: (teamId: string) => Promise<{ success: boolean; isResumed: boolean; isComplete: boolean; currentPhase: number }>;
     initSessionFromTeamCode: (teamName: string, usecaseId: string) => Promise<{ success: boolean; isResumed: boolean; isComplete: boolean; currentPhase: number }>;
-    startPhase: (phaseNum: number) => Promise<void>;
+    startPhase: (phaseNum: number) => Promise<boolean>;
     submitPhase: (responses: PhaseResponse[]) => Promise<void>;
     handleFeedbackAction: (action: 'CONTINUE' | 'RETRY') => Promise<{ navigateTo?: string }>;
     curatePrompt: (force?: boolean) => Promise<void>;
@@ -385,15 +385,23 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setSelectedUsecase(data.usecase);
         setSelectedTheme(data.theme);
 
+        // ALWAYS reset uploadedImages to prevent cross-team data leakage
+        // This must happen regardless of whether final_output exists
+        setUploadedImages(initialSubmissions);
+
+        if (initialSubmissions.length > 0) {
+            setActiveRevealSubmission(initialSubmissions[initialSubmissions.length - 1]);
+        } else {
+            setActiveRevealSubmission(null);
+        }
+
         if (data.final_output) {
             if (data.final_output.image_prompt) setCuratedPrompt(data.final_output.image_prompt);
             const url = getFullUrl(data.final_output.image_url);
             setGeneratedImageUrl(url);
 
-            setUploadedImages(initialSubmissions);
-            if (initialSubmissions.length > 0) {
-                setActiveRevealSubmission(initialSubmissions[initialSubmissions.length - 1]);
-            } else if (data.final_output && data.final_output.image_url) {
+            // If no uploaded images but we have a final_output image, use that as active reveal
+            if (initialSubmissions.length === 0 && data.final_output.image_url) {
                 setActiveRevealSubmission({
                     image_url: url,
                     prompt: data.final_output.image_prompt,
@@ -518,8 +526,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }, [setLoading, setError, processInitResponse]); // Stable dependencies
 
-    const startPhase = useCallback(async (phaseNum: number) => {
-        if (!session) return;
+    const startPhase = useCallback(async (phaseNum: number): Promise<boolean> => {
+        if (!session) return false;
 
         const leavingPhaseNum = session.current_phase;
         const leavingElapsed = elapsedSeconds;
@@ -598,14 +606,17 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     startTimer(data.elapsed_seconds ?? 0);
                 }
 
+                return true; // Success
             } else {
                 console.error('Failed to start phase, status:', res.status);
                 const errorData = await res.json().catch(() => ({}));
                 setError(errorData.detail || `Server error: ${res.status}`);
+                return false;
             }
         } catch (e) {
             console.error("Failed to start phase", e);
             setError("Network error establishing phase connection.");
+            return false;
         } finally {
             setLoading(false);
         }
@@ -975,6 +986,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         stopTimer();
         setCuratedPrompt('');
         setGeneratedImageUrl('');
+        // Clear uploaded images to prevent cross-team data leakage
+        setUploadedImages([]);
+        setActiveRevealSubmission(null);
     }, [stopTimer]);
 
     // =========================================================================

@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's construction AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "Project Directors, Superintendents, Project Managers, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Reactive risk identification, schedule delay prediction absence, cost overrun invisibility, cross-project pattern blindness, mitigation timing ineffectiveness",
+                "focus": "Identify the inability to predict project delays and overruns early enough for effective mitigation and planning adjustments.",
+                "hint_text": "Describe how project managers discover schedule risks only when milestones are already missed. Mention the inability to identify subtle patterns indicating emerging cost overruns. Explain the challenge of correlating risks across trades, weather, supply chain, and labor that compound into major delays.",
+                "ideal_answer": "Construction project teams operate with limited visibility into emerging risks, discovering schedule delays only when milestones are missed and budget overruns when costs have already exceeded estimates. Traditional project management tools track current status but cannot predict future problems\u2014weather impacts compounding with labor shortages, supply chain delays cascading through dependent trades, design changes rippling through schedules. Project managers cannot synthesize complex risk interactions across hundreds of activities, subcontractors, and external factors that signal delays weeks or months before they materialize. Risk identification happens through periodic reviews rather than continuous monitoring, and mitigation occurs too late to prevent impact. This reactive approach results in project delays damaging client relationships and affecting subsequent work, cost overruns eroding margins and reputation, emergency interventions that are expensive and disruptive, and competitive disadvantage as rivals deliver more predictably through superior project intelligence.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Schedule adherence improvement, cost variance reduction, risk mitigation effectiveness, client satisfaction enhancement, resource optimization",
+                "focus": "Quantify early risk prediction impact on project outcomes and the speed of delivery predictability improvement.",
+                "hint_text": "Focus on how early risk alerts enable proactive mitigation before delays materialize. Mention the shift from reactive problem-solving to proactive risk management. Emphasize both project performance improvement and client relationship strengthening from reliable delivery.",
+                "ideal_answer": "Project teams gain early warning of emerging risks weeks before traditional indicators reveal problems, enabling proactive mitigation that prevents delays and cost overruns rather than managing crises. Superintendents adjust schedules, reallocate resources, and engage subcontractors early when interventions remain effective and affordable. Project delivery predictability improves substantially as teams shift from reactive firefighting to proactive risk management. Client relationships strengthen through transparent communication about potential issues and demonstrated commitment to schedule commitments. The financial impact manifests through improved project margins from reduced cost overruns, enhanced win rates from reputation for reliable delivery, decreased emergency intervention expenses, and optimized resource deployment across the project portfolio based on risk-informed priorities that maximize overall performance.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Construction AI specialization, multi-factor risk correlation, predictive timeline accuracy, mitigation recommendation intelligence, project management expertise",
+                "focus": "Highlight construction domain expertise and multi-variable risk prediction capabilities that generic tools cannot deliver.",
+                "hint_text": "Highlight AI trained on construction project patterns versus generic project management software. Contrast multi-factor risk correlation with simple critical path analysis. Emphasize prescriptive mitigation recommendations based on construction expertise and successful intervention patterns.",
+                "ideal_answer": "The solution delivers superior predictive accuracy through AI purpose-built for construction projects, trained on diverse building types, delivery methods, and risk scenarios rather than generic project management tools adapted for construction. Unlike traditional scheduling software that tracks current progress linearly, the platform correlates complex risk interactions\u2014weather forecasts affecting exterior work, material lead times impacting dependent trades, labor availability constraining critical paths, inspection timing influencing schedule sequences\u2014identifying delay signatures before they manifest. The differentiation extends to prescriptive intelligence providing specific mitigation recommendations based on successful intervention patterns from similar project scenarios. Deep construction expertise ensures implementation aligns with superintendent workflows, subcontractor coordination processes, and owner communication requirements. The system learns from project outcomes, continuously improving prediction accuracy and mitigation effectiveness.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "Project Directors, Superintendents, Project Managers, CFO",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Project management platform connectivity, scheduling software integration, cost tracking synchronization, external risk data incorporation, communication tool compatibility",
+                "focus": "Detail seamless connection to existing construction systems and risk alert delivery within current project workflows.",
+                "hint_text": "Explain connections to project management platforms, scheduling tools, and cost tracking systems. Mention automatic ingestion of weather forecasts, material lead times, and labor availability data. Describe how risk alerts flow into superintendent dashboards and project review meetings.",
+                "ideal_answer": "The platform integrates seamlessly with existing project management software, scheduling tools, and cost tracking systems through standard construction technology connectors, automatically ingesting activity progress, resource assignments, budget data, and change orders without duplicate data entry. External risk signals\u2014weather forecasts, material supplier lead times, labor market conditions, and permit processing timelines\u2014flow continuously into risk prediction models enriching analysis with contextual factors. Risk alerts and mitigation recommendations deliver directly into superintendent dashboards, project coordinator interfaces, and executive project review tools teams use for daily management. Integration with communication platforms enables transparent client updates when risks require schedule or budget discussions. The architecture supports both project-level tactical risk management and portfolio-level strategic resource allocation, ensuring project teams access intelligence within established workflows.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Superintendent alert actionability, project manager risk visibility, scheduler mitigation planning support, executive portfolio oversight, client communication transparency",
+                "focus": "Compare actionable superintendent mitigation recommendations with strategic executive portfolio risk dashboards.",
+                "hint_text": "Describe specific risk alerts for superintendents with recommended mitigation actions versus portfolio analytics for executives. Explain scheduler tools for scenario planning and project manager interfaces showing comprehensive risk profiles with client communication support.",
+                "ideal_answer": "Superintendents receive prioritized risk alerts with specific mitigation recommendations\u2014which activities face delay risk, root causes driving the risk, and actionable interventions like schedule adjustments or resource reallocation\u2014enabling proactive management without extensive analysis. Project managers view comprehensive risk profiles showing all emerging threats with probability assessments, potential impact on schedule and budget, and mitigation options for client discussions. Schedulers access scenario planning tools exploring how different mitigation strategies affect overall project timelines and resource requirements. Executive leadership sees portfolio-wide risk dashboards identifying projects requiring attention, resource reallocation opportunities, and organizational risk concentrations across the project pipeline. Client communication interfaces provide transparent risk reporting with professional framing appropriate for owner relationships, demonstrating proactive management and commitment to delivery excellence.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Risk factor transparency, prediction confidence scoring, historical accuracy validation, override capabilities, scenario sensitivity, expert review integration",
+                "focus": "Explain risk driver transparency and project team override authority that build confidence while respecting construction expertise.",
+                "hint_text": "Highlight how the system shows which specific project factors are driving each risk prediction. Describe confidence scoring and superintendent override authority. Explain performance tracking comparing predictions to actual outcomes and validating accuracy over time.",
+                "ideal_answer": "Every risk prediction includes transparent reasoning showing which specific factors are driving the assessment\u2014weather patterns affecting exterior work windows, material delivery delays impacting trade sequences, labor availability constraining critical activities\u2014enabling project teams to validate the logic based on their site knowledge. Predictions include confidence scores reflecting data quality and scenario complexity, with lower-confidence risks clearly flagged for additional review. Project managers retain complete override authority, applying their construction experience and project-specific knowledge to risk prioritization and mitigation strategies. Scenario sensitivity tools show how changing assumptions affect predictions, enabling exploration of mitigation effectiveness. Performance tracking compares risk predictions against actual project outcomes, validating accuracy over time and building confidence through demonstrated reliability. Historical accuracy metrics for similar project types provide transparency into prediction performance.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "Project Directors, Superintendents, Project Managers, CFO",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Pilot project validation, regional expansion, enterprise-wide deployment, organizational capability building, measurable delivery transformation",
+                "focus": "Map pilot project validation milestones toward enterprise-wide predictive project management transformation.",
+                "hint_text": "Define milestones from verifying accuracy in a single pilot (90 days) to becoming the company-wide standard for quality (12 months).",
+                "ideal_answer": "At the initial milestone, success means validating predictive accuracy on pilot projects with documented risk identification lead time, measurable mitigation effectiveness, and project team confidence in recommendations. Expansion phase success involves scaling across regional project portfolios with predictive risk management integrated into project controls and demonstrated value across diverse project types and delivery methods. Full maturity represents the platform functioning as the enterprise-wide standard for project risk intelligence, with proactive risk management embedded in organizational culture. Leadership reports substantial improvement in on-time project delivery, reduced cost variance across the portfolio, enhanced client satisfaction scores, improved win rates from reputation for reliable execution, and competitive differentiation through superior delivery predictability that justifies pricing premium and drives portfolio growth, transforming the organization's capability to execute complex projects successfully.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Construction sector relevance, project complexity similarity, validated outcome metrics, client testimonials, industry recognition",
+                "focus": "Reference comparable construction organization results and independently validated delivery improvement outcomes.",
+                "hint_text": "Mention deployments at similar construction firms with comparable project types. Describe validated schedule adherence improvements and cost variance reductions. Reference client feedback or construction industry recognition of delivery excellence.",
+                "ideal_answer": "The platform has proven success in construction organizations similar to yours, with documented implementations across contractors managing comparable project complexity, delivery methods, and market sectors. Reference clients report measurable improvements in schedule adherence and cost control, with outcomes validated through project closeout data confirming delivery performance enhancement. Client testimonials document satisfaction with improved communication and delivery predictability. Several organizations have received industry recognition for project delivery excellence and innovation in risk management. The approach has delivered consistent results across diverse construction contexts\u2014commercial buildings, infrastructure, healthcare, industrial\u2014demonstrating effectiveness across different project types and procurement methods. Construction references are available to discuss their transformation to predictive project management, the superintendent adoption strategies that drove cultural change, and the competitive advantage they have gained through reliable delivery.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Dedicated implementation support, project team training, technical assistance accessibility, continuous optimization process, executive success reviews",
+                "focus": "Outline dedicated construction operations team support and comprehensive project team enablement programs.",
+                "hint_text": "Detail implementation support from construction technology and project controls experts. Describe superintendent and project manager training. Explain continuous risk model refinement and regular reviews tracking delivery performance impact.",
+                "ideal_answer": "Your project teams receive dedicated implementation support from specialists combining data science expertise and construction operations experience, configuring risk models for your specific project types, delivery methods, and market conditions. Comprehensive training prepares superintendents to interpret risk alerts and execute mitigation strategies, project managers to leverage intelligence for client communication, and schedulers to incorporate predictive insights into planning. Project controls teams learn to use portfolio analytics for strategic resource allocation. Continuous technical support provides rapid assistance whenever questions arise during project management. Regular optimization sessions analyze prediction performance across completed projects, refine models based on your organization's evolving portfolio, and identify new risk patterns to monitor. Executive business reviews track delivery metrics\u2014schedule adherence rates, cost variance trends, client satisfaction scores, win rate impacts\u2014ensuring leadership maintains visibility into how predictive project risk management is strengthening delivery excellence and competitive positioning.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

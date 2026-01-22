@@ -1,0 +1,9 @@
+{
+    "id": "logistics_ops_copilot",
+    "title": "AI Operations Copilot SaaS",
+    "domain": "Logistics",
+    "complexity": "High",
+    "target_market": "Logistics Firms",
+    "theme_id": "cyberpunk",
+    "description": "Develop an AI operations copilot that predicts delivery delays, identifies supply-chain exceptions early, and recommends corrective actions to improve reliability and efficiency."
+}

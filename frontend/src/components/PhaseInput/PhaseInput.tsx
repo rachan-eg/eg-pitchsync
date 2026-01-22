@@ -52,6 +52,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     } = useApp();
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [direction, setDirection] = useState<'next' | 'prev' | 'none'>('none');
     const [answers, setAnswers] = useState<string[]>([]);
     const [originalAnswers, setOriginalAnswers] = useState<string[]>([]);
     const [hintsUsed, setHintsUsed] = useState<boolean[]>([]);
@@ -153,8 +154,15 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         });
         const initialHints = phase.questions.map((q: any) => {
             const id = typeof q === 'string' ? q : q.id;
-            const prev = initialResponses.find(r => r.hint_used === true && r.question_id === id);
-            return !!prev;
+            const prev = initialResponses.find(r => r.question_id === id);
+            return prev?.hint_used === true;
+        });
+
+        // Debug logging
+        console.log('🔍 PhaseInput Init:', {
+            phaseId: currentId,
+            initialResponses: initialResponses.map(r => ({ qid: r.question_id, hint_used: r.hint_used })),
+            initialHints
         });
 
         // Reinitialize if:
@@ -204,11 +212,37 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         setAnswers(newAnswers);
     };
 
-    const unlockHint = () => {
+    const unlockHint = async () => {
         const newHints = [...hintsUsed];
         newHints[currentQuestionIndex] = true;
         setHintsUsed(newHints);
         setHintModalOpen(false);
+
+        // Immediately sync to provider (bypass debounce) to ensure hint persists on navigation
+        syncToProvider(answers, newHints);
+
+        // Immediately save hint to backend
+        const currentQuestion = phase.questions[currentQuestionIndex];
+        const questionId = typeof currentQuestion === 'string' ? currentQuestion : currentQuestion.id;
+        const phaseName = phaseConfig[phaseNumber]?.name;
+
+        if (session?.session_id && phaseName && questionId) {
+            try {
+                const { getApiUrl } = await import('../../utils');
+                await fetch(getApiUrl('/api/save-hint'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: session.session_id,
+                        phase_name: phaseName,
+                        question_id: questionId
+                    })
+                });
+                console.log('💡 Hint saved to backend');
+            } catch (e) {
+                console.error('Failed to save hint to backend:', e);
+            }
+        }
     };
 
 
@@ -285,6 +319,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const handleNext = useCallback(() => {
         if (currentQuestionIndex < phase.questions.length - 1) {
             if (isListening) stopVoice();
+            setDirection('next');
             setCurrentQuestionIndex(prev => prev + 1);
             setIsEditing(false);
         }
@@ -293,6 +328,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const handlePrev = useCallback(() => {
         if (currentQuestionIndex > 0) {
             if (isListening) stopVoice();
+            setDirection('prev');
             setCurrentQuestionIndex(prev => prev - 1);
             setIsEditing(false);
         }
@@ -300,6 +336,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
     const handleGoToQuestion = (index: number) => {
         if (isListening) stopVoice();
+        setDirection(index > currentQuestionIndex ? 'next' : 'prev');
         setCurrentQuestionIndex(index);
         setIsEditing(false);
     };
@@ -437,7 +474,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     return (
         <div className="pi-container animate-fade-in">
             <div className="pi-main">
-                <header className="pi-header">
+                <header className="pi-header reactive-border reactive-border--subtle">
                     <div className="pi-header__title-group">
                         <div className="pi-header__meta">
                             <span className="pi-header__tag">Operation Phase {phaseNumber} / {totalPhases}</span>
@@ -449,29 +486,33 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                         <h2 className="pi-header__name">{phase.name}</h2>
                     </div>
 
-                    <div className="pi-controls">
+                    <div className="pi-controls-liquid" style={{ '--active-index': currentQuestionIndex } as React.CSSProperties}>
+                        <div className="pi-liquid-thumb"></div>
                         {phase.questions.map((_: any, i: number) => {
                             const isDone = answers[i]?.trim().length >= 100;
                             const hasChanged = originalAnswers[i] !== undefined && answers[i] !== originalAnswers[i];
                             return (
                                 <button
                                     key={i}
-                                    className={`pi-btn ${i === currentQuestionIndex ? 'pi-btn--primary' : 'pi-btn--secondary'} ${isDone ? 'pi-btn--done' : ''} ${hasChanged ? 'pi-btn--changed' : ''}`}
-                                    style={{ padding: '0.35rem 0.75rem', minWidth: '40px', position: 'relative' }}
+                                    className={`pi-btn-liquid ${i === currentQuestionIndex ? 'pi-btn-liquid--active' : ''} ${isDone ? 'pi-btn-liquid--done' : ''} ${hasChanged ? 'pi-btn-liquid--changed' : ''}`}
                                     onClick={() => handleGoToQuestion(i)}
                                 >
-                                    {i + 1}
+                                    <span className="pi-btn-liquid-text">Q{i + 1}</span>
                                     {hasChanged && <span className="pi-btn-dot" />}
+                                    <div className="pi-btn-liquid-bg"></div>
                                 </button>
                             );
                         })}
                     </div>
                 </header>
 
-                <main className="pi-body">
+                <main
+                    key={currentQuestionIndex}
+                    className={`pi-body reactive-border ${direction === 'next' ? 'animate-question-next' : direction === 'prev' ? 'animate-question-prev' : ''}`}
+                >
                     <div className="pi-question-box">
                         <div className="pi-question">
-                            <span className="pi-question-num">{currentQuestionIndex + 1}</span>
+                            <span className="pi-question-num">Q{currentQuestionIndex + 1}</span>
                             <div className="pi-question-flex">
                                 <span className="pi-question-text">
                                     {typeof currentQuestion === 'string' ? currentQuestion : currentQuestion.text || currentQuestion.question}
@@ -513,6 +554,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 placeholder={isListening ? "" : "Type your response here (min 100 chars). Press Ctrl+Enter for next."}
                                 readOnly={isListening}
                                 onClick={handleInputClick}
+                                maxLength={3000}
                             />
                         ) : (
                             <div
@@ -536,7 +578,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </main>
 
-                <footer className="pi-footer">
+                <footer className="pi-footer reactive-border reactive-border--subtle">
                     <div className="pi-footer__left">
                         <div className="pi-char-count">
                             <span className="pi-char-label" style={{ color: currentValid ? 'var(--text-muted)' : 'rgba(192, 190, 190, 0.8)' }}>
@@ -553,7 +595,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     <div className="pi-footer__center">
                         <div className="pi-controls">
                             <button
-                                className="pi-btn pi-btn--secondary"
+                                className="pi-btn pi-btn--secondary reactive-border reactive-border--subtle"
                                 onClick={handlePrev}
                                 disabled={isFirstQuestion}
                             >
@@ -585,7 +627,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
                             {!isLastQuestion && (
                                 <button
-                                    className="pi-btn pi-btn--secondary"
+                                    className="pi-btn pi-btn--secondary reactive-border reactive-border--subtle"
                                     onClick={handleNext}
                                 >
                                     Next <Icons.ChevronRight />
@@ -610,7 +652,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
                             return (
                                 <button
-                                    className={`pi-btn ${allAnswered ? (showReview ? 'pi-btn--primary pi-btn--done' : 'pi-btn--primary') : 'pi-btn--secondary'}`}
+                                    className={`pi-btn reactive-border ${allAnswered ? (showReview ? 'pi-btn--primary pi-btn--done reactive-border--success' : 'pi-btn--primary reactive-border--intense') : 'pi-btn--secondary reactive-border--subtle'}`}
                                     style={{ position: 'relative' }}
                                     onClick={handleSubmit}
                                     disabled={!allAnswered || isSubmitting}
@@ -626,7 +668,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
             </div>
 
             <aside className="pi-sidebar">
-                <div className="pi-simple-clock">
+                <div className="pi-simple-clock reactive-border reactive-border--subtle">
                     <Icons.Clock />
                     <div className="pi-simple-timer-group">
                         <span className={`pi-simple-timer ${elapsedSeconds > timeLimit ? 'text-danger' : 'text-secondary'}`}>
@@ -635,7 +677,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </div>
 
-                <div className="pi-sidebar-section">
+                <div className="pi-sidebar-section reactive-border">
                     <div className="pi-sidebar-header">
                         <div className="pi-sidebar-icon"><Icons.Target /></div>
                         <h3 className="pi-sidebar-title">Strategic Focus</h3>
@@ -651,7 +693,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </div>
 
-                <div className="pi-sidebar-section">
+                <div className="pi-sidebar-section reactive-border">
                     <div className="pi-sidebar-header">
                         <div className="pi-sidebar-icon"><Icons.Cpu /></div>
                         <h3 className="pi-sidebar-title">Evaluation Focus</h3>
@@ -710,7 +752,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </div>
 
-                <div className="pi-sidebar-section">
+                <div className="pi-sidebar-section reactive-border">
                     <div className="pi-sidebar-header">
                         <div className="pi-sidebar-icon"><Icons.History /></div>
                         <h3 className="pi-sidebar-title">Retry History</h3>

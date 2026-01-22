@@ -1,0 +1,14 @@
+{
+    "id": "cyberpunk",
+    "name": "Industrial Cyberpunk",
+    "mood": "Rebellious, High-Tech, Underground",
+    "visual_style": "Neon, high contrast, futuristic, gritty, glitched overlays",
+    "colors": {
+        "primary": "#BA5400",
+        "secondary": "#FF00FF",
+        "bg": "#0a0a0f",
+        "success": "#00855B",
+        "error": "#D93539",
+        "warning": "#956D00"
+    }
+}
