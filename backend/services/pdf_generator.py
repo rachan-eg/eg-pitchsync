@@ -1,921 +1,919 @@
 """
 Pitch-Sync PDF Report Generator
-Premium HTML-to-PDF generation using xhtml2pdf - pure Python with no system dependencies.
+Dark Theme Edition - Matching Website Aesthetic with Poppins Support
+Version 4.1 - Premium Dark Mode Design
 """
 
 import logging
+import re
+import io
 from pathlib import Path
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 import base64
 from io import BytesIO
 
-from xhtml2pdf import pisa
+from reportlab.graphics import renderPDF
+from svglib.svglib import svg2rlg
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm, mm, inch
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import (
+    BaseDocTemplate,
+    PageTemplate,
+    Frame,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    Image,
+    PageBreak,
+    KeepTogether,
+    NextPageTemplate,
+    HRFlowable,
+    CondPageBreak,
+)
+from reportlab.pdfgen import canvas
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 
 from backend.models.session import SessionState, PhaseStatus
 from backend.models import get_phases_for_usecase
 from backend.config import GENERATED_DIR, settings
-from backend.services.state import get_leaderboard_sessions
 
-# --- SVG LOGOS (from frontend branding) - simplified for xhtml2pdf compatibility ---
-EG_LOGO_SVG = '''
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 500 506">
-    <rect x="0" y="280" width="226" height="226" rx="22" fill="#ef0304"/>
-    <rect x="274" y="0" width="226" height="226" rx="22" fill="#ef0304"/>
-    <text x="90" y="180" font-size="180" font-family="Arial" font-weight="bold" fill="white">E</text>
-    <text x="300" y="440" font-size="180" font-family="Arial" font-weight="bold" fill="white">G</text>
+# =============================================================================
+# WEBSITE THEME COLORS (Dark Mode) - Solid Unified Tone
+# =============================================================================
+BG_DARK = colors.HexColor("#050508")
+BG_CARD = colors.HexColor("#050508")  # Same as BG_DARK for unified tone
+BG_PANEL = colors.HexColor("#050508") # Same as BG_DARK
+
+PRIMARY = colors.HexColor("#a78bfa")
+SECONDARY = colors.HexColor("#3b82f6")
+ACCENT = colors.HexColor("#f472b6")
+
+EG_NAVY = colors.HexColor("#050508")  # Unified with background
+EG_RED = colors.HexColor("#EF0304")
+
+SUCCESS = colors.HexColor("#10b981")
+WARNING = colors.HexColor("#f59e0b")
+DANGER = colors.HexColor("#ef4444")
+INFO = colors.HexColor("#3b82f6")
+
+TEXT_PRIMARY = colors.HexColor("#f8fafc")
+TEXT_SECONDARY = colors.HexColor("#cbd5e1")
+TEXT_DIM = colors.HexColor("#94a3b8")
+TEXT_MUTED = colors.HexColor("#64748b")
+
+BORDER_LIGHT = colors.HexColor("#1e293b")
+
+TIER_S = colors.HexColor("#FFD700")
+TIER_A = colors.HexColor("#10B981")
+TIER_B = colors.HexColor("#3B82F6")
+TIER_C = colors.HexColor("#F59E0B")
+TIER_D = colors.HexColor("#EF4444")
+
+PAGE_WIDTH, PAGE_HEIGHT = A4
+MARGIN = 2 * cm
+TEXT_WIDTH = PAGE_WIDTH - 2 * MARGIN
+
+LOGO_PATH = settings.BACKEND_DIR / "vault" / "construction_ai_deviation" / "logo" / "EGDK logo.png"
+FONTS_DIR = settings.BACKEND_DIR / "assets" / "fonts"
+
+# Pitch-Sync "Flipping" Logo SVG Data (Back side from Branding.tsx)
+PITCH_SYNC_LOGO_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <path transform="translate(80.969 37.867)" d="m0 0c1.2104-0.0012891 2.4209-0.0025781 3.668-0.0039062 1.2749 0.0038672 2.5498 0.0077344 3.8633 0.011719 1.9123-0.0058008 1.9123-0.0058008 3.8633-0.011719 1.8156 0.0019336 1.8156 0.0019336 3.668 0.0039062 1.1196 0.0011279 2.2391 0.0022559 3.3926 0.003418 2.5762 0.12939 2.5762 0.12939 3.5762 1.1294 0.094137 2.0556 0.11743 4.1144 0.11353 6.1721 1.4603e-4 0.64388 2.9205e-4 1.2878 4.4251e-4 1.9512-6.9905e-4 2.1373-0.008491 4.2746-0.016312 6.4119-0.0018642 1.4783-0.0032881 2.9566-0.0042877 4.4349-0.0038249 3.8979-0.013655 7.7958-0.024704 11.694-0.010215 3.9747-0.014794 7.9494-0.019836 11.924-0.010737 7.8041-0.027813 15.608-0.048828 23.412-3.9693 0.024659-7.9386 0.04284-11.908 0.054932-1.3512 0.0050389-2.7025 0.01187-4.0537 0.020508-1.9385 0.012085-3.8771 0.017259-5.8157 0.022217-1.7517 0.0078552-1.7517 0.0078552-3.5388 0.015869-2.6838-0.11353-2.6838-0.11353-3.6838-1.1135-0.099351-2.0195-0.128-4.0425-0.12939-6.0645-0.0031522-1.298-0.0063043-2.5961-0.009552-3.9335 0.0017898-1.4278 0.0038407-2.8556 0.006134-4.2833-6.7308e-4 -1.4535-0.0016431-2.907-0.0028992-4.3605-0.0014768-3.0499 6.7697e-4 -6.0998 0.0053406-9.1498 0.0056973-3.9178 0.0024182-7.8355-0.0035725-11.753-0.0036061-3.0025-0.0024668-6.0049 1.2779e-4 -9.0074 6.6913e-4 -1.445-1.5865e-4 -2.8899-0.0024796-4.3349-0.0025273-2.0161 0.0020048-4.0323 0.0069008-6.0484 7.9559e-4 -1.1495 0.0015912-2.299 0.0024109-3.4833 0.23758-4.8293 2.8528-3.7097 7.0957-3.714z" fill="#EF0203" />
+    <path transform="translate(7.4062 73.867)" d="m0 0c1.3007-0.0012891 2.6013-0.0025781 3.9414-0.0039062 1.0212 0.0031421 1.0212 0.0031421 2.063 0.0063477 2.0806 0.0053487 4.1611 5.429e-5 6.2417-0.0063477 1.951 0.0019336 1.951 0.0019336 3.9414 0.0039062 1.2033 0.0011279 2.4067 0.0022559 3.6465 0.003418 2.7598 0.12939 2.7598 0.12939 3.7598 1.1294 0.10003 2.1335 0.13081 4.2704 0.13281 6.4062 0.0012891 1.3007 0.0025781 2.6013 0.0039062 3.9414-0.0031421 1.0212-0.0031421 1.0212-0.0063477 2.063-0.0053487 2.0806-5.429e-5 4.1611 0.0063477 6.2417-0.0012891 1.3007-0.0025781 2.6013-0.0039062 3.9414-0.0011279 1.2033-0.0022559 2.4067-0.003418 3.6465-0.12939 2.7598-0.12939 2.7598-1.1294 3.7598-2.2186 0.087835-4.4399 0.10695-6.6602 0.097656-0.9967-0.0021224-0.9967-0.0021224-2.0135-0.0042877-2.1296-0.0056134-4.2592-0.018168-6.3888-0.030869-1.4408-0.0050133-2.8815-0.0095765-4.3223-0.013672-3.5384-0.011047-7.0768-0.02832-10.615-0.048828-0.024656-4.2541-0.042839-8.5083-0.054932-12.762-0.0050394-1.4482-0.011871-2.8965-0.020508-4.3447-0.012083-2.0776-0.017793-4.1551-0.022217-6.2327-0.0052368-1.2516-0.010474-2.5032-0.015869-3.7927 0.20749-5.2409 2.8801-3.9959 7.5198-4.0002z" fill="#EF0203" />
+    <path transform="translate(36,38)" d="m0 0c3.9693-0.024659 7.9386-0.04284 11.908-0.054932 1.3512-0.0050389 2.7025-0.01187 4.0537-0.020508 1.9385-0.012085 3.8771-0.017259 5.8157-0.022217 1.7517-0.0078552 1.7517-0.0078552 3.5388-0.015869 2.6838 0.11353 2.6838 0.11353 3.6838 1.1135 0.099831 1.9876 0.13081 3.9787 0.13281 5.9688 0.0019336 1.8156 0.0019336 1.8156 0.0039062 3.668-0.0038672 1.2749-0.0077344 2.5498-0.011719 3.8633 0.0058008 1.9123 0.0058008 1.9123 0.011719 3.8633-0.0012891 1.2104-0.0025781 2.4209-0.0039062 3.668-0.0011279 1.1196-0.0022559 2.2391-0.003418 3.3926-0.12939 2.5762-0.12939 2.5762-1.1294 3.5762-2.0726 0.087671-4.1482 0.10696-6.2227 0.097656-1.2601-0.0032227-2.5201-0.0064453-3.8184-0.0097656-1.3405-0.0083566-2.681-0.016822-4.0215-0.025391-1.3444-0.0050134-2.6888-0.0095766-4.0332-0.013672-3.3015-0.011833-6.6029-0.028318-9.9043-0.048828-1.32-2.64-1.1296-4.6408-1.1328-7.5938-0.0019336-1.6687-0.0019336-1.6687-0.0039062-3.3711 0.0038672-1.1666 0.0077344-2.3332 0.011719-3.5352-0.0038672-1.1666-0.0077344-2.3332-0.011719-3.5352 0.0012891-1.1125 0.0025781-2.2249 0.0039062-3.3711 0.0016919-1.5362 0.0016919-1.5362 0.003418-3.1035 0.12939-2.4902 0.12939-2.4902 1.1294-4.4902z" fill="#EE0303" />
+    <path transform="translate(77.684 -.11353)" d="m0 0c1.1678 0.0052368 2.3356 0.010474 3.5388 0.015869 1.2601 0.0032227 2.5201 0.0064453 3.8184 0.0097656 1.3405 0.0083566 2.681 0.016822 4.0215 0.025391 1.3444 0.0050134 2.6888 0.0095766 4.0332 0.013672 3.3015 0.011833 6.6029 0.028318 9.9043 0.048828 0.024659 3.9693 0.04284 7.9386 0.054932 11.908 0.0050389 1.3512 0.01187 2.7025 0.020508 4.0537 0.012085 1.9385 0.017259 3.8771 0.022217 5.8157 0.0078552 1.7517 0.0078552 1.7517 0.015869 3.5388-0.11353 2.6838-0.11353 2.6838-1.1135 3.6838-1.9876 0.099831-3.9787 0.13081-5.9688 0.13281-1.2104 0.0012891-2.4209 0.0025781-3.668 0.0039062-1.2749-0.0038672-2.5498-0.0077344-3.8633-0.011719-1.2749 0.0038672-2.5498 0.0077344-3.8633 0.011719-1.8156-0.0019336-1.8156-0.0019336-3.668-0.0039062-1.1196-0.0011279-2.2391-0.0022559-3.3926-0.003418-2.5762-0.12939-2.5762-0.12939-3.5762-1.1294-0.099831-1.9876-0.13081-3.9787-0.13281-5.9688-0.0012891-1.2104-0.0025781-2.4209-0.0039062-3.668 0.0038672-1.2749 0.0077344-2.3332 0.011719-3.8633-0.0038672-1.2749-0.0077344-2.5498-0.011719-3.8633 0.0012891-1.2104 0.0025781-2.4209 0.0039062-3.668 0.0011279-1.1196 0.0022559-2.2391 0.003418-3.3926 0.17741-3.5322 0.26778-3.5397 3.8132-3.6897z" fill="#EF0303" />
 </svg>
-'''
+"""
+
+# =============================================================================
+# FONT CONFIGURATION
+# =============================================================================
+# Attempt to register Poppins if available, else fall back to Helvetica
+HEADER_FONT = "Helvetica-Bold"
+BODY_FONT = "Helvetica"
+ITALIC_FONT = "Helvetica-Oblique"
+
+def register_custom_fonts():
+    """Register Poppins fonts if available."""
+    global HEADER_FONT, BODY_FONT, ITALIC_FONT
+    
+    try:
+        if not FONTS_DIR.exists():
+            return
+
+        poppins_reg = FONTS_DIR / "Poppins-Regular.ttf"
+        poppins_bold = FONTS_DIR / "Poppins-Bold.ttf"
+        poppins_italic = FONTS_DIR / "Poppins-Italic.ttf"
+
+        if poppins_reg.exists() and poppins_bold.exists():
+            pdfmetrics.registerFont(TTFont('Poppins', str(poppins_reg)))
+            pdfmetrics.registerFont(TTFont('Poppins-Bold', str(poppins_bold)))
+            if poppins_italic.exists():
+                pdfmetrics.registerFont(TTFont('Poppins-Italic', str(poppins_italic)))
+            
+            HEADER_FONT = "Poppins-Bold"
+            BODY_FONT = "Poppins"
+            ITALIC_FONT = "Poppins-Italic" if poppins_italic.exists() else "Poppins"
+            logging.info("Successfully registered Poppins fonts.")
+            
+    except Exception as e:
+        logging.warning(f"Failed to register custom fonts: {e}")
+
+# Register fonts on module load
+register_custom_fonts()
 
 
 def clean_text(text: Optional[str]) -> str:
-    """Escape HTML entities for safe rendering."""
+    """Sanitize text for ReportLab XML compatibility."""
     if not text:
         return ""
     text = str(text)
     text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     text = text.replace('"', "&quot;")
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+    text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
+    text = text.replace('\n', '<br/>')
     return text
 
 
 def format_duration(seconds: float) -> str:
-    """Format duration in human-readable format."""
     mins, secs = divmod(int(seconds), 60)
+    hours, mins = divmod(mins, 60)
+    if hours > 0:
+        return f"{hours}h {mins}m {secs}s"
     if mins > 0:
         return f"{mins}m {secs}s"
     return f"{secs}s"
 
 
-class ReportGenerator:
-    """HTML-to-PDF Report Generator with premium styling."""
-
+class DarkThemeReportGenerator:
+    """Updated Dark Theme Generator with Font Support"""
+    
     def __init__(self, session: SessionState):
         self.session = session
         self.team_id = session.team_id
-        
-        # Calculate category ranks
-        self.category_ranks = self._calculate_category_ranks()
-        self.podium_wins = self._get_podium_wins()
+        register_custom_fonts()  # Ensure fonts are tried
+        self.styles = self._create_styles()
+        self.section_counter = 0
+        self.subsection_counter = 0
+        self.figure_counter = 0
+        self.table_counter = 0
 
-    def _calculate_category_ranks(self) -> Dict[str, Dict]:
-        """Calculate rankings across all competition categories."""
-        placements = {}
+    def _get_tier_info(self, score: int) -> Tuple[str, str, colors.Color]:
+        if score >= 900: return "S-TIER", "Exceptional", TIER_S
+        elif score >= 800: return "A-TIER", "Strong", TIER_A
+        elif score >= 700: return "B-TIER", "Good", TIER_B
+        elif score >= 500: return "C-TIER", "Satisfactory", TIER_C
+        else: return "D-TIER", "Needs Work", TIER_D
+
+    def _create_styles(self) -> Dict[str, ParagraphStyle]:
+        styles = {}
+        
+        styles["Display"] = ParagraphStyle(
+            name="Display",
+            fontName=HEADER_FONT,
+            fontSize=32,
+            leading=38,
+            textColor=TEXT_PRIMARY,
+            alignment=TA_CENTER
+        )
+        
+        styles["DisplaySub"] = ParagraphStyle(
+            name="DisplaySub",
+            fontName=BODY_FONT,
+            fontSize=14,
+            leading=18,
+            textColor=TEXT_DIM,
+            alignment=TA_CENTER
+        )
+        
+        styles["H1"] = ParagraphStyle(
+            name="H1",
+            fontName=HEADER_FONT,
+            fontSize=18,
+            leading=24,
+            textColor=TEXT_PRIMARY,
+            spaceBefore=16,
+            spaceAfter=10
+        )
+        
+        styles["H2"] = ParagraphStyle(
+            name="H2",
+            fontName=HEADER_FONT,
+            fontSize=14,
+            leading=18,
+            textColor=PRIMARY,
+            spaceBefore=14,
+            spaceAfter=8
+        )
+        
+        styles["PhaseHeading"] = ParagraphStyle(
+            name="PhaseHeading",
+            fontName=HEADER_FONT,
+            fontSize=15,
+            leading=20,
+            textColor=TEXT_PRIMARY,
+            alignment=TA_CENTER,
+            spaceBefore=5,
+            spaceAfter=5,
+            textTransform="uppercase"
+        )
+        
+        styles["H3"] = ParagraphStyle(
+            name="H3",
+            fontName=HEADER_FONT,
+            fontSize=11,
+            leading=14,
+            textColor=TEXT_SECONDARY,
+            spaceBefore=10,
+            spaceAfter=6
+        )
+        
+        styles["Body"] = ParagraphStyle(
+            name="Body",
+            fontName=BODY_FONT,
+            fontSize=10,
+            leading=15,
+            textColor=TEXT_SECONDARY,
+            alignment=TA_JUSTIFY
+        )
+        
+        styles["BodySmall"] = ParagraphStyle(
+            name="BodySmall",
+            fontName=BODY_FONT,
+            fontSize=9,
+            leading=12,
+            textColor=TEXT_DIM
+        )
+        
+        styles["Label"] = ParagraphStyle(
+            name="Label",
+            fontName=HEADER_FONT,
+            fontSize=8,
+            leading=10,
+            textColor=TEXT_MUTED,
+            textTransform="uppercase"
+        )
+        
+        styles["Caption"] = ParagraphStyle(
+            name="Caption",
+            fontName=BODY_FONT,
+            fontSize=9,
+            leading=12,
+            textColor=TEXT_DIM,
+            alignment=TA_CENTER
+        )
+        
+        styles["MetricLarge"] = ParagraphStyle(
+            name="MetricLarge",
+            fontName=HEADER_FONT,
+            fontSize=36,
+            leading=40,
+            textColor=PRIMARY,
+            alignment=TA_CENTER
+        )
+        
+        styles["MetricMedium"] = ParagraphStyle(
+            name="MetricMedium",
+            fontName=HEADER_FONT,
+            fontSize=20,
+            leading=24,
+            textColor=TEXT_PRIMARY,
+            alignment=TA_CENTER
+        )
+        
+        styles["TableHeader"] = ParagraphStyle(
+            name="TableHeader",
+            fontName=HEADER_FONT,
+            fontSize=9,
+            leading=12,
+            textColor=TEXT_PRIMARY
+        )
+        
+        styles["TableCell"] = ParagraphStyle(
+            name="TableCell",
+            fontName=BODY_FONT,
+            fontSize=9,
+            leading=12,
+            textColor=TEXT_SECONDARY
+        )
+        
+        styles["TableCellCenter"] = ParagraphStyle(
+            name="TableCellCenter",
+            fontName=BODY_FONT,
+            fontSize=9,
+            leading=12,
+            textColor=TEXT_SECONDARY,
+            alignment=TA_CENTER
+        )
+        
+        styles["Quote"] = ParagraphStyle(
+            name="Quote",
+            fontName=ITALIC_FONT,
+            fontSize=12,
+            leading=16,
+            textColor=PRIMARY,
+            alignment=TA_CENTER,
+            leftIndent=20,
+            rightIndent=20
+        )
+        
+        styles["ListItem"] = ParagraphStyle(
+            name="ListItem",
+            fontName=BODY_FONT,
+            fontSize=10,
+            leading=14,
+            textColor=TEXT_SECONDARY,
+            leftIndent=15,
+            bulletIndent=8
+        )
+        
+        return styles
+
+    def _next_section(self, title: str) -> str:
+        self.section_counter += 1
+        self.subsection_counter = 0
+        return title
+
+    def _next_subsection(self, title: str) -> str:
+        self.subsection_counter += 1
+        return title
+
+    def _next_figure(self) -> int:
+        self.figure_counter += 1
+        return self.figure_counter
+
+    def _next_table(self) -> int:
+        self.table_counter += 1
+        return self.table_counter
+
+    # =========================================================================
+    # PAGE TEMPLATES
+    # =========================================================================
+    def _draw_dark_background(self, canvas):
+        """Draw the solid single-toned dark background."""
+        canvas.setFillColor(BG_DARK)
+        canvas.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, fill=1, stroke=0)
+
+    def _draw_header(self, canvas, doc):
+        """Draw the dark header matching website navbar."""
+        header_height = 1.8 * cm
+        header_y = PAGE_HEIGHT - header_height
+        
+        canvas.setFillColor(EG_NAVY)
+        canvas.rect(0, header_y, PAGE_WIDTH, header_height, fill=1, stroke=0)
+        
+        canvas.setFillColor(EG_RED)
+        canvas.rect(0, header_y - 4, PAGE_WIDTH, 4, fill=1, stroke=0)
+        
+        logo_size = 0.8 * cm
+        logo_x = MARGIN
+        logo_y = header_y + (header_height - logo_size) / 2
+        
+        # 1. Draw EG Logo (PNG) on the LEFT
+        logo_cursor_x = MARGIN
+        if LOGO_PATH.exists():
+            try:
+                canvas.drawImage(str(LOGO_PATH), logo_cursor_x, logo_y, width=logo_size, height=logo_size, mask='auto', preserveAspectRatio=True)
+                logo_cursor_x += logo_size + 0.35*cm
+            except Exception: pass
+
+        # 2. Draw Pitch-Sync Branding Block on the LEFT (now following EG logo)
+        h_font = HEADER_FONT if "Poppins" in HEADER_FONT else "Helvetica-Bold"
+        b_font = BODY_FONT if "Poppins" in BODY_FONT else "Helvetica"
+        
         try:
-            best_sessions = get_leaderboard_sessions(limit=100)
+            # Draw SVG Logo
+            drawing = svg2rlg(io.BytesIO(PITCH_SYNC_LOGO_SVG.encode('utf-8')))
+            sx = sy = logo_size / max(drawing.width, drawing.height)
+            drawing.scale(sx, sy)
+            renderPDF.draw(drawing, canvas, logo_cursor_x, logo_y)
             
-            def get_rank(sorted_list):
-                for i, s in enumerate(sorted_list):
-                    if s.team_id == self.team_id:
-                        return i + 1
-                return None
-
-            # 1. Elite Score
-            elite = sorted([s for s in best_sessions if s.total_score > 0],
-                           key=lambda x: (-x.total_score, x.total_tokens))
-            r = get_rank(elite)
-            placements["Elite Score"] = {"val": r, "str": f"#{r}" if r else "N/A", "desc": "Highest Overall Score"}
-
-            # 2. No-Retry Legends
-            legends = sorted([s for s in best_sessions
-                              if sum(p.metrics.retries for p in s.phases.values()) == 0 and s.total_score > 0],
-                             key=lambda x: (-x.total_score, x.total_tokens))
-            is_legend = sum(p.metrics.retries for p in self.session.phases.values()) == 0
-            if is_legend:
-                r = get_rank(legends)
-                placements["No-Retry Legends"] = {"val": r, "str": f"#{r}" if r else "N/A", "desc": "Perfect First Attempt"}
-            else:
-                placements["No-Retry Legends"] = {"val": None, "str": "N/A", "desc": "Perfect First Attempt"}
-
-            # 3. Minimalist
-            minimalist = sorted([s for s in best_sessions if s.is_complete],
-                                key=lambda x: (x.total_tokens, -x.total_score))
-            if self.session.is_complete:
-                r = get_rank(minimalist)
-                placements["Minimalist"] = {"val": r, "str": f"#{r}" if r else "N/A", "desc": "Lowest Token Usage"}
-            else:
-                placements["Minimalist"] = {"val": None, "str": "N/A", "desc": "Lowest Token Usage"}
-
-            # 4. Strategic Speed
-            def get_dur(sess):
-                return sum(p.metrics.duration_seconds for p in sess.phases.values())
-            blitz = sorted([s for s in best_sessions if s.is_complete],
-                           key=lambda x: (get_dur(x), -x.total_score))
-            if self.session.is_complete:
-                r = get_rank(blitz)
-                placements["Strategic Speed"] = {"val": r, "str": f"#{r}" if r else "N/A", "desc": "Fastest Completion"}
-            else:
-                placements["Strategic Speed"] = {"val": None, "str": "N/A", "desc": "Fastest Completion"}
-
-            # 5. Phase Champions
-            for p_num in [1, 2, 3]:
-                def get_p_score(sess, idx):
-                    try:
-                        return list(sess.phases.values())[idx - 1].metrics.weighted_score
-                    except:
-                        return 0
-
-                p_sorted = sorted([s for s in best_sessions if len(s.phases) >= p_num],
-                                  key=lambda x: -get_p_score(x, p_num))
-
-                if len(self.session.phases) >= p_num:
-                    r = get_rank(p_sorted)
-                    placements[f"Phase {p_num} Champion"] = {"val": r, "str": f"#{r}" if r else "N/A", "desc": f"Phase {p_num} Excellence"}
-                else:
-                    placements[f"Phase {p_num} Champion"] = {"val": None, "str": "N/A", "desc": f"Phase {p_num} Excellence"}
-
+            text_x = logo_cursor_x + logo_size + 0.35*cm
+            text_y_main = header_y + header_height/2 + 0.05*cm
+            text_y_sub = header_y + header_height/2 - 0.30*cm
+            
+            canvas.setFillColor(PRIMARY)
+            canvas.setFont(h_font, 12)
+            canvas.drawString(text_x, text_y_main, "PITCH")
+            
+            pitch_w = canvas.stringWidth("PITCH", h_font, 12)
+            canvas.setFillColor(TEXT_PRIMARY)
+            canvas.drawString(text_x + pitch_w + 1, text_y_main, "-SYNC")
+            
+            canvas.setFillColor(TEXT_MUTED)
+            canvas.setFont(b_font, 6)
+            canvas.drawString(text_x, text_y_sub, "Powered By")
+            
+            pb_w = canvas.stringWidth("Powered By ", b_font, 6)
+            canvas.setFillColor(TEXT_PRIMARY)
+            canvas.setFont(h_font, 6)
+            canvas.drawString(text_x + pb_w, text_y_sub, "AI COE")
+            
         except Exception as e:
-            print(f"Rank calculation error: {e}")
-            placements["Elite Score"] = {"val": None, "str": "N/A", "desc": "Highest Overall Score"}
+            logging.warning(f"Failed to render left branding block: {e}")
 
-        return placements
+        # 3. Team Name Branding - CENTERED
+        canvas.setFillColor(TEXT_PRIMARY)
+        canvas.setFont(h_font, 14)
+        team_display = clean_text(self.team_id)
+        if not team_display.lower().startswith("team"):
+            team_display = f"Team {team_display}"
+        canvas.drawCentredString(PAGE_WIDTH / 2, header_y + header_height/2 - 0.2*cm, team_display)
 
-    def _get_podium_wins(self) -> List[Dict]:
-        """Get only categories where team placed in top 3."""
-        wins = []
-        for cat, data in self.category_ranks.items():
-            val = data.get('val')
-            if val and val <= 3:
-                wins.append({
-                    "category": cat,
-                    "rank": val,
-                    "label": "GOLD" if val == 1 else "SILVER" if val == 2 else "BRONZE",
-                    "desc": data.get("desc", "")
-                })
-        return wins
+    def _draw_footer(self, canvas, doc):
+        footer_y = MARGIN - 0.3*cm
+        b_font = BODY_FONT if "Poppins" in BODY_FONT else "Helvetica"
+        h_font = HEADER_FONT if "Poppins" in HEADER_FONT else "Helvetica-Bold"
+        
+        canvas.setStrokeColor(BORDER_LIGHT)
+        canvas.setLineWidth(1.5)
+        canvas.line(MARGIN, footer_y + 0.4*cm, PAGE_WIDTH - MARGIN, footer_y + 0.4*cm)
+        
+        canvas.setFillColor(TEXT_MUTED)
+        canvas.setFont(b_font, 9)
+        canvas.drawCentredString(PAGE_WIDTH / 2, footer_y, str(doc.page))
+        
+        canvas.setFont(b_font, 7)
+        canvas.drawString(MARGIN, footer_y, datetime.now().strftime("%d %b %Y"))
 
-    def _get_tier(self, score: float) -> str:
-        """Determine performance tier."""
-        if score >= 900: return 'S'
-        if score >= 800: return 'A'
-        if score >= 700: return 'B'
-        if score >= 500: return 'C'
-        return 'D'
+    def _draw_title_page(self, canvas, doc):
+        self._draw_dark_background(canvas)
+        self._draw_header(canvas, doc)
 
-    def _get_tier_color(self, score: float) -> str:
-        """Get color for tier."""
-        tier = self._get_tier(score)
-        colors = {'S': '#FFD700', 'A': '#22C55E', 'B': '#4078D9', 'C': '#F2A633', 'D': '#D94D4D'}
-        return colors.get(tier, '#4078D9')
+    def _draw_content_page(self, canvas, doc):
+        self._draw_dark_background(canvas)
+        self._draw_header(canvas, doc)
+        self._draw_footer(canvas, doc)
 
-    def _generate_css(self) -> str:
-        """Generate CSS styles compatible with xhtml2pdf."""
-        return '''
-        @page {
-            size: A4;
-            margin: 1.5cm 1.5cm 2cm 1.5cm;
-            @frame footer {
-                -pdf-frame-content: footerContent;
-                bottom: 0.5cm;
-                margin-left: 1.5cm;
-                margin-right: 1.5cm;
-                height: 1cm;
-            }
-        }
-        
-        body {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 10pt;
-            line-height: 1.4;
-            color: #1a1a2e;
-        }
-        
-        /* === HEADER === */
-        .header {
-            background-color: #0F1729;
-            color: white;
-            padding: 12px 15px;
-            margin: -1.5cm -1.5cm 15px -1.5cm;
-            border-bottom: 3px solid #4078D9;
-        }
-        
-        .header-table {
-            width: 100%;
-        }
-        
-        .header-brand {
-            font-size: 16pt;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-        }
-        
-        .header-subtitle {
-            font-size: 8pt;
-            color: #6690E6;
-        }
-        
-        .header-right {
-            text-align: right;
-        }
-        
-        .header-powered {
-            font-size: 7pt;
-            color: #8a8a9e;
-        }
-        
-        .header-coe {
-            font-size: 11pt;
-            font-weight: bold;
-        }
-        
-        /* === TITLE SECTION === */
-        .report-title {
-            font-size: 20pt;
-            font-weight: bold;
-            color: #0F1729;
-            margin-bottom: 3px;
-        }
-        
-        .report-subtitle {
-            font-size: 10pt;
-            color: #5a5a6e;
-            margin-bottom: 15px;
-        }
-        
-        /* === SCORE CARD === */
-        .score-card {
-            background-color: #f8f9fb;
-            border: 1px solid #e5e7eb;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .score-table {
-            width: 100%;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 12px;
-        }
-        
-        .score-value {
-            font-size: 36pt;
-            font-weight: bold;
-            color: #4078D9;
-            text-align: center;
-        }
-        
-        .score-label {
-            font-size: 8pt;
-            color: #8a8a9e;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: center;
-        }
-        
-        .stats-table {
-            width: 100%;
-        }
-        
-        .stats-table td {
-            text-align: center;
-            padding: 8px 5px;
-            background-color: #f0f2f5;
-        }
-        
-        .stat-value {
-            font-size: 14pt;
-            font-weight: bold;
-            color: #1a1a2e;
-        }
-        
-        .stat-value-negative {
-            font-size: 14pt;
-            font-weight: bold;
-            color: #D94D4D;
-        }
-        
-        .stat-value-positive {
-            font-size: 14pt;
-            font-weight: bold;
-            color: #2EBF80;
-        }
-        
-        .stat-label {
-            font-size: 7pt;
-            color: #8a8a9e;
-            text-transform: uppercase;
-        }
-        
-        /* === SECTION HEADERS === */
-        .section-header {
-            font-size: 13pt;
-            font-weight: bold;
-            color: #0F1729;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #4078D9;
-        }
-        
-        /* === ACHIEVEMENTS === */
-        .achievement-table {
-            width: 100%;
-            margin-bottom: 15px;
-        }
-        
-        .achievement-card {
-            text-align: center;
-            padding: 12px 8px;
-            border: 2px solid;
-        }
-        
-        .achievement-gold {
-            background-color: #FFF9E6;
-            border-color: #FFD700;
-        }
-        
-        .achievement-silver {
-            background-color: #F5F5F5;
-            border-color: #C0C0C0;
-        }
-        
-        .achievement-bronze {
-            background-color: #FDF4E8;
-            border-color: #CD7F32;
-        }
-        
-        .achievement-medal {
-            font-size: 18pt;
-            font-weight: bold;
-        }
-        
-        .medal-gold { color: #FFD700; }
-        .medal-silver { color: #A0A0A0; }
-        .medal-bronze { color: #CD7F32; }
-        
-        .achievement-rank {
-            font-size: 11pt;
-            font-weight: bold;
-            margin: 3px 0;
-        }
-        
-        .achievement-category {
-            font-size: 8pt;
-            color: #5a5a6e;
-        }
-        
-        /* === PHASE CARDS === */
-        .phase-card {
-            background-color: #ffffff;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 12px;
-            page-break-inside: avoid;
-        }
-        
-        .phase-header {
-            background-color: #f8f9fb;
-            padding: 10px 12px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .phase-header-table {
-            width: 100%;
-        }
-        
-        .phase-title {
-            font-size: 12pt;
-            font-weight: bold;
-            color: #0F1729;
-        }
-        
-        .phase-status {
-            font-size: 9pt;
-            font-weight: bold;
-            padding: 3px 10px;
-            text-align: right;
-        }
-        
-        .status-passed {
-            color: #2EBF80;
-        }
-        
-        .status-failed {
-            color: #D94D4D;
-        }
-        
-        .phase-body {
-            padding: 12px;
-        }
-        
-        .breakdown-table {
-            width: 100%;
-            background-color: #f8f9fb;
-            margin-bottom: 10px;
-        }
-        
-        .breakdown-table td {
-            text-align: center;
-            padding: 8px 5px;
-        }
-        
-        .breakdown-value {
-            font-size: 13pt;
-            font-weight: bold;
-        }
-        
-        .breakdown-label {
-            font-size: 7pt;
-            color: #8a8a9e;
-            text-transform: uppercase;
-        }
-        
-        .penalty-detail {
-            font-size: 8pt;
-            color: #8a8a9e;
-            margin-bottom: 10px;
-            padding: 5px 8px;
-            background-color: #FEF3E2;
-            border-left: 3px solid #F2A633;
-        }
-        
-        /* === Q&A === */
-        .qa-label {
-            font-size: 9pt;
-            font-weight: bold;
-            color: #4078D9;
-            margin-bottom: 6px;
-        }
-        
-        .qa-item {
-            margin-bottom: 8px;
-            padding-left: 8px;
-            border-left: 2px solid #e5e7eb;
-        }
-        
-        .qa-question {
-            font-size: 9pt;
-            font-weight: bold;
-            color: #5a5a6e;
-            margin-bottom: 2px;
-        }
-        
-        .qa-answer {
-            font-size: 9pt;
-            color: #1a1a2e;
-            padding-left: 8px;
-        }
-        
-        .hint-badge {
-            font-size: 7pt;
-            background-color: #F2A633;
-            color: white;
-            padding: 1px 5px;
-        }
-        
-        /* === FEEDBACK === */
-        .feedback-box {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #F0F4FF;
-            border-left: 3px solid #4078D9;
-        }
-        
-        .feedback-label {
-            font-size: 9pt;
-            font-weight: bold;
-            color: #4078D9;
-            margin-bottom: 4px;
-        }
-        
-        .feedback-text {
-            font-size: 9pt;
-            color: #1a1a2e;
-            line-height: 1.4;
-        }
-        
-        .list-item {
-            font-size: 8pt;
-            margin-bottom: 2px;
-        }
-        
-        .list-success { color: #2EBF80; }
-        .list-muted { color: #5a5a6e; }
-        
-        /* === HISTORY TABLE === */
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 8pt;
-            margin-top: 8px;
-        }
-        
-        .history-table th {
-            background-color: #f8f9fb;
-            padding: 5px 6px;
-            text-align: center;
-            font-weight: bold;
-            color: #5a5a6e;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .history-table td {
-            padding: 4px 6px;
-            text-align: center;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .history-final {
-            background-color: #E8F8F0;
-            font-weight: bold;
-        }
-        
-        /* === VISUAL SECTION === */
-        .visual-container {
-            text-align: center;
-            margin-bottom: 12px;
-        }
-        
-        .visual-image {
-            max-width: 100%;
-            max-height: 300px;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .visual-metrics-table {
-            width: auto;
-            margin: 10px auto;
-        }
-        
-        .visual-metric {
-            text-align: center;
-            padding: 10px 20px;
-            background-color: #f8f9fb;
-            border: 1px solid #4078D9;
-        }
-        
-        .visual-metric-value {
-            font-size: 14pt;
-            font-weight: bold;
-            color: #4078D9;
-        }
-        
-        .visual-metric-label {
-            font-size: 8pt;
-            color: #8a8a9e;
-            text-transform: uppercase;
-        }
-        
-        /* === FOOTER === */
-        .footer {
-            text-align: center;
-            font-size: 7pt;
-            color: #8a8a9e;
-        }
-        '''
+    def _create_stat_metric(self, label: str, value: str, color: colors.Color = None) -> List:
+        """Create a naked stat metric (no box)."""
+        c = color or PRIMARY
+        return [
+            Paragraph(label, self.styles["Label"]),
+            Spacer(1, 0.1*cm),
+            Paragraph(f'<font color="{c.hexval()}">{value}</font>', self.styles["MetricMedium"])
+        ]
 
-    def _generate_html(self) -> str:
-        """Generate the complete HTML report."""
-        # Get data
+    def _create_dark_table(self, data: List[List], col_widths: List[float], has_header: bool = True) -> Table:
+        """Create a dark-themed table matching the background."""
+        table = Table(data, colWidths=col_widths)
+        
+        style_commands = [
+            ('BACKGROUND', (0, 0), (-1, -1), BG_DARK),
+            ('TEXTCOLOR', (0, 0), (-1, -1), TEXT_SECONDARY),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('LINEBELOW', (0, -1), (-1, -1), 1, BORDER_LIGHT),
+        ]
+        
+        if has_header and len(data) > 1:
+            style_commands.append(('BACKGROUND', (0, 0), (-1, 0), BG_DARK))
+            style_commands.append(('TEXTCOLOR', (0, 0), (-1, 0), TEXT_PRIMARY))
+            style_commands.append(('LINEBELOW', (0, 0), (-1, 0), 1, BORDER_LIGHT))
+        table.setStyle(TableStyle(style_commands))
+        return table
+
+    def _create_section_header(self, title: str) -> List:
+        elements = []
+        elements.append(Paragraph(title, self.styles["H1"]))
+        line = HRFlowable(width="35%", thickness=4, color=PRIMARY, spaceBefore=0, spaceAfter=12, hAlign='LEFT')
+        elements.append(line)
+        return elements
+
+    def generate(self) -> Path:
+        """Generate the dark-themed PDF report with context-aware chunking."""
+        reports_dir = settings.BACKEND_DIR / "vault" / "reports"
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        
+        clean_team_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', self.team_id)
+        filename = f"Report_{clean_team_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        output_path = reports_dir / filename
+        
+        doc = BaseDocTemplate(
+            str(output_path),
+            pagesize=A4,
+            title=f"Mission Report — {self.team_id}",
+            author="EG Pitch-Sync | AI COE"
+        )
+        
+        title_frame = Frame(
+            MARGIN, MARGIN + 1*cm,
+            TEXT_WIDTH, PAGE_HEIGHT - 2*MARGIN - 2*cm,
+            id='title', showBoundary=0,
+            topPadding=1*cm
+        )
+        
+        content_frame = Frame(
+            MARGIN, MARGIN + 1*cm,
+            TEXT_WIDTH, PAGE_HEIGHT - 2*MARGIN - 1.5*cm,
+            id='content', showBoundary=0,
+            topPadding=1*cm
+        )
+        
+        doc.addPageTemplates([
+            PageTemplate(id='Title', frames=title_frame, onPage=self._draw_title_page),
+            PageTemplate(id='Content', frames=content_frame, onPage=self._draw_content_page)
+        ])
+        
+        story = []
+        
+        # TITLE PAGE
+        title_block = [
+            Spacer(1, 4*cm),
+            Paragraph(f'<font color="{TEXT_PRIMARY.hexval()}">{clean_text(self.team_id)}</font>', self.styles["Display"]),
+            Spacer(1, 0.5*cm),
+            Paragraph(clean_text(self.session.usecase.get("title", "Strategic Challenge")), self.styles["DisplaySub"]),
+            Spacer(1, 2*cm)
+        ]
+        story.append(KeepTogether(title_block))
+        
         score = int(self.session.total_score)
-        tier = self._get_tier(score)
-        tier_color = self._get_tier_color(score)
+        tier, tier_desc, tier_color = self._get_tier_info(score)
         
+        hero_data = [[
+            [
+                Paragraph("PURSUIT SCORE", self.styles["Label"]),
+                Spacer(1, 0.2*cm),
+                Paragraph(f'<font color="{PRIMARY.hexval()}" size="42">{score}</font>', self.styles["MetricLarge"])
+            ],
+            [
+                Paragraph("PERFORMANCE TIER", self.styles["Label"]),
+                Spacer(1, 0.2*cm),
+                Paragraph(f'<font color="{tier_color.hexval()}" size="28">{tier}</font>', self.styles["MetricMedium"])
+            ]
+        ]]
+        
+        hero_table = Table(hero_data, colWidths=[8*cm, 8*cm])
+        hero_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), BG_CARD),
+            ('BOX', (0, 0), (-1, -1), 1, BORDER_LIGHT),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 20),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 20),
+            ('LINEAFTER', (0, 0), (0, -1), 1, BORDER_LIGHT),
+        ]))
+        story.append(hero_table)
+        
+        story.append(NextPageTemplate('Content'))
+        story.append(PageBreak())
+        
+        # EXECUTIVE SUMMARY
+        header_block = self._create_section_header(self._next_section("Executive Summary"))
+        story.append(KeepTogether(header_block))
+        # Block: Naked Metrics Row
         phase_count = len(self.session.phases)
         total_retries = sum(p.metrics.retries for p in self.session.phases.values())
-        total_hints = sum(sum(1 for r in p.responses if r.hint_used) for p in self.session.phases.values())
         total_dur = sum(p.metrics.duration_seconds for p in self.session.phases.values())
-        total_penalties = sum(p.metrics.time_penalty + p.metrics.retry_penalty + p.metrics.hint_penalty for p in self.session.phases.values())
-        total_bonus = sum(p.metrics.efficiency_bonus for p in self.session.phases.values())
+        total_tokens = self.session.total_tokens + self.session.extra_ai_tokens
         
-        usecase_id = self.session.usecase.get('id', '')
-        phase_config = get_phases_for_usecase(usecase_id)
+        metrics_data = [[
+            self._create_stat_metric("PHASES", str(phase_count), SECONDARY),
+            self._create_stat_metric("RETRIES", str(total_retries), WARNING),
+            self._create_stat_metric("DURATION", format_duration(total_dur), INFO),
+            self._create_stat_metric("TOKENS", f"{total_tokens:,}", PRIMARY)
+        ]]
         
-        # Build HTML
-        html = f'''<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Mission Report - {clean_text(self.team_id)}</title>
-    <style>{self._generate_css()}</style>
-</head>
-<body>
-    <!-- HEADER -->
-    <div class="header">
-        <table class="header-table">
-            <tr>
-                <td style="width: 60%;">
-                    <span class="header-brand">EG | PITCH-SYNC</span><br/>
-                    <span class="header-subtitle">Intelligent Proposal Analysis</span>
-                </td>
-                <td class="header-right" style="width: 40%;">
-                    <span class="header-powered">Powered by</span><br/>
-                    <span class="header-coe">AI COE</span>
-                </td>
-            </tr>
-        </table>
-    </div>
-    
-    <!-- TITLE -->
-    <div class="report-title">Mission Report: {clean_text(self.team_id)}</div>
-    <div class="report-subtitle">{clean_text(self.session.usecase.get('domain', 'Business'))} Domain &bull; {clean_text(self.session.usecase.get('title', 'Strategic Challenge'))}</div>
-    
-    <!-- SCORE CARD -->
-    <div class="score-card">
-        <table class="score-table">
-            <tr>
-                <td style="width: 50%;">
-                    <div class="score-value">{score}</div>
-                    <div class="score-label">Pursuit Score</div>
-                </td>
-                <td style="width: 50%;">
-                    <div class="score-value" style="color: {tier_color};">{tier}</div>
-                    <div class="score-label">Performance Tier</div>
-                </td>
-            </tr>
-        </table>
-        <table class="stats-table">
-            <tr>
-                <td>
-                    <div class="stat-value">{phase_count}</div>
-                    <div class="stat-label">Phases</div>
-                </td>
-                <td>
-                    <div class="stat-value">{total_retries + phase_count}</div>
-                    <div class="stat-label">Attempts</div>
-                </td>
-                <td>
-                    <div class="stat-value">{total_hints}</div>
-                    <div class="stat-label">Hints</div>
-                </td>
-                <td>
-                    <div class="stat-value">{format_duration(total_dur)}</div>
-                    <div class="stat-label">Duration</div>
-                </td>
-                <td>
-                    <div class="stat-value-negative">-{int(total_penalties)}</div>
-                    <div class="stat-label">Penalties</div>
-                </td>
-                <td>
-                    <div class="stat-value-positive">+{int(total_bonus)}</div>
-                    <div class="stat-label">Bonus</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-'''
+        metrics_row = Table(metrics_data, colWidths=[4.1*cm, 4.1*cm, 4.1*cm, 4.1*cm])
+        metrics_row.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            # Vertical dividers between columns
+            ('LINEAFTER', (0, 0), (0, 0), 0.5, BORDER_LIGHT),
+            ('LINEAFTER', (1, 0), (1, 0), 0.5, BORDER_LIGHT),
+            ('LINEAFTER', (2, 0), (2, 0), 0.5, BORDER_LIGHT),
+            ('LEFTPADDING', (1, 0), (-1, 0), 12),
+        ]))
         
-        # Achievements section (only if podium wins)
-        if self.podium_wins:
-            html += '''
-    <div class="section-header">Podium Achievements</div>
-    <table class="achievement-table">
-        <tr>
-'''
-            for win in self.podium_wins[:3]:  # Max 3 per row
-                rank = win['rank']
-                medal_class = 'gold' if rank == 1 else 'silver' if rank == 2 else 'bronze'
-                medal_symbol = '1ST' if rank == 1 else '2ND' if rank == 2 else '3RD'
-                html += f'''
-            <td class="achievement-card achievement-{medal_class}" style="width: 33%;">
-                <div class="achievement-medal medal-{medal_class}">[{medal_symbol}]</div>
-                <div class="achievement-rank">{win['label']}</div>
-                <div class="achievement-category">{clean_text(win['category'])}</div>
-            </td>
-'''
-            html += '''
-        </tr>
-    </table>
-'''
-            # Second row if more than 3
-            if len(self.podium_wins) > 3:
-                html += '''
-    <table class="achievement-table">
-        <tr>
-'''
-                for win in self.podium_wins[3:6]:
-                    rank = win['rank']
-                    medal_class = 'gold' if rank == 1 else 'silver' if rank == 2 else 'bronze'
-                    medal_symbol = '1ST' if rank == 1 else '2ND' if rank == 2 else '3RD'
-                    html += f'''
-            <td class="achievement-card achievement-{medal_class}" style="width: 33%;">
-                <div class="achievement-medal medal-{medal_class}">[{medal_symbol}]</div>
-                <div class="achievement-rank">{win['label']}</div>
-                <div class="achievement-category">{clean_text(win['category'])}</div>
-            </td>
-'''
-                html += '''
-        </tr>
-    </table>
-'''
+        phases_passed = sum(1 for p in self.session.phases.values() if p.status == PhaseStatus.PASSED)
+        overview_text = (
+            f'Team achieved <font color="{PRIMARY.hexval()}"><b>{score}/1000</b></font> points, '
+            f'completing <b>{phases_passed}/{phase_count}</b> phases successfully. '
+            f'Performance tier: <font color="{tier_color.hexval()}"><b>{tier}</b></font> ({tier_desc}).'
+        )
         
-        # Phase Details
-        html += '''
-    <div class="section-header">Tactical Phase Analysis</div>
-'''
+        # Phase Performance Summary Table - Expanded
+        summary_table_data = [
+            [
+                Paragraph("<b>Phase / Niche</b>", self.styles["TableHeader"]), 
+                Paragraph("<b>Time</b>", self.styles["TableHeader"]),
+                Paragraph("<b>Retries</b>", self.styles["TableHeader"]),
+                Paragraph("<b>Hints</b>", self.styles["TableHeader"]),
+                Paragraph("<b>Score</b>", self.styles["TableHeader"])
+            ]
+        ]
         
-        for phase_idx, (phase_name, phase_data) in enumerate(self.session.phases.items()):
-            p_idx = next((idx for idx, d in phase_config.items() if d['name'] == phase_name), phase_idx)
-            p_def = phase_config.get(p_idx, {})
-            weight = p_def.get('weight', 0.33)
-            max_points = int(1000 * weight)
+        total_hints = 0
+        phases_sorted = sorted(self.session.phases.items(), key=lambda x: x[0])
+        for p_name, p_data in phases_sorted:
+            p_hints = sum(1 for r in p_data.responses if r.hint_used)
+            total_hints += p_hints
             
-            status_class = 'status-passed' if phase_data.status == PhaseStatus.PASSED else 'status-failed'
-            status_text = 'CLEARED' if phase_data.status == PhaseStatus.PASSED else 'INCOMPLETE'
+            summary_table_data.append([
+                Paragraph(p_name, self.styles["TableCell"]),
+                Paragraph(format_duration(p_data.metrics.duration_seconds), self.styles["TableCellCenter"]),
+                Paragraph(str(p_data.metrics.retries), self.styles["TableCellCenter"]),
+                Paragraph(str(p_hints), self.styles["TableCellCenter"]),
+                Paragraph(f"{int(p_data.metrics.weighted_score)}", self.styles["TableCellCenter"])
+            ])
+            
+        summary_table_data.append([
+            Paragraph("<b>OVERALL TOTALS</b>", self.styles["TableCell"]),
+            Paragraph(f"<b>{format_duration(total_dur)}</b>", self.styles["TableCellCenter"]),
+            Paragraph(f"<b>{total_retries}</b>", self.styles["TableCellCenter"]),
+            Paragraph(f"<b>{total_hints}</b>", self.styles["TableCellCenter"]),
+            Paragraph(f"<b>{score}</b>", self.styles["TableCellCenter"])
+        ])
+        
+        # Columns widths: [Name, Time, Retries, Hints, Score] totaling ~17cm
+        perf_summary_table = self._create_dark_table(summary_table_data, [6.5*cm, 3*cm, 2.5*cm, 2.5*cm, 2.5*cm])
+        
+        summary_block = [
+            Spacer(1, 0.5*cm),
+            metrics_row,
+            Spacer(1, 0.8*cm),
+            Paragraph(overview_text, self.styles["Body"]),
+            Spacer(1, 0.6*cm),
+            Paragraph("Performance Summary", self.styles["H3"]),
+            Spacer(1, 0.2*cm),
+            perf_summary_table,
+            Spacer(1, 0.5*cm)
+        ]
+        story.append(KeepTogether(summary_block))
+        
+        # PHASE ANALYSIS - Start on new page
+        story.append(PageBreak())
+        story.append(KeepTogether(self._create_section_header(self._next_section("Phase Analysis"))))
+        
+        # Use session's usecase ID to fetch the correct configuration for weights
+        usecase_id = self.session.usecase.get("id", "")
+        # Get phase config mapping: Name -> Config
+        phases_repo = get_phases_for_usecase(usecase_id)
+        phase_map = {d["name"]: d for d in phases_repo.values()}
+        
+        phases_sorted = sorted(self.session.phases.items(), key=lambda x: x[0])
+        
+        for i, (phase_name, phase_data) in enumerate(phases_sorted):
+            if i > 0:
+                story.append(PageBreak())
+            
+            # Phase Hero Heading - Centered Sub-header
+            p_title = f"PHASE {i+1}: {phase_name}"
+            story.append(Paragraph(p_title, self.styles["PhaseHeading"]))
+            story.append(HRFlowable(width="100%", thickness=3, color=BORDER_LIGHT, spaceBefore=5, spaceAfter=20))
+
+            # Chunk: Status Message
+            phase_intro = []
+            
+            # Find weight properly from config
+            config = phase_map.get(phase_name, {})
+            weight = config.get("weight", 0.33)
+            max_points = int(settings.AI_QUALITY_MAX_POINTS * weight)
             
             metrics = phase_data.metrics
-            base_score = int(metrics.ai_score * 1000 * weight)
-            penalties = int(metrics.time_penalty + metrics.retry_penalty + metrics.hint_penalty)
-            bonus = int(metrics.efficiency_bonus)
             final_score = int(metrics.weighted_score)
+            ai_pct = int(metrics.ai_score * 100)
+            is_passed = phase_data.status == PhaseStatus.PASSED
             
-            html += f'''
-    <div class="phase-card">
-        <div class="phase-header">
-            <table class="phase-header-table">
-                <tr>
-                    <td class="phase-title">{clean_text(phase_name)}</td>
-                    <td class="phase-status {status_class}">{status_text}</td>
-                </tr>
-            </table>
-        </div>
-        <div class="phase-body">
-            <table class="breakdown-table">
-                <tr>
-                    <td>
-                        <div class="breakdown-value">{base_score}</div>
-                        <div class="breakdown-label">Base Score</div>
-                    </td>
-                    <td>
-                        <div class="breakdown-value" style="color: #D94D4D;">-{penalties}</div>
-                        <div class="breakdown-label">Penalties</div>
-                    </td>
-                    <td>
-                        <div class="breakdown-value" style="color: #2EBF80;">+{bonus}</div>
-                        <div class="breakdown-label">Bonus</div>
-                    </td>
-                    <td>
-                        <div class="breakdown-value" style="color: #4078D9;">{final_score}/{max_points}</div>
-                        <div class="breakdown-label">Final</div>
-                    </td>
-                </tr>
-            </table>
-'''
+            status_color = SUCCESS if is_passed else DANGER
+            status_text = "CLEARED" if is_passed else "INCOMPLETE"
             
-            # Penalty details
-            penalty_parts = []
-            if metrics.retry_penalty > 0:
-                penalty_parts.append(f"Retry: -{int(metrics.retry_penalty)}")
-            if metrics.time_penalty > 0:
-                penalty_parts.append(f"Time: -{int(metrics.time_penalty)}")
-            if metrics.hint_penalty > 0:
-                penalty_parts.append(f"Hints: -{int(metrics.hint_penalty)}")
+            status_line = (
+                f'<font color="{status_color.hexval()}"><b>[{status_text}]</b></font> '
+                f'Score: <b>{final_score}/{max_points}</b> pts | AI: <b>{ai_pct}%</b>'
+            )
+            phase_intro.append(Paragraph(status_line, self.styles["Body"]))
+            phase_intro.append(Spacer(1, 0.3*cm))
+            story.append(KeepTogether(phase_intro))
             
-            if penalty_parts:
-                html += f'''
-            <div class="penalty-detail">
-                Penalty Breakdown: {' | '.join(penalty_parts)}
-            </div>
-'''
+            # Chunk: Scoring Table (ALL components must be WEIGHTED to sum to final_score)
+            table_block = []
+            table_num = self._next_table()
             
-            # Q&A Responses
+            # Calculations
+            w_base = round(metrics.ai_score * settings.AI_QUALITY_MAX_POINTS * weight)
+            w_time = round(metrics.time_penalty * weight)
+            w_retry = round(metrics.retry_penalty * weight)
+            w_hint = round(metrics.hint_penalty * weight)
+            w_bonus = round(metrics.efficiency_bonus * weight)
+            
+            scoring_data = [
+                [Paragraph("Component", self.styles["TableHeader"]), Paragraph("Points", self.styles["TableHeader"])],
+                [Paragraph("Base Performance", self.styles["TableCell"]), Paragraph(f"{w_base}", self.styles["TableCellCenter"])],
+                [Paragraph("Time Adjustment", self.styles["TableCell"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_time}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("Retry Adjustment", self.styles["TableCell"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_retry}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("Hint Adjustment", self.styles["TableCell"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_hint}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("Efficiency Bonus", self.styles["TableCell"]), Paragraph(f'<font color="{SUCCESS.hexval()}">+{w_bonus}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("<b>Final Phase Score</b>", self.styles["TableCell"]), Paragraph(f"<b>{final_score}</b>", self.styles["TableCellCenter"])],
+            ]
+            score_table = self._create_dark_table(scoring_data, [5.5*cm, 3.5*cm])
+            table_block.append(score_table)
+            table_block.append(Paragraph(f"<i>Table {table_num}: {phase_name} breakdown</i>", self.styles["Caption"]))
+            table_block.append(Spacer(1, 0.5*cm))
+            story.append(KeepTogether(table_block))
+            
+            if phase_data.rationale or phase_data.feedback:
+                feedback_block = []
+                feedback_block.append(Paragraph("AI Feedback", self.styles["H3"]))
+                feedback_block.append(Paragraph(clean_text(phase_data.rationale or phase_data.feedback), self.styles["Body"]))
+                feedback_block.append(Spacer(1, 0.2*cm))
+                story.append(KeepTogether(feedback_block))
+            
+            if phase_data.strengths:
+                strength_block = []
+                strength_block.append(Paragraph(f'<font color="{SUCCESS.hexval()}">Strengths</font>', self.styles["H3"]))
+                for s in phase_data.strengths:
+                    strength_block.append(Paragraph(f'<font color="{SUCCESS.hexval()}">✓</font> {clean_text(s)}', self.styles["ListItem"]))
+                story.append(KeepTogether(strength_block))
+            
+            if phase_data.improvements:
+                improv_block = []
+                improv_block.append(Paragraph(f'<font color="{WARNING.hexval()}">Improvements</font>', self.styles["H3"]))
+                for i in phase_data.improvements:
+                    improv_block.append(Paragraph(f'<font color="{WARNING.hexval()}">→</font> {clean_text(i)}', self.styles["ListItem"]))
+                story.append(KeepTogether(improv_block))
+            
+            # --- NEW: SUBMISSION LOG (Q&A) ---
             if phase_data.responses:
-                html += '''
-            <div class="qa-label">Submission Details</div>
-'''
-                for q_idx, response in enumerate(phase_data.responses):
-                    hint_html = ' <span class="hint-badge">HINT</span>' if response.hint_used else ''
-                    answer = clean_text(response.a) if response.a else '<em>No response</em>'
-                    html += f'''
-            <div class="qa-item">
-                <div class="qa-question">Q{q_idx + 1}: {clean_text(response.q)}{hint_html}</div>
-                <div class="qa-answer">{answer}</div>
-            </div>
-'''
-            
-            # AI Feedback
-            if phase_data.feedback or phase_data.rationale:
-                feedback_text = clean_text(phase_data.rationale or phase_data.feedback or "No detailed feedback.")
-                html += f'''
-            <div class="feedback-box">
-                <div class="feedback-label">Intelligence Analysis</div>
-                <div class="feedback-text">{feedback_text}</div>
-'''
-                
-                if phase_data.strengths:
-                    for strength in phase_data.strengths[:3]:
-                        html += f'<div class="list-item list-success">&#10003; {clean_text(strength)}</div>\n'
-                
-                if phase_data.improvements:
-                    for improvement in phase_data.improvements[:3]:
-                        html += f'<div class="list-item list-muted">&bull; {clean_text(improvement)}</div>\n'
-                
-                html += '            </div>\n'
-            
-            # Attempt History
-            if phase_data.history:
-                html += '''
-            <table class="history-table">
-                <tr>
-                    <th>#</th>
-                    <th>AI Score</th>
-                    <th>Time</th>
-                    <th>Retry Pen</th>
-                    <th>Time Pen</th>
-                    <th>Hint Pen</th>
-                </tr>
-'''
-                for i, h in enumerate(phase_data.history):
-                    html += f'''
-                <tr>
-                    <td>{i + 1}</td>
-                    <td>{int(h.ai_score * 100)}%</td>
-                    <td>{int(h.duration_seconds)}s</td>
-                    <td>-{int(h.retry_penalty)}</td>
-                    <td>-{int(h.time_penalty)}</td>
-                    <td>-{int(h.hint_penalty)}</td>
-                </tr>
-'''
-                # Final attempt
-                curr = phase_data.metrics
-                html += f'''
-                <tr class="history-final">
-                    <td>{len(phase_data.history) + 1} *</td>
-                    <td>{int(curr.ai_score * 100)}%</td>
-                    <td>{int(curr.duration_seconds)}s</td>
-                    <td>-{int(curr.retry_penalty)}</td>
-                    <td>-{int(curr.time_penalty)}</td>
-                    <td>-{int(curr.hint_penalty)}</td>
-                </tr>
-            </table>
-'''
-            
-            html += '''
-        </div>
-    </div>
-'''
+                for idx, resp in enumerate(phase_data.responses):
+                    qa_block = []
+                    if idx == 0:
+                        qa_block.append(Spacer(1, 0.4*cm))
+                        qa_block.append(Paragraph("Submission Log", self.styles["H3"]))
+                    
+                    # Question
+                    q_text = clean_text(resp.q)
+                    qa_block.append(Paragraph(f"<b>Q: {q_text}</b>", self.styles["BodySmall"]))
+                    qa_block.append(Spacer(1, 0.15*cm))
+                    
+                    # Answer in a BOX
+                    a_text = clean_text(resp.a)
+                    a_para = Paragraph(f'<font color="{TEXT_PRIMARY.hexval()}">{a_text}</font>', self.styles["BodySmall"])
+                    
+                    a_table = Table([[a_para]], colWidths=[TEXT_WIDTH])
+                    a_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#0f0f1a")),
+                        ('BOX', (0,0), (-1,-1), 1, BORDER_LIGHT),
+                        ('TOPPADDING', (0,0), (-1,-1), 8),
+                        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+                        ('LEFTPADDING', (0,0), (-1,-1), 10),
+                        ('RIGHTPADDING', (0,0), (-1,-1), 10),
+                    ]))
+                    qa_block.append(a_table)
+                    qa_block.append(Spacer(1, 0.5*cm))
+                    story.append(KeepTogether(qa_block))
+
+            story.append(Spacer(1, 0.8*cm))
         
-        # Visual Section
+        # STRATEGIC NARRATIVE
+        if self.session.final_output.visionary_hook or self.session.final_output.customer_pitch:
+            sn_block = []
+            sn_block.extend(self._create_section_header(self._next_section("Strategic Narrative")))
+            
+            if self.session.final_output.visionary_hook:
+                sn_block.append(Paragraph(self._next_subsection("Visionary Hook"), self.styles["H2"]))
+                sn_block.append(Paragraph(f'"{clean_text(self.session.final_output.visionary_hook)}"', self.styles["Quote"]))
+                sn_block.append(Spacer(1, 0.5*cm))
+            
+            if self.session.final_output.customer_pitch:
+                sn_block.append(Paragraph(self._next_subsection("Customer Pitch"), self.styles["H2"]))
+                sn_block.append(Paragraph(clean_text(self.session.final_output.customer_pitch), self.styles["Body"]))
+            
+            story.append(KeepTogether(sn_block))
+            story.append(Spacer(1, 0.5*cm))
+        
+        # VISUAL SYNTHESIS
         if self.session.final_output.image_url:
-            img_name = self.session.final_output.image_url.split('/')[-1]
+            img_name = self.session.final_output.image_url.split("/")[-1]
             img_path = GENERATED_DIR / img_name
             
             if img_path.exists():
+                story.append(PageBreak())
+                story.extend(self._create_section_header(self._next_section("Visual Synthesis")))
+                
                 try:
-                    with open(img_path, 'rb') as f:
+                    with open(img_path, "rb") as f:
                         img_bytes = f.read()
-                        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
-                        img_data = f'data:image/png;base64,{img_b64}'
+                    img_io = BytesIO(img_bytes)
+                    img_reader = ImageReader(img_io)
+                    iw, ih = img_reader.getSize()
+                    aspect = ih / float(iw)
+                    target_w = min(TEXT_WIDTH * 0.9, 14*cm)
+                    target_h = target_w * aspect
+                    if target_h > 10*cm:
+                        target_h = 10*cm
+                        target_w = target_h / aspect
+                    img_io.seek(0)
+                    img_flowable = Image(img_io, width=target_w, height=target_h)
                     
-                    html += f'''
-    <pdf:nextpage />
-    <div class="section-header">Visual Synthesis</div>
-    <div class="visual-container">
-        <img src="{img_data}" class="visual-image" />
-    </div>
-    <table class="visual-metrics-table">
-        <tr>
-            <td class="visual-metric">
-                <div class="visual-metric-value">{clean_text(self.session.final_output.visual_alignment or 'N/A')}</div>
-                <div class="visual-metric-label">Alignment Tier</div>
-            </td>
-            <td class="visual-metric">
-                <div class="visual-metric-value">{int(self.session.final_output.visual_score * 100)}%</div>
-                <div class="visual-metric-label">Match Score</div>
-            </td>
-        </tr>
-    </table>
-'''
+                    visual_block = []
+                    img_container = Table([[img_flowable]], colWidths=[TEXT_WIDTH])
+                    img_container.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, 0), BG_CARD),
+                        ('BOX', (0, 0), (0, 0), 1, BORDER_LIGHT),
+                        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+                        ('VALIGN', (0, 0), (0, 0), 'MIDDLE'),
+                        ('TOPPADDING', (0, 0), (0, 0), 15),
+                        ('BOTTOMPADDING', (0, 0), (0, 0), 15),
+                    ]))
+                    visual_block.append(img_container)
+                    
+                    fig_num = self._next_figure()
+                    visual_block.append(Paragraph(f"<i>Figure {fig_num}: AI-generated visual synthesis</i>", self.styles["Caption"]))
+                    visual_block.append(Spacer(1, 0.5*cm))
+                    
+                    vis_score = int(self.session.final_output.visual_score * 100)
+                    if vis_score > 0:
+                        vis_text = (
+                            f'Alignment Score: <font color="{PRIMARY.hexval()}"><b>{vis_score}%</b></font> | '
+                            f'Assessment: <b>{clean_text(self.session.final_output.visual_alignment or "N/A")}</b>'
+                        )
+                        visual_block.append(Paragraph(vis_text, self.styles["Body"]))
+                    
+                    story.append(KeepTogether(visual_block))
+                    
                     if self.session.final_output.visual_feedback:
-                        html += f'''
-    <div class="feedback-box">
-        <div class="feedback-label">Visual Analysis</div>
-        <div class="feedback-text">{clean_text(self.session.final_output.visual_feedback)}</div>
-    </div>
-'''
+                        fb_block = []
+                        fb_block.append(Spacer(1, 0.3*cm))
+                        fb_block.append(Paragraph("AI Analysis:", self.styles["H3"]))
+                        fb_block.append(Paragraph(clean_text(self.session.final_output.visual_feedback), self.styles["Body"]))
+                        story.append(KeepTogether(fb_block))
+                        
                 except Exception as e:
-                    print(f"Error loading image: {e}")
+                    logging.warning(f"Failed to embed visual: {e}")
+
+        # --- NEW: SYNTHESIS BLUEPRINT (Master Prompt) ---
+        if self.session.final_output.image_prompt:
+            p_block = []
+            p_block.extend(self._create_section_header(self._next_section("Synthesis Blueprint")))
+            p_block.append(Paragraph(self._next_subsection("Master Image Prompt"), self.styles["H2"]))
+            p_block.append(Paragraph(
+                "The following semantic blueprint was synthesized from the team's combined phase outputs to generate the final strategic asset.",
+                self.styles["Body"]
+            ))
+            p_block.append(Spacer(1, 0.3*cm))
+            
+            # Draw the prompt in a dark code-like box
+            prompt_text = clean_text(self.session.final_output.image_prompt)
+            prompt_data = [[Paragraph(f'<font face="Courier" size="8" color="#cbd5e1">{prompt_text}</font>', self.styles["BodySmall"])]]
+            prompt_table = Table(prompt_data, colWidths=[TEXT_WIDTH])
+            prompt_table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#0f0f1a")),
+                ('BOX', (0,0), (-1,-1), 1, BORDER_LIGHT), # Matching the bolder border
+                ('TOPPADDING', (0,0), (-1,-1), 10),
+                ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+                ('LEFTPADDING', (0,0), (-1,-1), 10),
+                ('RIGHTPADDING', (0,0), (-1,-1), 10),
+            ]))
+            p_block.append(prompt_table)
+            story.append(KeepTogether(p_block))
+            story.append(Spacer(1, 0.8*cm))
         
-        # Footer content for @frame
-        html += f'''
-    <div id="footerContent" class="footer">
-        Mission Report &bull; Generated {datetime.now().strftime('%d %b %Y, %H:%M')} &bull; Confidential
-    </div>
-</body>
-</html>
-'''
-        return html
-
-    def generate(self) -> Path:
-        """Generate the PDF report."""
-        reports_dir = settings.BACKEND_DIR / "vault" / "reports"
-        reports_dir.mkdir(parents=True, exist_ok=True)
-
-        filename = f"Report_{self.team_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        output_path = reports_dir / filename
-
-        # Generate HTML
-        html_content = self._generate_html()
+        # CONCLUSION
+        concl_block = []
+        concl_block.extend(self._create_section_header(self._next_section("Conclusion")))
         
-        # Convert to PDF
-        with open(output_path, "wb") as pdf_file:
-            pisa_status = pisa.CreatePDF(html_content, dest=pdf_file)
+        conclusion = (
+            f'Team <b>{clean_text(self.team_id)}</b> completed the Pitch-Sync simulation with '
+            f'<font color="{PRIMARY.hexval()}"><b>{score}/1000</b></font> points '
+            f'(<font color="{tier_color.hexval()}"><b>{tier}</b></font>). '
+        )
+        if score >= 700:
+            conclusion += "This demonstrates strong strategic thinking and effective communication."
+        elif score >= 500:
+            conclusion += "There remain opportunities for improvement in strategic depth."
+        else:
+            conclusion += "Focus on strengthening strategic communication and analytical skills."
         
-        if pisa_status.err:
-            raise Exception(f"PDF generation failed with {pisa_status.err} errors")
-
+        concl_block.append(Paragraph(conclusion, self.styles["Body"]))
+        concl_block.append(Spacer(1, 1*cm))
+        concl_block.append(HRFlowable(width="60%", thickness=2, color=BORDER_LIGHT, spaceBefore=10, spaceAfter=10, hAlign='CENTER'))
+        concl_block.append(Paragraph(
+            f'<i>Generated by EG Pitch-Sync | Powered by AI COE</i><br/>{datetime.now().strftime("%B %d, %Y at %H:%M")}',
+            self.styles["Caption"]
+        ))
+        
+        story.append(KeepTogether(concl_block))
+        
+        doc.build(story)
         return output_path
 
 
 def generate_report(session: SessionState) -> Path:
-    """Main entry point for report generation."""
-    generator = ReportGenerator(session)
+    """Main entry point."""
+    generator = DarkThemeReportGenerator(session)
     return generator.generate()

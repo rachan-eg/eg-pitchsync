@@ -1,9 +1,0 @@
-{
-    "id": "energy_asset_monitoring",
-    "title": "AI Asset Monitoring SaaS",
-    "domain": "Energy & Utilities",
-    "complexity": "High",
-    "target_market": "Energy & Utilities Firms",
-    "theme_id": "cyberpunk",
-    "description": "Build an AI asset-monitoring solution that predicts equipment failures, optimizes maintenance schedules, and improves infrastructure reliability using operational and sensor data."
-}

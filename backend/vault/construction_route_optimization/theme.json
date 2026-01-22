@@ -1,0 +1,14 @@
+{
+    "id": "logistic_precise",
+    "name": "Logistic Precise",
+    "mood": "Directional, Accurate, Flowing",
+    "visual_style": "Map-inspired graphics, path animations, navy and crimson accents, dark mode default",
+    "colors": {
+        "primary": "#BA5400",
+        "secondary": "#FF00FF",
+        "bg": "#0a0a0f",
+        "success": "#00855B",
+        "error": "#D93539",
+        "warning": "#956D00"
+    }
+}

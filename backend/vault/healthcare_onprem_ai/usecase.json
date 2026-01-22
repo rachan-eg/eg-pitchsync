@@ -1,9 +1,0 @@
-{
-    "id": "healthcare_onprem_ai",
-    "title": "On-Premise AI Chatbot",
-    "domain": "Healthcare AI",
-    "complexity": "High",
-    "target_market": "Hospitals, Compliance Officers, Legal Teams",
-    "theme_id": "health_tech",
-    "description": "A secure, HIPAA-compliant on-promise AI chatbot designed for internal hospital operations and legal compliance."
-}

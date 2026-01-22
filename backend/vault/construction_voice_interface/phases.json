@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's construction AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Jobsite data entry difficulty, gloved hand interface challenges, safety distraction from devices, real-time information access barriers, documentation delay from manual entry",
+                "focus": "Identify the physical barriers preventing efficient field interaction with construction management applications.",
+                "hint_text": "Describe how field workers struggle with touchscreen interfaces wearing gloves. Mention safety concerns from device interaction while working. Explain delayed documentation from inability to enter data in real-time during tasks.",
+                "ideal_answer": "Construction field teams face substantial barriers interacting with management applications during actual work. Touchscreen interfaces prove nearly impossible with safety gloves, forcing workers to remove protective equipment risking hand injuries or abandoning real-time data entry. Device interaction while performing physical tasks creates safety hazards and productivity disruptions requiring work stoppage. Critical information needs go unmet because accessing applications mid-task is impractical. Documentation happens hours later from memory rather than real-time, reducing accuracy and completeness. The interaction friction results in incomplete project data undermining management visibility, delayed issue reporting allowing problems to escalate, safety risks from removing gloves or distracted device usage, and productivity loss from constant work interruption for administrative tasks requiring traditional interfaces.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Data completeness improvement, documentation timeliness enhancement, safety incident reduction, productivity increase from reduced interruption, information access speed improvement",
+                "focus": "Quantify documentation quality and safety improvements with clear productivity benefits.",
+                "hint_text": "Focus on real-time documentation improving data completeness and accuracy. Mention safety improvements from hands-free interaction. Emphasize productivity from reduced work interruption for data entry.",
+                "ideal_answer": "Field teams experience immediate productivity improvements through hands-free voice interaction enabling real-time documentation without work interruption or glove removal. Data completeness and accuracy improve as workers capture information during tasks rather than relying on later memory. Safety enhances through hands-free operation maintaining focus on physical work while accessing critical information or reporting issues. Information retrieval becomes instant through voice queries rather than navigating interfaces or waiting for office assistance. The operational impact manifests through improved project visibility from complete accurate data, faster issue resolution from real-time reporting, reduced safety incidents from maintained protective equipment usage and work focus, and enhanced field team satisfaction from technology that supports rather than disrupts their work.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Construction terminology understanding, jobsite noise handling capability, safety integration priority, application functionality comprehensiveness, continuous accuracy improvement",
+                "focus": "Highlight construction domain expertise and jobsite environment adaptation that generic voice assistants lack.",
+                "hint_text": "Highlight understanding construction terminology and jobsite language versus generic voice recognition. Contrast noise handling in construction environments. Emphasize comprehensive application functionality access through voice.",
+                "ideal_answer": "The solution delivers superior voice interaction through deep construction domain knowledge, understanding industry terminology, trade-specific language, and jobsite communication patterns rather than generic voice assistants requiring consumer vocabulary. Robust noise handling operates effectively in construction environments with machinery, tools, and ambient sounds that defeat standard voice recognition. Safety-first design ensures voice interaction maintains rather than compromises worker focus and protective equipment usage. Comprehensive functionality access through voice covers essential field workflows\u2014documentation, information retrieval, issue reporting, task updates\u2014rather than limited command sets. Continuous learning improves recognition accuracy for individual workers, team communication patterns, and project-specific terminology, delivering increasingly valuable voice interaction as the system adapts to organizational language and jobsite acoustic environments.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Application functionality access, project data synchronization, mobile device compatibility, offline operation capability, hands-free hardware support",
+                "focus": "Detail seamless voice access to existing application functionality within current field workflows.",
+                "hint_text": "Explain voice access to existing application features without separate systems. Mention synchronization with project data and work orders. Describe compatibility with mobile devices and hands-free hardware options.",
+                "ideal_answer": "Voice interaction provides direct access to existing application functionality, enabling field workers to perform essential tasks\u2014update progress, report issues, request information, log materials\u2014through natural speech rather than separate voice-only features. Project data synchronizes seamlessly, with voice interactions updating the same systems office teams access ensuring organizational visibility. Mobile device compatibility works with phones and tablets field teams already carry, with optional hands-free hardware like headsets or wearables for enhanced convenience. Offline capability supports jobsite usage without constant connectivity, synchronizing when network access returns. The architecture integrates voice as an additional interaction mode rather than requiring workflow changes, ensuring field teams access familiar application capabilities through whichever interface suits their immediate work context.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Field worker voice interaction simplicity, supervisor information access ease, project manager data visibility, safety officer incident reporting, office team data reliability",
+                "focus": "Compare simple field worker voice commands with office team confidence in voice-entered data quality.",
+                "hint_text": "Describe natural voice commands for field workers performing tasks versus data quality validation for office teams. Explain supervisor voice access to project information and safety officer incident reporting capabilities.",
+                "ideal_answer": "Field workers interact through natural conversational commands requiring no technical training\u2014speaking progress updates, asking equipment location questions, reporting safety observations\u2014while performing physical work without interruption. Supervisors access project information through voice queries while walking jobsites, maintaining situational awareness instead of focusing on devices. Safety officers immediately report incidents through voice, capturing details accurately in real-time rather than delayed written reports. Project managers view voice-captured data with confidence in completeness and timeliness, knowing information was documented during actual work rather than recreated from memory. Office teams appreciate improved field data quality and currency supporting better decision-making, with voice interaction removing friction that previously limited field documentation reliability.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Recognition accuracy validation, confirmation for critical actions, misunderstanding handling, privacy protection, manual correction capability, performance monitoring",
+                "focus": "Explain recognition confirmation and error handling building user confidence in voice interaction reliability.",
+                "hint_text": "Highlight confirmation requests for critical actions preventing errors. Describe clear misunderstanding handling when recognition is uncertain. Explain manual correction capability and accuracy improvement over time.",
+                "ideal_answer": "Voice recognition includes intelligent confirmation for critical actions\u2014deleting data, marking tasks complete, ordering materials\u2014preventing errors from misrecognition before consequences occur. When understanding is uncertain, the system requests clarification rather than guessing intent incorrectly. Recognition feedback provides immediate confirmation of understood commands, allowing workers to catch mistakes before they propagate. Privacy protections ensure voice data is handled securely with appropriate access controls. Manual correction capability allows users to fix recognition errors through voice or traditional interface, with corrections improving future accuracy. Performance monitoring tracks recognition success rates across different acoustic environments and worker speech patterns, validating reliability and identifying improvement opportunities, building confidence through demonstrated accuracy, transparent error handling, and continuous improvement from usage experience.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Pilot crew adoption, company-wide rollout, field documentation transformation, safety improvement measurement, competitive differentiation establishment",
+                "focus": "Map pilot crew validation through adoption toward field operations transformation and competitive advantage.",
+                "hint_text": "Define progression from pilot crew usage validation to organization-wide adoption to standard field interaction. Show evolution from convenience feature to operational transformation and workforce attraction tool.",
+                "ideal_answer": "Initial success means pilot crew adoption with measurable documentation improvement, positive user feedback, and demonstrated safety benefits from hands-free operation. Expansion involves company-wide rollout with field teams preferring voice interaction for routine documentation and information access, demonstrated value across diverse trades and work contexts. Full maturity represents voice interaction as standard field practice, with comprehensive real-time documentation transforming project visibility and control. Leadership reports substantial field data quality improvement supporting better decision-making, measurable safety enhancement from maintained protective equipment usage and work focus, improved field worker satisfaction from technology supporting their workflow, and competitive differentiation through modern field technology attracting skilled workers, transforming field operations efficiency and establishing technology leadership reputation.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Construction sector validation, field environment testing, adoption metrics documentation, safety impact evidence, data quality improvement confirmation",
+                "focus": "Reference construction field validation and documented safety and productivity improvements.",
+                "hint_text": "Mention validation in actual construction jobsite environments. Describe documented adoption rates and user satisfaction. Reference safety improvements and data quality enhancements from real-time voice documentation.",
+                "ideal_answer": "Voice interaction has proven success in construction field environments similar to yours, with documented validation across actual jobsites with typical noise levels, weather conditions, and work contexts. Reference companies report strong field worker adoption with positive feedback about convenience and productivity impact, validated through usage analytics. Safety improvements are documented through incident analysis showing reduced protective equipment violations and distraction-related risks. Data quality enhancement is confirmed through completeness metrics and timestamp analysis showing real-time documentation replacing delayed manual entry. Field worker satisfaction surveys document technology appreciation. Construction references are available to discuss implementation experience, field team adoption strategies, and operational improvements realized through voice-enabled field interaction removing barriers to real-time project documentation and information access.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Implementation support dedication, field worker training simplicity, acoustic optimization assistance, continuous recognition improvement, adoption tracking reviews",
+                "focus": "Outline dedicated field operations support and simple enablement ensuring successful adoption.",
+                "hint_text": "Detail implementation support for voice system setup and acoustic optimization. Describe minimal field worker training reflecting intuitive interaction. Explain continuous accuracy improvement and adoption tracking.",
+                "ideal_answer": "Your field operations receive dedicated implementation support for voice system configuration, acoustic optimization for typical jobsite environments, and integration with existing mobile devices and optional hands-free hardware. Field worker training is intentionally minimal, reflecting natural voice interaction requiring demonstration rather than extensive instruction. Ongoing acoustic optimization assistance helps address challenging jobsite environments or specific recognition issues. Continuous recognition improvement learns from your workers' speech patterns and construction terminology, enhancing accuracy over time. Regular adoption reviews track usage metrics across crews and trades, field worker satisfaction, data quality improvements, and safety impacts, ensuring leadership visibility into how voice interaction is transforming field operations, improving project visibility, enhancing safety, and differentiating the organization through technology-enabled field workforce productivity.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

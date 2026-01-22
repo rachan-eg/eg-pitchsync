@@ -1,0 +1,9 @@
+{
+    "id": "facility_management_workplace_advisor",
+    "title": "AI Workplace Balance Advisor",
+    "domain": "Facility Management",
+    "complexity": "High",
+    "target_market": "HR Directors, Facility Managers, COO",
+    "theme_id": "corporate_balance",
+    "description": "An AI platform that optimizes workplace balance by analyzing utilization data and employee work patterns to inform remote work policies and space planning."
+}

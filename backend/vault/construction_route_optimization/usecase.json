@@ -1,0 +1,9 @@
+{
+    "id": "construction_route_optimization",
+    "title": "AI Route Optimization Assistant",
+    "domain": "Construction",
+    "complexity": "High",
+    "target_market": "Logistics Managers, Project Coordinators",
+    "theme_id": "logistic_precise",
+    "description": "An AI-powered logistics assistant that optimizes crew routes and schedules, accounting for travel time, skill requirements, and jobsite constraints."
+}

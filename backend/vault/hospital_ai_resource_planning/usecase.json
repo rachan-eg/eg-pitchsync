@@ -1,0 +1,9 @@
+{
+    "id": "hospital_ai_resource_planning",
+    "title": "AI Resource Planning Assistant",
+    "domain": "Hospitals",
+    "complexity": "High",
+    "target_market": "Hospital Administrators, Resource Planners, HR Directors",
+    "theme_id": "clinical_clean",
+    "description": "An AI-powered resource planning assistant that optimizes clinical staffing and department coverage by balancing staff availability, skill mix, and regulatory requirements."
+}

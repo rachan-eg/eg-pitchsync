@@ -1,0 +1,14 @@
+{
+    "id": "professional_modern",
+    "name": "Professional Modern",
+    "mood": "Reliable, Efficient, Tech-forward",
+    "visual_style": "Clean lines, soft shadows, geometric patterns, deep blues and teals",
+    "colors": {
+        "primary": "#007BFF",
+        "secondary": "#6C757D",
+        "bg": "#F8F9FA",
+        "success": "#00855B",
+        "error": "#D93539",
+        "warning": "#956D00"
+    }
+}

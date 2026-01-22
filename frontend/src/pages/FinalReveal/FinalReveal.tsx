@@ -170,18 +170,19 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                                 onClick={() => navigate('/present')}
                                 disabled={!imageUrl}
                             >
-                                <Icons.Mic /> BEGIN PRESENTATION
+                                <Icons.Mic /> PRESENT PITCH
                             </button>
                             <button
-                                className={`btn-secondary ${isDownloading ? 'is-loading' : ''}`}
+                                className={`final-reveal__present-btn btn-secondary ${isDownloading ? 'is-loading' : ''}`}
                                 onClick={handleDownloadReport}
-                                title="Export PDF Report"
                                 disabled={isDownloading}
                             >
                                 {isDownloading ? (
                                     <div className="btn-spinner" />
                                 ) : (
-                                    <Icons.Download />
+                                    <>
+                                        <Icons.Download /> DOWNLOAD REPORT
+                                    </>
                                 )}
                             </button>
                         </div>

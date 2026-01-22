@@ -5,60 +5,60 @@
             "usecase_id": "construction_ai_deviation",
             "description": "Construction AI Deviation Detection team"
         },
-        "AURORA26": {
-            "team_name": "Aurora Unit",
-            "usecase_id": "healthcare_onprem_ai",
-            "description": "Healthcare AI team"
+        "PREDICT24": {
+            "team_name": "Predictive Ops",
+            "usecase_id": "facility_management_predictive_maintenance",
+            "description": "AI Predictive Maintenance team"
         },
-        "VORTEX26": {
-            "team_name": "Vortex Collective",
-            "usecase_id": "manufacturing_quality_ai",
-            "description": "Manufacturing quality AI team"
+        "ENERGY24": {
+            "team_name": "Grid Watchers",
+            "usecase_id": "energy_management_intelligence_assistant",
+            "description": "AI Energy Intelligence team"
         },
-        "ZENITH26": {
-            "team_name": "Zenith Squad",
-            "usecase_id": "retail_demand_ai",
-            "description": "Retail demand forecasting team"
+        "WORKPLACE24": {
+            "team_name": "Zen Space",
+            "usecase_id": "facility_management_workplace_advisor",
+            "description": "AI Workplace Balance team"
         },
-        "NEXUS26": {
-            "team_name": "Nexus Alliance",
-            "usecase_id": "logistics_ops_copilot",
-            "description": "Logistics operations copilot team"
+        "SMB24": {
+            "team_name": "Scale Up",
+            "usecase_id": "construction_interface_simplification",
+            "description": "Construction SMB Retention team"
         },
-        "SIRIUS26": {
-            "team_name": "Sirius Command",
-            "usecase_id": "fin_risk_fraud_ai",
-            "description": "Financial risk and fraud detection team"
+        "ROUTE24": {
+            "team_name": "Pathfinders",
+            "usecase_id": "construction_route_optimization",
+            "description": "Construction Route Optimization team"
         },
-        "TITAN26": {
-            "team_name": "Titan Syndicate",
-            "usecase_id": "energy_asset_monitoring",
-            "description": "Energy asset monitoring AI team"
+        "VOICE24": {
+            "team_name": "Voice First",
+            "usecase_id": "construction_voice_interface",
+            "description": "Construction Voice Interface team"
         },
-        "PULSE26": {
-            "team_name": "Pulse Core",
-            "usecase_id": "education_student_success",
-            "description": "Education student success AI team"
+        "RETAIL24": {
+            "team_name": "Secure Cart",
+            "usecase_id": "retail_checkout_fraud_prevention",
+            "description": "Retail Fraud Prevention team"
         },
-        "PHOENIX26": {
-            "team_name": "Phoenix Vanguard",
-            "usecase_id": "real_estate_portfolio_ai",
-            "description": "Real estate portfolio analysis team"
+        "CIVIC24": {
+            "team_name": "Civic Flow",
+            "usecase_id": "municipalities_workflow_generation",
+            "description": "Municipal Workflow Generation team"
         },
-        "VEGA26": {
-            "team_name": "Vega Horizon",
-            "usecase_id": "hospitality_guest_experience",
-            "description": "Hospitality guest experience AI team"
+        "HOSPITAL24": {
+            "team_name": "Care Sync",
+            "usecase_id": "hospital_ai_resource_planning",
+            "description": "Hospital AI Resource Planning team"
         },
-        "APOLLO26": {
-            "team_name": "Apollo Mission",
-            "usecase_id": "construction_project_risk",
-            "description": "Construction project risk management team"
+        "HOUSING24": {
+            "team_name": "Community Connect",
+            "usecase_id": "housing_maintenance_vendor_matching",
+            "description": "Housing Maintenance Vendor Matching team"
         },
-        "NOVA26": {
-            "team_name": "Nova Insight",
-            "usecase_id": "professional_services_delivery",
-            "description": "Professional services delivery AI team"
+        "PROSERV24": {
+            "team_name": "Growth Ops",
+            "usecase_id": "professional_services_onboarding_optimizer",
+            "description": "Professional Services Onboarding team"
         }
     }
 }

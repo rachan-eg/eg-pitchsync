@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's onboarding solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Onboarding duration excessive, process inefficiency, customer frustration from delays, revenue realization postponement, resource allocation suboptimality",
+                "focus": "Identify the time burden and customer friction from lengthy complex onboarding processes.",
+                "hint_text": "Describe how onboarding consumes weeks or months before customers realize value. Mention manual coordination across teams creating delays. Explain customer frustration and churn risk from prolonged time-to-value.",
+                "ideal_answer": "Organizations face extended customer onboarding consuming excessive time before new clients realize application value and begin productive usage. Manual process coordination across implementation teams, customer stakeholders, technical resources, and training creates sequential delays and scheduling bottlenecks. Customers experience frustration from prolonged waiting between onboarding steps, creating churn risk as initial enthusiasm fades during administrative delays. Revenue realization postpones as customers cannot use applications productively until onboarding completes. Resource allocation proves suboptimal with implementation capacity constrained by inefficient processes rather than actual technical complexity. The extended timeline results in customer dissatisfaction impacting references and expansion, delayed revenue recognition affecting financial performance, competitive disadvantage as rivals onboard faster, and inefficient resource utilization preventing capacity scaling to support growth objectives.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Onboarding time reduction, customer satisfaction improvement, revenue acceleration, resource efficiency gains, capacity expansion enablement",
+                "focus": "Quantify onboarding acceleration and customer satisfaction with clear revenue and capacity benefits.",
+                "hint_text": "Focus on dramatic onboarding time reduction improving customer experience. Mention faster revenue realization. Emphasize implementation capacity expansion from efficiency gains.",
+                "ideal_answer": "Organizations experience substantial onboarding time reduction through process optimization and automation, delivering faster customer value realization and improved satisfaction. Customer experience enhances dramatically as streamlined onboarding reduces waiting, maintains momentum, and demonstrates organizational efficiency and customer focus. Revenue acceleration occurs as customers reach productive usage sooner, improving financial performance and cash flow. Implementation team capacity expands significantly as efficiency gains enable serving more customers with existing resources, supporting growth without proportional headcount increases. The business impact manifests through improved customer satisfaction and retention from positive onboarding experiences, accelerated revenue recognition supporting financial targets, competitive advantage through superior time-to-value, and scalable implementation capacity enabling customer acquisition growth without operational constraints.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Onboarding process expertise, bottleneck identification intelligence, automation sophistication, customer experience optimization, continuous improvement capability",
+                "focus": "Highlight onboarding optimization expertise and intelligent process improvement that generic tools lack.",
+                "hint_text": "Highlight understanding onboarding process patterns versus generic workflow automation. Contrast intelligent bottleneck identification with manual process analysis. Emphasize customer experience focus and continuous optimization.",
+                "ideal_answer": "The solution delivers superior onboarding optimization through deep expertise in customer implementation processes, understanding common bottlenecks, coordination inefficiencies, and experience friction points rather than generic process automation tools. Intelligent analysis identifies specific improvement opportunities—automation candidates, parallel process enablement, resource allocation optimization, customer self-service expansion—generating actionable recommendations rather than requiring manual process redesign. Customer experience focus ensures optimization maintains implementation quality and relationship building while accelerating timelines. Continuous improvement capability learns from onboarding outcomes, customer feedback, and implementation patterns, refining recommendations as organizational processes evolve. The approach balances speed with thoroughness, recognizing that effective onboarding requires both efficiency and customer success foundation, delivering professional services-specific intelligence rather than generic process optimization requiring extensive customization.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Project management integration, customer communication compatibility, documentation synchronization, training platform connection, implementation tracking alignment",
+                "focus": "Detail seamless connection to implementation systems and optimization delivery within current workflows.",
+                "hint_text": "Explain integration with project management and customer relationship tools. Mention automated coordination and documentation synchronization. Describe optimization recommendations within existing implementation processes.",
+                "ideal_answer": "The platform integrates seamlessly with existing project management systems, customer relationship platforms, and implementation tracking tools through standard connectors, analyzing onboarding processes, timelines, and resource allocation without requiring separate systems. Customer communication integration enables automated coordination and status updates maintaining engagement throughout streamlined onboarding. Documentation synchronization ensures training materials, configuration guides, and success resources are accessible when customers need them. Training platform connection supports efficient knowledge transfer scheduling and progress tracking. Implementation tracking alignment provides visibility into optimization impact and remaining improvement opportunities. The architecture delivers process enhancements within current implementation workflows rather than requiring operational disruption, ensuring implementation teams adopt improvements within familiar systems and established customer engagement approaches.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Implementation manager optimization guidance, customer onboarding clarity, technical team coordination efficiency, leadership capacity visibility, customer success timeline transparency",
+                "focus": "Compare implementation team optimization guidance with customer experience transparency and leadership capacity dashboards.",
+                "hint_text": "Describe process improvement recommendations for implementation managers versus clear timeline communication for customers. Explain coordination automation for teams and leadership dashboards showing capacity gains.",
+                "ideal_answer": "Implementation managers receive specific optimization recommendations showing process bottlenecks, automation opportunities, and resource allocation improvements with projected timeline reduction and effort savings. Customers experience clear transparent onboarding with visible progress, predictable timelines, and proactive communication maintaining engagement and confidence. Technical teams benefit from automated coordination reducing scheduling friction and manual handoff management. Customer success teams access timeline transparency enabling proactive engagement and expansion conversation timing. Leadership views capacity analytics quantifying onboarding efficiency improvements, implementation throughput increases, and customer satisfaction trends demonstrating optimization impact. Each stakeholder experiences appropriate benefits—implementation teams gain efficiency, customers gain speed and clarity, leadership gains scalable capacity supporting growth objectives.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Recommendation validation, quality preservation assurance, implementation team authority, customer satisfaction monitoring, rollback capability",
+                "focus": "Explain optimization validation and team control building confidence in improvement recommendations.",
+                "hint_text": "Highlight validation showing optimizations maintain implementation quality. Describe team authority over which improvements to adopt. Explain customer satisfaction monitoring and ability to adjust if issues emerge.",
+                "ideal_answer": "Every optimization recommendation includes validation showing how process improvements reduce timeline while maintaining implementation quality and customer success outcomes. Quality preservation assurance demonstrates that efficiency gains don't compromise thoroughness, training adequacy, or relationship building essential for long-term customer success. Implementation teams retain complete authority over which optimizations to adopt, when to introduce changes, and how to balance speed with quality based on customer-specific needs. Customer satisfaction monitoring tracks whether onboarding improvements maintain or enhance experience rather than creating rushed feelings or inadequate preparation. Rollback capability allows reverting optimizations if unexpected issues emerge, with the system learning from feedback to refine recommendations. Team control over optimization pace and scope ensures changes support rather than disrupt customer success objectives, building confidence through validation, preserved authority, and demonstrated quality maintenance.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Initial timeline reduction, organization-wide optimization, capacity transformation, customer satisfaction enhancement, revenue acceleration",
+                "focus": "Map initial onboarding improvement through adoption toward scalable growth capacity transformation.",
+                "hint_text": "Define progression from pilot onboarding acceleration to company-wide optimization to strategic capacity expansion. Show evolution from tactical efficiency to growth enablement capability.",
+                "ideal_answer": "Initial success means validating onboarding time reduction with pilot customers, documenting satisfaction maintenance or improvement, and implementation team confidence in optimized processes. Expansion involves organization-wide optimization adoption with streamlined onboarding as standard practice, demonstrated capacity gains enabling higher customer volumes, and consistent faster time-to-value across customer segments. Full maturity represents optimized onboarding as competitive differentiator and growth enabler, with implementation capacity supporting ambitious customer acquisition targets. Leadership reports substantial average onboarding time reduction delivering faster customer value realization, maintained or improved customer satisfaction scores validating quality preservation, measurable implementation capacity expansion enabling revenue growth without proportional cost increases, and competitive advantage through superior time-to-value attracting customers valuing rapid deployment, transforming onboarding from growth constraint to strategic advantage supporting organizational scaling and market expansion objectives.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Professional services validation, process complexity similarity, timeline metrics documentation, satisfaction preservation evidence, capacity impact confirmation",
+                "focus": "Reference comparable organization results and validated onboarding acceleration without satisfaction compromise.",
+                "hint_text": "Mention deployments in similar organizations with comparable onboarding complexity. Describe validated timeline reductions and maintained satisfaction. Reference capacity expansion enabling growth.",
+                "ideal_answer": "The platform has proven success in professional services organizations similar to yours, with documented implementations across companies managing comparable customer onboarding complexity and implementation processes. Reference organizations report substantial onboarding time reductions validated through project tracking data, with outcomes showing consistent timeline compression across customer segments. Customer satisfaction metrics confirm maintained or improved experience despite accelerated onboarding, validated through surveys and retention analysis. Implementation capacity expansion is documented through throughput metrics showing increased customer handling without proportional resource additions. Several organizations credit onboarding optimization with enabling revenue growth targets by removing implementation capacity constraints. Professional services references are available to discuss implementation experience, change management approaches for process optimization adoption, and the business impact achieved through onboarding acceleration supporting customer satisfaction and scalable growth capacity.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Implementation support dedication, process analysis assistance, team training provision, continuous optimization refinement, impact tracking reviews",
+                "focus": "Outline dedicated onboarding optimization support and implementation team enablement ensuring success.",
+                "hint_text": "Detail implementation support for process analysis and optimization identification. Describe team training on improved processes. Explain continuous refinement and impact tracking.",
+                "ideal_answer": "Your implementation organization receives dedicated support for onboarding process analysis, identifying specific optimization opportunities aligned with your customer segments, application complexity, and organizational capabilities. Process improvement assistance helps design optimized workflows balancing efficiency with quality and customer experience. Comprehensive training prepares implementation teams to execute streamlined processes effectively, maintain customer engagement through accelerated timelines, and handle exceptions appropriately. Continuous optimization refinement incorporates feedback from customer outcomes, satisfaction trends, and implementation experience improving recommendations as organizational processes mature. Regular impact reviews track onboarding timeline trends, customer satisfaction metrics, implementation capacity utilization, and revenue acceleration impacts, ensuring leadership visibility into how onboarding optimization is reducing time-to-value, improving customer experience, expanding implementation capacity, and supporting revenue growth objectives through scalable efficient customer deployment processes.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

@@ -1,9 +1,0 @@
-{
-    "id": "fin_risk_fraud_ai",
-    "title": "AI Risk & Fraud SaaS",
-    "domain": "Financial Services",
-    "complexity": "High",
-    "target_market": "Financial Services Firms",
-    "theme_id": "cyberpunk",
-    "description": "Design an AI-powered risk and fraud detection platform that identifies suspicious activity earlier, minimizes false positives, and supports regulatory explainability."
-}
