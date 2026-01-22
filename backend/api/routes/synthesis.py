@@ -213,7 +213,7 @@ async def submit_pitch_image(
     import os
     import base64
     from backend.config import GENERATED_DIR
-    from backend.services.ai.image_gen import overlay_logos, get_logos_for_usecase
+    from backend.services.ai.image_gen import overlay_logos, get_logos_for_usecase, upscale_image
     
     session = get_session(session_id)
     if not session:
@@ -252,9 +252,19 @@ async def submit_pitch_image(
             
         print(f"DEBUG: Uploaded image saved to {filename}")
         
-        # 4. Overlay logos
+        # 4. Overlay logos first (on original resolution)
         logos_to_overlay = get_logos_for_usecase(session.usecase)
-        overlay_logos(str(filepath), logos_to_overlay)
+        
+        # Get team name from team_id
+        # Note: session.team_id is actually the team name (e.g., "Team Orion") 
+        # passed from frontend during init, not the team code
+        team_name = session.team_id  # This is already the display name
+        print(f"DEBUG: Using team_name = '{team_name}'")
+        
+        overlay_logos(str(filepath), logos_to_overlay, team_name=team_name)
+        
+        # 5. Upscale image (fast CPU-based, low latency) - logos scale with image
+        upscale_image(str(filepath), target_min_dimension=2048, max_scale=2.5)
         
         image_url = f"/generated/{filename}"
         

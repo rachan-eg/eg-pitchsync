@@ -284,6 +284,15 @@ def auto_generate_pitch(
     }
 
 
+# =============================================================================
+# IMAGE PROMPT CURATOR MODE SWITCH
+# =============================================================================
+# Set to True for the new organic/adaptive curator that interprets ideas freely
+# Set to False for the classic structured 3-panel approach
+USE_ORGANIC_CURATOR = True
+# =============================================================================
+
+
 def generate_customer_image_prompt(
     usecase: Dict[str, Any], 
     all_phases_data: Dict[str, Any],
@@ -292,19 +301,208 @@ def generate_customer_image_prompt(
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Creates a comprehensive, customer-centric image prompt for pitch presentations.
-    Synthesizes Q&A responses into a coherent solution mockup with specific details.
-    ALWAYS outputs prompts for 16:9 aspect ratio images.
+    
+    MODE SWITCH (USE_ORGANIC_CURATOR):
+    - True: Organic approach - curator interprets idea and designs layout freely
+    - False: Classic approach - structured 3-panel Problem→Solution→Outcome layout
+    
+    ALWAYS outputs prompts for 16:9 aspect ratio images with light-mode aesthetics.
     """
     phase_summaries = _extract_phase_summaries(all_phases_data)
     
+    # Extract key details from usecase
+    usecase_title = usecase.get('title', 'Unknown Product')
+    usecase_domain = usecase.get('domain', 'Technology')
+    target_market = usecase.get('target_market', 'Businesses')
+    brand_colors = _load_brand_colors(usecase, theme)
+
+    refinement_instruction = ""
+    if additional_notes:
+        refinement_instruction = f"""
+USER REFINEMENT REQUEST:
+"{additional_notes}"
+This MUST be prominently reflected in the visual.
+"""
+
+    # Build raw Q&A context
+    raw_qa_context = ""
+    for phase_data in phase_summaries:
+        p_name = phase_data.get("phase", "Unknown Phase")
+        p_content = phase_data.get("content", "")
+        if p_content:
+            raw_qa_context += f"\n--- {p_name} ---\n{p_content}\n"
+
+    # =========================================================================
+    # SELECT PROMPT BASED ON MODE
+    # =========================================================================
+    if USE_ORGANIC_CURATOR:
+        prompt = _build_organic_curator_prompt(
+            raw_qa_context, usecase_title, usecase_domain, target_market,
+            brand_colors, refinement_instruction
+        )
+    else:
+        prompt = _build_classic_curator_prompt(
+            phase_summaries, usecase_title, usecase_domain, target_market,
+            brand_colors, refinement_instruction
+        )
+
+    # Use Claude Sonnet 4.5 for creative image prompt generation
+    client = get_creative_client()
+    try:
+        mode_label = "ORGANIC" if USE_ORGANIC_CURATOR else "CLASSIC"
+        print(f"DEBUG: [{mode_label}] Curator generating prompt for {usecase_title}...")
+        
+        response_text, usage = client.generate_content(
+            prompt=prompt,
+            temperature=0.7
+        )
+        
+        # Parse the response
+        import re
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
+        if json_match:
+            try:
+                parsed_json = json.loads(json_match.group())
+                final_prompt = parsed_json.get("final_combined_prompt", "")
+                
+                if USE_ORGANIC_CURATOR:
+                    print(f"DEBUG: Curator interpretation: {parsed_json.get('idea_interpretation', 'N/A')}")
+                    print(f"DEBUG: Chosen layout: {parsed_json.get('chosen_layout', 'N/A')}")
+                
+                if not final_prompt:
+                    raise ValueError("Empty prompt")
+                    
+            except json.JSONDecodeError:
+                final_prompt = response_text
+                parsed_json = {"final_combined_prompt": final_prompt}
+        else:
+            final_prompt = response_text
+            parsed_json = {"final_combined_prompt": final_prompt}
+        
+        # Safety clamps
+        if "16:9" not in final_prompt.lower() and "16x9" not in final_prompt.lower():
+            final_prompt = f"16:9 widescreen aspect ratio, {final_prompt}"
+        
+        if "8k" not in final_prompt.lower():
+            final_prompt += ", 8K resolution, professional presentation quality"
+
+        if "light" not in final_prompt.lower() or "dark" in final_prompt.lower():
+            final_prompt += ", light mode, bright white background, high-key lighting"
+        
+        parsed_json["final_combined_prompt"] = final_prompt
+        
+        print(f"DEBUG: Successfully generated [{mode_label}] curator prompt")
+        return parsed_json, usage
+        
+    except Exception as e:
+        print(f"Critical Image Curator Error: {e}")
+        return {
+            "final_combined_prompt": f"Professional 16:9 widescreen single-slide pitch for {usecase_title}. Clean modern layout. Light-mode, bright white background. Brand colors: {brand_colors}. 8K resolution.",
+            "idea_interpretation": "Fallback due to error",
+            "chosen_layout": "simple centered",
+            "layout_rationale": "Error fallback"
+        }, {"input_tokens": 0, "output_tokens": 0}
+
+
+def _build_organic_curator_prompt(
+    raw_qa_context: str,
+    usecase_title: str,
+    usecase_domain: str,
+    target_market: str,
+    brand_colors: str,
+    refinement_instruction: str
+) -> str:
+    """
+    ORGANIC CURATOR PROMPT (New Approach)
+    - Reads Q&A deeply and interprets the idea
+    - Chooses layout organically based on content
+    - No fixed structure enforced
+    """
+    return f"""
+You are a VISUAL STORYTELLER and PITCH DESIGNER.
+
+Your task: Read the participant's Q&A responses below, deeply understand their IDEA, and design a SINGLE-SLIDE VISUAL PITCH that authentically represents their concept.
+
+=== PARTICIPANT'S IDEA (Q&A Responses) ===
+{raw_qa_context}
+
+=== CONTEXT ===
+Product/Concept: "{usecase_title}"
+Domain: {usecase_domain}
+Target Audience: {target_market}
+{refinement_instruction}
+
+=== BRAND COLORS (Must Use) ===
+{brand_colors}
+
+=== YOUR TASK ===
+
+**STEP 1: UNDERSTAND THE IDEA**
+Read the Q&A carefully. Ask yourself:
+- What is the CORE of this idea? (A process? A platform? An outcome? A transformation?)
+- What makes this idea UNIQUE or interesting?
+- What is the participant most proud of or emphasizing?
+- What visual metaphor or structure best captures this?
+
+**STEP 2: DESIGN THE VISUAL NARRATIVE**
+Based on your understanding, choose a layout that EMERGES from the idea:
+- If the idea is a JOURNEY or PROCESS → Use a flowing path, timeline, or progression
+- If the idea is a PLATFORM or ECOSYSTEM → Use a hub-and-spoke, modular grid, or interconnected nodes
+- If the idea is about IMPACT or OUTCOMES → Lead with a hero metric, surround with supporting evidence
+- If the idea is a SYSTEM or ARCHITECTURE → Use layered stacks, pipelines, or component diagrams
+- If the idea is a COMPARISON or TRANSFORMATION → Use before/after, contrast panels
+- If the idea is EXPLORATORY or MULTI-FACETED → Use a dashboard or card-based layout
+
+DO NOT default to a 3-column "Problem-Solution-Outcome" layout unless the idea genuinely fits that structure.
+
+**STEP 3: CRAFT THE IMAGE PROMPT**
+Write a detailed, specific image generation prompt that:
+1. Describes the EXACT visual layout you chose and WHY it fits
+2. Includes SPECIFIC details from the Q&A (names, metrics, features mentioned)
+3. Shows the product/solution in action with realistic UI or system elements
+4. Incorporates human elements (users benefiting, teams collaborating)
+5. Uses the brand colors as the dominant visual theme
+
+=== VISUAL STYLE (Non-Negotiable) ===
+- FORMAT: 16:9 widescreen presentation slide
+- BACKGROUND: Light-mode, bright white or soft cream background
+- AESTHETIC: Calm, modern, professional—like a polished investor deck
+- TYPOGRAPHY: Clean, readable headlines and metric callouts
+- AVOID: Dark themes, cluttered designs, generic stock imagery, abstract meaningless shapes
+
+=== OUTPUT FORMAT ===
+Return ONLY a JSON object:
+{{
+    "idea_interpretation": "1-2 sentences describing what you understood as the core idea",
+    "chosen_layout": "The layout type you chose (e.g., 'hub-and-spoke', 'timeline flow', 'hero metric', etc.)",
+    "layout_rationale": "Why this layout fits the idea",
+    "final_combined_prompt": "The complete, detailed image generation prompt (include all specifics: layout, content, colors, style, 16:9 format, light-mode background, 8K quality)"
+}}
+
+BE AUTHENTIC to the participant's idea. The visual should feel like THEIR pitch, not a generic template.
+"""
+
+
+def _build_classic_curator_prompt(
+    phase_summaries: list,
+    usecase_title: str,
+    usecase_domain: str,
+    target_market: str,
+    brand_colors: str,
+    refinement_instruction: str
+) -> str:
+    """
+    CLASSIC CURATOR PROMPT (Original Approach)
+    - Structured 3-panel Problem→Solution→Outcome layout
+    - Categorizes Q&A into problem/solution/market/benefit buckets
+    - Consistent, predictable output format
+    """
     # Structured extraction of Q&A insights for coherent story-building
     problem_insights = []
     solution_insights = []
     market_insights = []
     benefit_insights = []
     
-    # phase_summaries is a list of {"phase": name, "content": ...}
-    # Build structured context that tells a coherent story
     structured_context = ""
     for phase_data in phase_summaries:
         p_name = phase_data.get("phase", "Unknown Phase")
@@ -314,7 +512,6 @@ def generate_customer_image_prompt(
         if p_content:
             structured_context += f"\n### {p_name} ###\n{p_content}\n"
             
-            # Categorize insights for coherent story synthesis
             if any(kw in phase_lower for kw in ['problem', 'challenge', 'pain', 'issue', 'need']):
                 problem_insights.append(p_content)
             elif any(kw in phase_lower for kw in ['solution', 'approach', 'how', 'method', 'architecture']):
@@ -324,28 +521,6 @@ def generate_customer_image_prompt(
             elif any(kw in phase_lower for kw in ['benefit', 'value', 'outcome', 'result', 'impact']):
                 benefit_insights.append(p_content)
     
-    # Extract key details from usecase
-    usecase_title = usecase.get('title', 'Unknown Product')
-    usecase_domain = usecase.get('domain', 'Technology')
-    target_market = usecase.get('target_market', 'Businesses')
-    usecase_desc = usecase.get('description', f'{usecase_domain} solution for {target_market}')
-    
-    # Theme details
-    theme_name = theme.get('name', 'Modern') if isinstance(theme, dict) else str(theme)
-    theme_style = theme.get('visual_style', 'Clean and professional') if isinstance(theme, dict) else ''
-    theme_mood = theme.get('mood', 'Innovative') if isinstance(theme, dict) else ''
-
-    refinement_instruction = ""
-    if additional_notes:
-        refinement_instruction = f"""
-=== CRITICAL USER REFINEMENTS (MUST PRIORITIZE) ===
-The user has specifically requested: {additional_notes}
-These refinements MUST be prominently featured in the final image prompt.
-"""
-    
-    brand_colors = _load_brand_colors(usecase, theme)
-    
-    # Build a focused summary of insights for the AI to work with
     story_summary = f"""
 PROBLEM BEING SOLVED: {' | '.join(problem_insights[:2]) if problem_insights else 'Streamlining business operations'}
 SOLUTION APPROACH: {' | '.join(solution_insights[:2]) if solution_insights else 'Intelligent automation platform'}
@@ -353,10 +528,11 @@ TARGET CUSTOMERS: {' | '.join(market_insights[:2]) if market_insights else targe
 KEY BENEFITS: {' | '.join(benefit_insights[:2]) if benefit_insights else 'Efficiency gains and cost reduction'}
 """
     
-    prompt = f"""
+    return f"""
 ACT AS A SILICON VALLEY PITCH DESIGNER who creates COMPELLING VISUAL MOCKUPS for investor presentations.
 
-Your task: Synthesize the Q&A insights below into ONE COHERENT CUSTOMER-CENTRIC SOLUTION MOCKUP.
+Your task: Synthesize the Q&A insights below into ONE COHERENT, CUSTOMER-CENTRIC SINGLE-SLIDE PITCH MOCKUP.
+The slide must communicate Problem → Solution → Outcome in a single frame with calm, modern clarity.
 
 === CRITICAL FORMAT REQUIREMENT ===
 The image MUST be in **16:9 ASPECT RATIO** (widescreen presentation format).
@@ -380,7 +556,7 @@ TARGET MARKET: {target_market}
 These colors MUST be the dominant visual theme. Use them for backgrounds, accents, headers, and key elements.
 
 === YOUR MISSION ===
-Create a prompt that generates a **COHESIVE SOLUTION MOCKUP** showing:
+Create a prompt that generates a **COHESIVE SINGLE-SLIDE PITCH MOCKUP** showing:
 1. **THE CUSTOMER'S PROBLEM** (left side or top) - Visual representation of the pain point
 2. **THE SOLUTION IN ACTION** (center) - Show the product/interface solving the problem
 3. **THE OUTCOME/BENEFIT** (right side or bottom) - Metrics, happy users, success indicators
@@ -388,81 +564,27 @@ Create a prompt that generates a **COHESIVE SOLUTION MOCKUP** showing:
 === VISUAL STYLE REQUIREMENTS ===
 - **FORMAT**: 16:9 widescreen, professional presentation slide style
 - **LAYOUT**: Clean 3-panel journey (Problem → Solution → Outcome) OR split-screen Before/After
-- **STYLE**: Modern SaaS product visualization, clean vector/isometric style
+- **STYLE**: Calm, modern, LIGHT-MODE aesthetic with a bright, clean background (white or near-white). Avoid dark themes.
+- **HIERARCHY**: Clear visual hierarchy; no clutter; easy to scan in 3 seconds
 - **MUST INCLUDE**: 
   • Specific metrics from the Q&A (use actual numbers/percentages mentioned)
   • Clear visual hierarchy showing the transformation
   • Human elements (users, customers) benefiting from the solution
   • Dashboard or interface mockup showing the product in use
-- **COLORS**: Dominant use of the brand palette specified above
+- **COLORS**: Dominant use of the brand palette specified above, with the theme color clearly highlighted throughout
 - **TEXT**: Include readable headlines/metrics that tell the value story
-- **AVOID**: Abstract shapes without meaning, generic stock imagery, cluttered designs.
-- **NO BRAND LOGOS**: DO NOT include any specific mentions of "EG", "Expedia", or "EG Logo" in the text of the prompt. Use generic placeholders like "Company Logo" or "Brand Mark" only if absolutely necessary for the layout.
+- **AVOID**: Abstract shapes without meaning, aggressive or noisy visuals, generic stock imagery, cluttered designs.
 
 === OUTPUT FORMAT (JSON) ===
 Return ONLY a JSON object with 'final_combined_prompt' containing a detailed, specific prompt:
 
 {{
-  "final_combined_prompt": "A professional 16:9 widescreen customer solution mockup for '{usecase_title}'. [FORMAT: 16:9 aspect ratio, presentation slide] [LAYOUT: 3-panel transformation journey showing Problem → Solution → Outcome] [PROBLEM PANEL: Visual of [SPECIFIC pain point from Q&A]] [SOLUTION PANEL: Clean interface mockup of '{usecase_title}' showing [SPECIFIC feature from Q&A] in action] [OUTCOME PANEL: Success dashboard with metrics like '[SPECIFIC benefit/metric from Q&A]', happy customer icons] [STYLE: Modern SaaS visualization, clean isometric/flat design] [COLORS: Primary {brand_colors}] [TEXT: Readable headlines and metric callouts] [QUALITY: Professional, 8K resolution, presentation-ready]"
+    "final_combined_prompt": "A professional 16:9 widescreen single-slide customer pitch mockup for '{usecase_title}'. [FORMAT: 16:9 aspect ratio, presentation slide] [LAYOUT: 3-panel transformation journey showing Problem → Solution → Outcome] [PROBLEM PANEL: Visual of specific pain point] [SOLUTION PANEL: Clean interface mockup showing the product in action] [OUTCOME PANEL: Success dashboard with metrics, happy customer icons] [STYLE: Calm modern LIGHT-MODE, bright white background, clean isometric/flat design] [COLORS: Primary {brand_colors} with theme color highlighted] [TEXT: Readable headlines and metric callouts] [QUALITY: Professional, 8K resolution, presentation-ready]"
 }}
 
 BE SPECIFIC! Pull actual details from the Q&A context - names, numbers, features mentioned.
 DO NOT be vague. The mockup should tell a clear, cohesive story specific to THIS solution.
 """
-
-    # Use Claude Sonnet 4.5 for creative image prompt generation
-    client = get_creative_client()
-    try:
-        print(f"DEBUG: Generating coherent customer solution mockup prompt for {usecase_title} using Claude Sonnet 4.5...")
-        
-        response_text, usage = client.generate_content(
-            prompt=prompt,
-            temperature=0.7
-        )
-        
-        # Robust JSON extraction and parsing via specialized utility
-        from backend.models.ai_responses import ImagePromptSpec, parse_ai_response
-        
-        data = parse_ai_response(response_text, ImagePromptSpec)
-        
-        # Check if we got a totally empty response (fail-safe)
-        if not data.final_combined_prompt and not data.subject:
-             print(f"⚠️ Image Curator Parsing FAILURE. Raw response: {response_text[:200]}")
-             # Return a safe dictionary fallback with proper format
-             return {
-                 "final_combined_prompt": f"Professional 16:9 widescreen customer solution mockup for {usecase_title}. 3-panel transformation layout showing Problem to Solution to Outcome. Modern SaaS visualization style. Colors: {brand_colors}. High information density, clean flat vector style, 8k resolution.",
-                 "style": "modern saas visualization"
-             }, usage
-
-        # Convert to dictionary but keep the prompt-building logic from the model
-        prompt_data = data.model_dump()
-        final_prompt = data.get_combined_prompt()
-        
-        # Ensure 16:9 aspect ratio is always specified
-        if "16:9" not in final_prompt.lower() and "16x9" not in final_prompt.lower():
-            final_prompt = f"16:9 widescreen aspect ratio, {final_prompt}"
-        
-        # Add high-fidelity specs if missing (ensures engine consistency)
-        specs = "8k resolution, professional presentation quality"
-        if "8k" not in final_prompt.lower():
-            final_prompt += f", {specs}"
-        
-        # Sync the polished prompt back into the data object
-        prompt_data["final_combined_prompt"] = final_prompt
-        
-        print(f"DEBUG: Successfully generated coherent customer solution mockup prompt")
-        return prompt_data, usage
-        
-    except Exception as e:
-        print(f"Critical Image Curator Error: {e}")
-        # Always return something with proper format to allow the game to continue
-        return {
-            "final_combined_prompt": f"Professional 16:9 widescreen customer solution mockup for {usecase_title}. Problem to Solution to Outcome transformation layout. Modern SaaS style. Colors: {brand_colors}.",
-            "style": "modern saas visualization"
-        }, {"input_tokens": 0, "output_tokens": 0}
-
-
-
 
 
 def generate_pitch_narrative(

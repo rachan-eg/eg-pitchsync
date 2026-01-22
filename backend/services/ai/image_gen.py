@@ -8,10 +8,10 @@ import os
 import base64
 import requests
 from pathlib import Path
-from PIL import Image, ImageStat, ImageFilter, ImageOps
+from PIL import Image, ImageStat, ImageFilter, ImageOps, ImageDraw, ImageFont
 from backend.config import settings, GENERATED_DIR
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 # Asset paths - Vault root contains usecase folders with their own assets
 BASE_DIR = Path(__file__).parent.parent.parent
@@ -86,9 +86,10 @@ def get_dominant_color(image: Image.Image) -> tuple:
     return color # RGBA
 
 
-def overlay_logos(image_path: str, logos: list, padding: int = 30, logo_height: int = 40) -> None:
+def overlay_logos(image_path: str, logos: list, padding: int = 30, logo_height: int = 40, team_name: Optional[str] = None) -> None:
     """
-    Overlay logos on a footer that matches the image's dominant color.
+    Overlay logos on a header (top) that matches the image's dominant color.
+    Extends the image from the TOP instead of bottom.
     """
     try:
         # Open the base image
@@ -123,39 +124,37 @@ def overlay_logos(image_path: str, logos: list, padding: int = 30, logo_height: 
         if not logo_images:
             return
 
-        # Calculate footer stats
-        footer_height = int(logo_height * 2.5)
-        total_height = base_height + footer_height
+        # Calculate header stats (extending from TOP)
+        header_height = int(logo_height * 2.5)
+        total_height = base_height + header_height
         
-        # --- Create Mirrored Blur Background ---
-        # 1. Take the bottom slice of the image
-        sample_height = int(base_height * 0.15) # Sample bottom 15%
-        bottom_slice = base_image.crop((0, base_height - sample_height, base_width, base_height))
+        # --- Create Mirrored Blur Background for HEADER (top) ---
+        # 1. Take the TOP slice of the image
+        sample_height = int(base_height * 0.15) # Sample top 15%
+        top_slice = base_image.crop((0, 0, base_width, sample_height))
         
-        # 2. Resize to fill the footer height
-        footer_bg = bottom_slice.resize((base_width, footer_height), Image.Resampling.BICUBIC)
+        # 2. Resize to fill the header height
+        header_bg = top_slice.resize((base_width, header_height), Image.Resampling.BICUBIC)
         
         # 3. Mirror it vertically for better blending seam
-        footer_bg = ImageOps.flip(footer_bg)
+        header_bg = ImageOps.flip(header_bg)
         
         # 4. Apply heavy blur to abstract the details
-        footer_bg = footer_bg.filter(ImageFilter.GaussianBlur(radius=30))
+        header_bg = header_bg.filter(ImageFilter.GaussianBlur(radius=30))
         
-        # Create new canvas
+        # Create new canvas with header at TOP
         new_image = Image.new("RGBA", (base_width, total_height), (0, 0, 0, 255))
         
-        # Paste original image
-        new_image.paste(base_image, (0, 0))
+        # Paste the blurred header at the TOP
+        new_image.paste(header_bg, (0, 0))
         
-        # Paste the blurred footer
-        new_image.paste(footer_bg, (0, base_height))
+        # Paste original image BELOW the header
+        new_image.paste(base_image, (0, header_height))
         
-        # Place logos: Left (EGDK) and Right (Construction)
-        footer_y_start = base_height
-        
+        # Place logos in the HEADER (top area)
         for logo, path in zip(logo_images, logos):
-            # Center vertically in the footer
-            y_offset = footer_y_start + (footer_height - logo.height) // 2
+            # Center vertically in the header
+            y_offset = (header_height - logo.height) // 2
             
             if "EGDK logo.png" in path.name:
                 # Place on LEFT
@@ -165,13 +164,119 @@ def overlay_logos(image_path: str, logos: list, padding: int = 30, logo_height: 
                 x_pos = base_width - logo.width - padding
             
             new_image.paste(logo, (x_pos, y_offset), logo)
+        
+        # Add team name text in the center of the header if provided
+        if team_name:
+            draw = ImageDraw.Draw(new_image)
+            
+            # Convert team name to uppercase
+            team_name_display = team_name.upper()
+            
+            # Try to load a bold/heavy font, fallback to default
+            font_size = int(header_height * 0.35)
+            try:
+                # Try Windows bold fonts first, then regular
+                font_paths = [
+                    "C:/Windows/Fonts/segoeuib.ttf",  # Segoe UI Bold
+                    "C:/Windows/Fonts/arialbd.ttf",   # Arial Bold
+                    "C:/Windows/Fonts/segoeui.ttf",
+                    "C:/Windows/Fonts/arial.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                    "/System/Library/Fonts/Helvetica.ttc"
+                ]
+                font = None
+                for font_path in font_paths:
+                    if Path(font_path).exists():
+                        font = ImageFont.truetype(font_path, font_size)
+                        break
+                if font is None:
+                    font = ImageFont.load_default()
+            except Exception:
+                font = ImageFont.load_default()
+            
+            # Get text bounding box for centering
+            bbox = draw.textbbox((0, 0), team_name_display, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+            
+            # Center text horizontally and vertically in header
+            x_text = (base_width - text_width) // 2
+            y_text = (header_height - text_height) // 2
+            
+            # Determine text color based on header background brightness
+            # Sample the TOP border area of the header (first 20% of header height)
+            sample_top_height = max(5, int(header_height * 0.2))
+            sample_region = header_bg.crop((0, 0, base_width, sample_top_height))
+            avg_color = sample_region.resize((1, 1), Image.Resampling.LANCZOS).getpixel((0, 0))
+            
+            # Calculate luminance (perceived brightness)
+            if isinstance(avg_color, int):
+                luminance = avg_color
+            else:
+                r, g, b = avg_color[:3]
+                luminance = 0.299 * r + 0.587 * g + 0.114 * b
+            
+            # Use dark text on bright backgrounds, light text on dark backgrounds
+            if luminance > 128:
+                text_color = (40, 40, 40, 255)  # Dark gray-black
+            else:
+                text_color = (255, 255, 255, 255)  # White
+            
+            # Draw text without shadow
+            draw.text((x_text, y_text), team_name_display, font=font, fill=text_color)
             
         new_image.save(image_path, "PNG", optimize=False)
-        print(f"DEBUG: Added blurred mirror footer and split logos")
+        print(f"DEBUG: Added blurred mirror header (top) with logos" + (f" and team name '{team_name}'" if team_name else ""))
         
     except Exception as e:
         print(f"WARNING: Failed to overlay logos: {e}")
+        import traceback
+        traceback.print_exc()
         # Don't raise - image generation should still succeed without logos
+
+
+def upscale_image(image_path: str, target_min_dimension: int = 2048, max_scale: float = 2.5) -> None:
+    """
+    Fast CPU-based image upscaling using Lanczos resampling.
+    Maintains low latency while improving resolution.
+    
+    Args:
+        image_path: Path to the image file (will be overwritten)
+        target_min_dimension: Target minimum dimension (width or height)
+        max_scale: Maximum scale factor to prevent excessive upscaling
+    """
+    try:
+        img = Image.open(image_path)
+        original_width, original_height = img.size
+        
+        # Calculate scale factor based on smaller dimension
+        min_dim = min(original_width, original_height)
+        scale_factor = target_min_dimension / min_dim
+        
+        # Clamp scale factor
+        scale_factor = min(scale_factor, max_scale)
+        
+        # Skip if image is already large enough
+        if scale_factor <= 1.0:
+            print(f"DEBUG: Image already at target size ({original_width}x{original_height}), skipping upscale")
+            return
+        
+        # Calculate new dimensions
+        new_width = int(original_width * scale_factor)
+        new_height = int(original_height * scale_factor)
+        
+        # Use LANCZOS for high-quality upscaling (fast on CPU)
+        upscaled = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        # Save with optimized settings
+        upscaled.save(image_path, "PNG", optimize=True)
+        
+        print(f"DEBUG: Upscaled image from {original_width}x{original_height} to {new_width}x{new_height} (scale: {scale_factor:.2f}x)")
+        
+    except Exception as e:
+        print(f"WARNING: Failed to upscale image: {e}")
+        # Don't raise - image processing should still succeed without upscaling
 
 
 def generate_image(prompt: str, usecase: Dict[str, Any] = None) -> str:

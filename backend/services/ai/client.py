@@ -15,8 +15,9 @@ class ClaudeClient:
         """Initialize the Bedrock runtime client."""
         from botocore.config import Config
         self.region = settings.AWS_REGION
-        # Use Claude Sonnet 4 (released May 2025)
-        self.model_id = 'eu.anthropic.claude-sonnet-4-20250514-v1:0'
+
+        # self.model_id = 'eu.anthropic.claude-sonnet-4-5-20250929-v1:0'
+        self.model_id = 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
         
         # Configure timeouts for production-grade reliability
         config = Config(
