@@ -798,6 +798,42 @@
     animation: flicker 3s ease-in-out infinite;
 }
 
+@keyframes flicker {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.85;
+        transform: scale(0.995);
+    }
+}
+
+/* Download Loading State */
+.btn-secondary.is-loading {
+    cursor: wait;
+    opacity: 0.8;
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.4);
+}
+
+.btn-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: btn-spin 0.8s linear infinite;
+}
+
+@keyframes btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .animate-slideUp {
     animation: slideUp 0.4s ease-out forwards;
 }
@@ -819,18 +855,6 @@
 .stagger-3 {
     animation-delay: 0.3s;
     opacity: 0;
-}
-
-@keyframes flicker {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    5% {
-        opacity: 0.9;
-    }
 }
 
 @keyframes slideUp {

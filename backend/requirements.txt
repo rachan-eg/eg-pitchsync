@@ -21,3 +21,6 @@ httpx==0.27.0
 
 python-multipart
 python-keycloak
+
+# PDF Generation (HTML-to-PDF, pure Python)
+xhtml2pdf==0.2.16

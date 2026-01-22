@@ -21,6 +21,10 @@ from typing import Dict, List, Any, Tuple
 # VAULT LOADING LOGIC (Hierarchical)
 # =============================================================================
 
+# Directories inside vault to ignore during validation/discovery
+# 'reports' is used for PDF generation and should not be treated as a usecase
+IGNORED_DIRS = ["reports", ".DS_Store", "__pycache__"]
+
 def get_vault_root() -> str:
     """Returns the absolute path to the vault directory."""
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -45,7 +49,7 @@ def validate_vault() -> Tuple[bool, List[str]]:
     
     for item in os.listdir(vault_root):
         item_path = os.path.join(vault_root, item)
-        if not os.path.isdir(item_path):
+        if not os.path.isdir(item_path) or item in IGNORED_DIRS:
             continue
             
         usecase_dirs.append(item)
@@ -118,6 +122,8 @@ def discover_usecases() -> List[Dict[str, Any]]:
         return []
 
     for item in os.listdir(vault_root):
+        if item in IGNORED_DIRS:
+            continue
         item_path = os.path.join(vault_root, item)
         if os.path.isdir(item_path):
             usecase_file = os.path.join(item_path, "usecase.json")
@@ -150,6 +156,8 @@ def discover_themes() -> List[Dict[str, Any]]:
     themes = []
     
     for item in os.listdir(vault_root):
+        if item in IGNORED_DIRS:
+            continue
         item_path = os.path.join(vault_root, item)
         if os.path.isdir(item_path):
             theme_file = os.path.join(item_path, "theme.json")

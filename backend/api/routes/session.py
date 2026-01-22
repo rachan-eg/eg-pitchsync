@@ -692,3 +692,37 @@ def _get_retry_info(session: SessionState, phase_name: str) -> tuple[int, str | 
                 retries = (m.get('retries', 0) if isinstance(m, dict) else getattr(m, 'retries', 0)) + 1
     
     return retries, prev_feedback
+
+
+@router.get("/session/{team_id}/report")
+async def get_session_report(team_id: str):
+    """
+    Generate and download a PDF report for the team's latest session.
+    """
+    from backend.services.pdf_generator import generate_report
+    from fastapi.responses import FileResponse
+    import logging
+    
+    logger = logging.getLogger("pitchsync.api")
+    
+    # 1. Fetch session
+    session = get_latest_session_for_team(team_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="No session found for this team.")
+    
+    # 2. Generate PDF
+    try:
+        print(f"📄 Generating report for team: {team_id}")
+        pdf_path = generate_report(session)
+        
+        # 3. Stream file back
+        return FileResponse(
+            path=str(pdf_path),
+            filename=f"PitchSync_Report_{team_id}.pdf",
+            media_type="application/pdf"
+        )
+    except Exception as e:
+        logger.error(f"❌ PDF Generation Error: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")

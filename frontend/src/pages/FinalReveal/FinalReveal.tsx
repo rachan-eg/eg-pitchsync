@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../AppContext';
+import { getApiUrl } from '../../utils/api';
 import type { SessionState, PitchSubmission } from '../../types';
 import './FinalReveal.css';
 
@@ -30,8 +31,33 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
     const { totalTokens, phaseConfig } = useApp();
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
     const [dragStart, setDragStart] = useState<number | null>(null);
     const [dragOffset, setDragOffset] = useState(0);
+
+    const handleDownloadReport = async () => {
+        if (isDownloading) return;
+        setIsDownloading(true);
+        try {
+            const response = await fetch(getApiUrl(`/api/session/${session.team_id}/report`));
+            if (!response.ok) throw new Error('Report generation failed');
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `PitchSync_Report_${session.team_id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Error downloading report:', error);
+            alert('Failed to download report. Please try again.');
+        } finally {
+            setIsDownloading(false);
+        }
+    };
 
     const goToSlide = useCallback((index: number) => {
         setCurrentSlide(index);
@@ -146,8 +172,17 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                             >
                                 <Icons.Mic /> BEGIN PRESENTATION
                             </button>
-                            <button className="btn-secondary" onClick={() => window.print()} title="Export">
-                                <Icons.Download />
+                            <button
+                                className={`btn-secondary ${isDownloading ? 'is-loading' : ''}`}
+                                onClick={handleDownloadReport}
+                                title="Export PDF Report"
+                                disabled={isDownloading}
+                            >
+                                {isDownloading ? (
+                                    <div className="btn-spinner" />
+                                ) : (
+                                    <Icons.Download />
+                                )}
                             </button>
                         </div>
                     </section>
