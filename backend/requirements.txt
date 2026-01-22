@@ -24,3 +24,4 @@ python-keycloak
 
 # PDF Generation (HTML-to-PDF, pure Python)
 xhtml2pdf==0.2.16
+reportlab==4.2.5

@@ -61,6 +61,9 @@ const Icons = {
     ),
     ArrowLeft: () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
+    ),
+    X: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
     )
 };
 
@@ -197,27 +200,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
         }
     };
 
-    // Drag and Drop handlers
-    const handleDragEnter = (e: React.DragEvent<HTMLLabelElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (uploadedImages.length < 3) {
-            setIsDragging(true);
-        }
-    };
-
-    const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-    };
-
-    const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-    };
-
-    const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
@@ -227,35 +210,77 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
         const files = e.dataTransfer.files;
         if (files && files.length > 0) {
             const file = files[0];
-            // Validate it's an image
             if (file.type.startsWith('image/')) {
                 setSelectedFile(file);
             }
         }
     };
 
-    const handleSubmitPitch = async () => {
-        if (uploadedImages.length >= 3) {
-            // Already at max, just move to reveal with the latest submission
-            if (uploadedImages.length > 0) {
-                setActiveRevealSubmission(uploadedImages[uploadedImages.length - 1]);
-            }
-            navigate('/reveal');
-            return;
-        }
-
-        if (!selectedFile) return;
-        await submitPitchImage(editedPrompt, selectedFile);
-        navigate('/reveal');
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
     };
 
+    const handleDragEnter = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (uploadedImages.length < 3) {
+            setIsDragging(true);
+        }
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Check if we are really leaving the window/container
+        const rect = e.currentTarget.getBoundingClientRect();
+        if (
+            e.clientX <= rect.left ||
+            e.clientX >= rect.right ||
+            e.clientY <= rect.top ||
+            e.clientY >= rect.bottom
+        ) {
+            setIsDragging(false);
+        }
+    };
+
+    const handleSubmitPitch = async () => {
+        if (selectedFile) {
+            // Upload new version
+            await submitPitchImage(editedPrompt, selectedFile);
+        } else if (uploadedImages.length > 0) {
+            // Use last successful submission as active
+            setActiveRevealSubmission(uploadedImages[uploadedImages.length - 1]);
+        }
+
+        navigate('/reveal');
+    };
 
 
     // Calculate penalties (clamp negative values to 0 for backwards compat with old speed bonus data)
 
 
     return (
-        <div className="prompt-curation war-room-bg page-transition">
+        <div
+            className={`prompt-curation war-room-bg page-transition ${isDragging ? 'is-dragging-global' : ''}`}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+        >
+            {/* Global Drag Overlay */}
+            {isDragging && (
+                <div className="curate-drag-overlay">
+                    <div className="curate-drag-overlay__content">
+                        <div className="curate-drag-overlay__icon">
+                            <Icons.Upload />
+                        </div>
+                        <h2 className="curate-drag-overlay__title">Release to Upload Pitch Visual</h2>
+                        <p className="curate-drag-overlay__subtitle">System ready for tactical asset ingestion</p>
+                    </div>
+                </div>
+            )}
+
             {/* Loading Overlay */}
             {isLoading && (
                 <div className="curate-overlay">
@@ -414,14 +439,6 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                 <p className="curate-upload__instruction">
                                     Copy the prompt above and generate your image using an AI tool, then upload the result here.
                                 </p>
-                                <div className="curate-tools-row">
-                                    <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" className="curate-provider-btn curate-provider-btn--gemini reactive-border reactive-border--subtle">
-                                        Open Gemini
-                                    </a>
-                                    <a href="https://chat.openai.com/" target="_blank" rel="noopener noreferrer" className="curate-provider-btn curate-provider-btn--chatgpt reactive-border reactive-border--subtle">
-                                        Open ChatGPT
-                                    </a>
-                                </div>
                                 <input
                                     type="file"
                                     id="pitch-visual-upload"
@@ -430,35 +447,54 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                     className="curate-upload__input"
                                     disabled={uploadedImages.length >= 3}
                                 />
-                                <label
-                                    htmlFor="pitch-visual-upload"
-                                    className={`curate-upload__dropzone ${uploadedImages.length >= 3 ? 'curate-upload__dropzone--frozen' : ''} ${isDragging ? 'curate-upload__dropzone--dragging' : ''}`}
-                                    onDragEnter={handleDragEnter}
-                                    onDragOver={handleDragOver}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={handleDrop}
-                                >
-                                    <div className="curate-upload__icon"><Icons.Upload /></div>
-                                    <span className="curate-upload__text">
-                                        {isDragging ? "Drop image here" : selectedFile ? selectedFile.name : "Click or Drag & Drop Image"}
-                                    </span>
-                                    <span className="curate-upload__hint">
-                                        {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : "PNG, JPG up to 20MB"}
-                                    </span>
-                                </label>
+                                <div className={`curate-upload__dropzone ${uploadedImages.length >= 3 ? 'curate-upload__dropzone--frozen' : ''} ${isDragging ? 'curate-upload__dropzone--dragging' : ''}`}>
+                                    <label
+                                        htmlFor="pitch-visual-upload"
+                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%', cursor: 'inherit' }}
+                                    >
+                                        <div className="curate-upload__icon"><Icons.Upload /></div>
+                                        <span className="curate-upload__text">
+                                            {selectedFile ? selectedFile.name : "Click or Drag & Drop Image"}
+                                        </span>
+                                        <span className="curate-upload__hint">
+                                            {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : "PNG, JPG up to 20MB"}
+                                        </span>
+                                    </label>
+                                    {selectedFile && (
+                                        <button
+                                            className="curate-upload__clear"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setSelectedFile(null);
+                                            }}
+                                            title="Remove File"
+                                        >
+                                            <Icons.X />
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="curate-tools-row" style={{ marginTop: '0.85rem' }}>
+                                    <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" className="curate-provider-btn curate-provider-btn--gemini reactive-border reactive-border--subtle">
+                                        Open Gemini
+                                    </a>
+                                    <a href="https://chat.openai.com/" target="_blank" rel="noopener noreferrer" className="curate-provider-btn curate-provider-btn--chatgpt reactive-border reactive-border--subtle">
+                                        Open ChatGPT
+                                    </a>
+                                </div>
                             </div>
 
                             <button
                                 onClick={handleSubmitPitch}
-                                disabled={isLoading || isRegenerating || (uploadedImages.length < 3 && !selectedFile)}
+                                disabled={isLoading || isRegenerating}
                                 className="curate-finalize reactive-border reactive-border--success"
                             >
                                 {isLoading ? (
                                     <span>Processing...</span>
                                 ) : (
                                     <>
-                                        {uploadedImages.length < 3 && <Icons.Sparkles />}
-                                        <span>{uploadedImages.length >= 3 ? "View Reveal Page" : "Upload & Finalize"}</span>
+                                        {(selectedFile || uploadedImages.length < 3) && <Icons.Sparkles />}
+                                        <span>{selectedFile ? "Upload & Finalize" : "Go to Final Reveal"}</span>
                                         <Icons.ChevronRight />
                                     </>
                                 )}
