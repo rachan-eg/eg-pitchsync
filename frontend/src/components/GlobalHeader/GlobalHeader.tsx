@@ -108,7 +108,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
         if (!session) return null;
         return (
             <div className="global-header__right">
-                <div className="header-score-pill">
+                <div className="header-score-pill reactive-border reactive-border--subtle">
                     {tier && (
                         <div className={`header-score-tier ${tier.className}`}>
                             {tier.label}
@@ -126,7 +126,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
 
                 <button
                     onClick={handleViewLeaderboard}
-                    className="header-leaderboard-btn"
+                    className="header-leaderboard-btn reactive-border reactive-border--subtle"
                 >
                     <Icons.Trophy />
                     <span className="header-leaderboard-btn__text">Ranks</span>
@@ -135,7 +135,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
                 {user && (
                     <>
                         <div className="global-header__divider" />
-                        <div className="header-user-profile" title={`Logon: ${user.name || 'User'} (${user.email})`}>
+                        <div className="header-user-profile reactive-border reactive-border--subtle" title={`Logon: ${user.name || 'User'} (${user.email})`}>
                             <div className="header-user-avatar">
                                 {user.picture ? (
                                     <img src={user.picture} alt={user.name || 'User'} className="header-avatar-img" />

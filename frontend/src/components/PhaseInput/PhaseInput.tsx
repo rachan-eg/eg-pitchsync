@@ -470,7 +470,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     return (
         <div className="pi-container animate-fade-in">
             <div className="pi-main">
-                <header className="pi-header">
+                <header className="pi-header reactive-border reactive-border--subtle">
                     <div className="pi-header__title-group">
                         <div className="pi-header__meta">
                             <span className="pi-header__tag">Operation Phase {phaseNumber} / {totalPhases}</span>
@@ -501,7 +501,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </header>
 
-                <main className="pi-body">
+                <main className="pi-body reactive-border">
                     <div className="pi-question-box">
                         <div className="pi-question">
                             <span className="pi-question-num">{currentQuestionIndex + 1}</span>
@@ -570,7 +570,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </main>
 
-                <footer className="pi-footer">
+                <footer className="pi-footer reactive-border reactive-border--subtle">
                     <div className="pi-footer__left">
                         <div className="pi-char-count">
                             <span className="pi-char-label" style={{ color: currentValid ? 'var(--text-muted)' : 'rgba(192, 190, 190, 0.8)' }}>
@@ -587,7 +587,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     <div className="pi-footer__center">
                         <div className="pi-controls">
                             <button
-                                className="pi-btn pi-btn--secondary"
+                                className="pi-btn pi-btn--secondary reactive-border reactive-border--subtle"
                                 onClick={handlePrev}
                                 disabled={isFirstQuestion}
                             >
@@ -619,7 +619,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
                             {!isLastQuestion && (
                                 <button
-                                    className="pi-btn pi-btn--secondary"
+                                    className="pi-btn pi-btn--secondary reactive-border reactive-border--subtle"
                                     onClick={handleNext}
                                 >
                                     Next <Icons.ChevronRight />
@@ -644,7 +644,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
                             return (
                                 <button
-                                    className={`pi-btn ${allAnswered ? (showReview ? 'pi-btn--primary pi-btn--done' : 'pi-btn--primary') : 'pi-btn--secondary'}`}
+                                    className={`pi-btn reactive-border ${allAnswered ? (showReview ? 'pi-btn--primary pi-btn--done reactive-border--success' : 'pi-btn--primary reactive-border--intense') : 'pi-btn--secondary reactive-border--subtle'}`}
                                     style={{ position: 'relative' }}
                                     onClick={handleSubmit}
                                     disabled={!allAnswered || isSubmitting}
@@ -660,7 +660,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
             </div>
 
             <aside className="pi-sidebar">
-                <div className="pi-simple-clock">
+                <div className="pi-simple-clock reactive-border reactive-border--subtle">
                     <Icons.Clock />
                     <div className="pi-simple-timer-group">
                         <span className={`pi-simple-timer ${elapsedSeconds > timeLimit ? 'text-danger' : 'text-secondary'}`}>
@@ -669,7 +669,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </div>
 
-                <div className="pi-sidebar-section">
+                <div className="pi-sidebar-section reactive-border">
                     <div className="pi-sidebar-header">
                         <div className="pi-sidebar-icon"><Icons.Target /></div>
                         <h3 className="pi-sidebar-title">Strategic Focus</h3>
@@ -685,7 +685,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </div>
 
-                <div className="pi-sidebar-section">
+                <div className="pi-sidebar-section reactive-border">
                     <div className="pi-sidebar-header">
                         <div className="pi-sidebar-icon"><Icons.Cpu /></div>
                         <h3 className="pi-sidebar-title">Evaluation Focus</h3>
@@ -744,7 +744,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </div>
 
-                <div className="pi-sidebar-section">
+                <div className="pi-sidebar-section reactive-border">
                     <div className="pi-sidebar-header">
                         <div className="pi-sidebar-icon"><Icons.History /></div>
                         <h3 className="pi-sidebar-title">Retry History</h3>

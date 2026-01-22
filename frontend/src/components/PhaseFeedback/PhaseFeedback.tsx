@@ -34,7 +34,7 @@ export const PhaseFeedback: React.FC<PhaseFeedbackProps> = ({
 
     return (
         <div className="phase-feedback animate-fadeIn">
-            <div className="phase-feedback__modal animate-slideUp">
+            <div className="phase-feedback__modal animate-slideUp reactive-border reactive-border--intense">
 
                 {/* Header */}
                 <div className={`phase-feedback__header ${isSuccess ? 'phase-feedback__header--success' : 'phase-feedback__header--failure'}`}>
@@ -133,7 +133,7 @@ export const PhaseFeedback: React.FC<PhaseFeedbackProps> = ({
 
                         {/* Column 1: Verdict */}
                         <div className="phase-feedback__verdict">
-                            <div className="phase-feedback__verdict-card glass-card">
+                            <div className="phase-feedback__verdict-card glass-card reactive-border">
                                 <div className="phase-feedback__verdict-label">AI Judge Verdict</div>
                                 <div className="phase-feedback__verdict-points">
                                     {result.feedback.split(/[.!?]\s+/).filter(p => p.trim()).map((point, idx) => (
@@ -167,7 +167,7 @@ export const PhaseFeedback: React.FC<PhaseFeedbackProps> = ({
                         </div>
 
                         {/* Column 2: Strengths */}
-                        <div className="phase-feedback__list-card phase-feedback__list-card--strengths glass-card">
+                        <div className="phase-feedback__list-card phase-feedback__list-card--strengths glass-card reactive-border reactive-border--success">
                             <div className="phase-feedback__list-header phase-feedback__list-header--strengths">
                                 <span className="phase-feedback__list-icon phase-feedback__list-icon--strengths"><Icons.Up /></span>
                                 <span className="phase-feedback__list-title phase-feedback__list-title--strengths">Asset Strengths</span>
@@ -183,7 +183,7 @@ export const PhaseFeedback: React.FC<PhaseFeedbackProps> = ({
                         </div>
 
                         {/* Column 3: Improvements */}
-                        <div className="phase-feedback__list-card phase-feedback__list-card--improvements glass-card">
+                        <div className="phase-feedback__list-card phase-feedback__list-card--improvements glass-card reactive-border reactive-border--warning">
                             <div className="phase-feedback__list-header phase-feedback__list-header--improvements">
                                 <span className="phase-feedback__list-icon phase-feedback__list-icon--improvements"><Icons.Down /></span>
                                 <span className="phase-feedback__list-title phase-feedback__list-title--improvements">Optimization Required</span>

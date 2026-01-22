@@ -76,7 +76,7 @@ export const TacticalLoader: React.FC<TacticalLoaderProps> = ({
         <div className={containerClass}>
             <div className="tactical-loader__backdrop" />
 
-            <div className="tactical-loader__content">
+            <div className="tactical-loader__content reactive-border reactive-border--intense">
                 {/* Animated Orbital Ring */}
                 <div className="tactical-loader__orb">
                     <div className="tactical-loader__ring tactical-loader__ring--outer" />

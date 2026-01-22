@@ -184,7 +184,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     <div className="leaderboard__podium">
                         {/* 2nd Place */}
                         {topThree[1] && (
-                            <div className="leaderboard__podium-card leaderboard__podium-card--2 glass-card animate-slideUp stagger-1">
+                            <div className="leaderboard__podium-card leaderboard__podium-card--2 glass-card animate-slideUp stagger-1 reactive-border">
                                 <div className="leaderboard__podium-icon"><Icons.Trophy /></div>
                                 <div className="leaderboard__podium-rank">2nd Division</div>
                                 <div className="leaderboard__podium-team">{topThree[1].team_id}</div>
@@ -196,7 +196,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
                         {/* 1st Place */}
                         {topThree[0] && (
-                            <div className="leaderboard__podium-card leaderboard__podium-card--1 glass-card animate-reveal-up">
+                            <div className="leaderboard__podium-card leaderboard__podium-card--1 glass-card animate-reveal-up reactive-border reactive-border--intense">
                                 <div className="leaderboard__podium-icon leaderboard__podium-icon--1"><Icons.Trophy /></div>
                                 <div className="leaderboard__podium-badge">
                                     <Icons.Trophy /> {track === 'ELITE' ? 'Apex Leader' : track === 'LEGENDS' ? 'Perfect Record' : track === 'MINIMALIST' ? 'Token Master' : 'Speed Demon'}
@@ -210,7 +210,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
                         {/* 3rd Place */}
                         {topThree[2] && (
-                            <div className="leaderboard__podium-card leaderboard__podium-card--3 glass-card animate-slideUp stagger-2">
+                            <div className="leaderboard__podium-card leaderboard__podium-card--3 glass-card animate-slideUp stagger-2 reactive-border">
                                 <div className="leaderboard__podium-icon"><Icons.Trophy /></div>
                                 <div className="leaderboard__podium-rank">3rd Division</div>
                                 <div className="leaderboard__podium-team">{topThree[2].team_id}</div>
@@ -223,7 +223,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 )}
 
                 {/* Main Content Area */}
-                <div className="leaderboard__list glass-panel animate-fadeIn stagger-3">
+                <div className="leaderboard__list glass-panel animate-fadeIn stagger-3 reactive-border">
                     {track !== 'PHASES' && (
                         <div className="leaderboard__list-header">
                             <div className="leaderboard__list-header-pos">Pos</div>

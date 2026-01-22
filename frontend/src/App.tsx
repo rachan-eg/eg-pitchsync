@@ -20,6 +20,7 @@ import { PhaseFeedback } from './components/PhaseFeedback/PhaseFeedback';
 import { PhaseInput } from './components/PhaseInput/PhaseInput';
 import { AuthLoading } from './components/AuthLoading/AuthLoading';
 import { TacticalLoader } from './components/TacticalLoader';
+import { MouseGlowEffect } from './components/MouseGlowEffect';
 
 
 // =============================================================================
@@ -324,38 +325,44 @@ const App: React.FC = () => {
     const { isAuthenticated, teamCodeValidated } = useAuth();
 
     return (
-        <Routes>
-            {/* Public Routes */}
-            <Route
-                path="/login"
-                element={
-                    isAuthenticated ? <Navigate to="/team-code" replace /> : <Login />
-                }
-            />
+        <>
+            {/* Global mouse tracking for reactive borders */}
+            <MouseGlowEffect />
 
-            {/* Team Code Route (requires auth) */}
-            <Route
-                path="/team-code"
-                element={
-                    <ProtectedRoute requireAuth={true}>
-                        {teamCodeValidated ? <Navigate to="/mission" replace /> : <TeamCode />}
-                    </ProtectedRoute>
-                }
-            />
+            <Routes>
+                {/* Public Routes */}
+                <Route
+                    path="/login"
+                    element={
+                        isAuthenticated ? <Navigate to="/team-code" replace /> : <Login />
+                    }
+                />
 
-            {/* Game Routes (requires auth + team code) */}
-            <Route
-                path="/*"
-                element={
-                    <ProtectedRoute requireAuth={true} requireTeamCode={true}>
-                        <AppProvider>
-                            <GameLayout />
-                        </AppProvider>
-                    </ProtectedRoute>
-                }
-            />
-        </Routes>
+                {/* Team Code Route (requires auth) */}
+                <Route
+                    path="/team-code"
+                    element={
+                        <ProtectedRoute requireAuth={true}>
+                            {teamCodeValidated ? <Navigate to="/mission" replace /> : <TeamCode />}
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Game Routes (requires auth + team code) */}
+                <Route
+                    path="/*"
+                    element={
+                        <ProtectedRoute requireAuth={true} requireTeamCode={true}>
+                            <AppProvider>
+                                <GameLayout />
+                            </AppProvider>
+                        </ProtectedRoute>
+                    }
+                />
+            </Routes>
+        </>
     );
 };
 
 export default App;
+

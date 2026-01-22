@@ -75,7 +75,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                                 key={phaseNum}
                                 disabled={isLocked || loading}
                                 onClick={() => handlePhaseSelect(phaseNum)}
-                                className={`war-room__phase-btn ${isActive ? 'war-room__phase-btn--active' : ''} ${isCompleted ? 'war-room__phase-btn--completed' : ''}`}
+                                className={`war-room__phase-btn reactive-border ${isActive ? 'war-room__phase-btn--active' : ''} ${isCompleted ? 'war-room__phase-btn--completed reactive-border--success' : ''}`}
                                 title={isLocked ? 'Tactical Lock: Complete previous objectives' : `Switch to Phase 0${phaseNum}`}
                             >
                                 <div className="war-room__phase-num">
@@ -114,7 +114,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                                     key="curate"
                                     disabled={!isCurationUnlocked}
                                     onClick={() => navigate('/curate')}
-                                    className={`war-room__phase-btn war-room__phase-btn--final ${isCurateActive ? 'war-room__phase-btn--active' : ''} ${isCurationUnlocked ? 'war-room__phase-btn--completed' : ''}`}
+                                    className={`war-room__phase-btn war-room__phase-btn--final reactive-border reactive-border--warning ${isCurateActive ? 'war-room__phase-btn--active' : ''} ${isCurationUnlocked ? 'war-room__phase-btn--completed' : ''}`}
                                     style={{ marginTop: '1rem', borderTop: '1px solid var(--border-light)' }}
                                     title={!isCurationUnlocked ? 'Locked: Complete all phases to unlock' : 'Visualize Pitch'}
                                 >
@@ -133,7 +133,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                                     key="reveal"
                                     disabled={!isRevealUnlocked}
                                     onClick={() => navigate('/reveal')}
-                                    className={`war-room__phase-btn ${isRevealActive ? 'war-room__phase-btn--active' : ''} ${session.is_complete ? 'war-room__phase-btn--completed' : ''}`}
+                                    className={`war-room__phase-btn reactive-border ${isRevealActive ? 'war-room__phase-btn--active' : ''} ${session.is_complete ? 'war-room__phase-btn--completed reactive-border--success' : ''}`}
                                     style={{ borderColor: isRevealUnlocked ? 'rgba(139, 92, 246, 0.3)' : undefined, opacity: isRevealUnlocked ? 1 : 0.6 }}
                                     title={!isRevealUnlocked ? 'Locked: Submit your final pitch to unlock' : 'Mission Completion'}
                                 >
@@ -156,11 +156,11 @@ export const WarRoom: React.FC<WarRoomProps> = ({
                         <h3 className="war-room__sidebar-title">Live Intelligence</h3>
                     </header>
                     <div className="war-room__metrics-grid">
-                        <div className="war-room__metric-card">
+                        <div className="war-room__metric-card reactive-border reactive-border--subtle">
                             <div className="war-room__metric-label">Team Designation</div>
                             <div className="war-room__metric-value">{session.team_id || 'ALPHA-1'}</div>
                         </div>
-                        <div className="war-room__metric-card">
+                        <div className="war-room__metric-card reactive-border reactive-border--subtle">
                             <div className="war-room__metric-label">AI Resource Usage</div>
                             <div className="war-room__metric-value" style={{ color: 'var(--primary)' }}>
                                 {totalTokens.total.toLocaleString()}

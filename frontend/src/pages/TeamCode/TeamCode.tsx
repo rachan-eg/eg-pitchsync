@@ -91,7 +91,7 @@ export const TeamCode: React.FC = () => {
                 </div>
             )}
 
-            <div className="teamcode-card">
+            <div className="teamcode-card reactive-border reactive-border--intense">
                 {showSuccess ? (
                     <div className="teamcode-success">
                         <div className="success-icon animate-float">
@@ -126,7 +126,7 @@ export const TeamCode: React.FC = () => {
                         </div>
 
                         <form className="teamcode-form" onSubmit={handleSubmit}>
-                            <div className="input-group">
+                            <div className="input-group reactive-border reactive-border--subtle">
                                 <input
                                     type="text"
                                     className={`teamcode-input ${error ? 'error' : ''}`}

@@ -86,7 +86,7 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
                 <div className="mission-brief__grid">
                     {/* Left: Mission Context */}
                     <div
-                        className={`mission-brief__panel mission-brief__panel--mission ${activePanel === 'mission' ? 'active' : ''} ${activePanel && activePanel !== 'mission' ? 'inactive' : ''}`}
+                        className={`mission-brief__panel mission-brief__panel--mission reactive-border ${activePanel === 'mission' ? 'active' : ''} ${activePanel && activePanel !== 'mission' ? 'inactive' : ''}`}
                         onMouseEnter={() => handlePanelHover('mission')}
                         onMouseLeave={() => setActivePanel(null)}
                     >
@@ -140,7 +140,7 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
 
                     {/* Middle: Engagement Protocol (Rules) */}
                     <div
-                        className={`mission-brief__panel mission-brief__panel--rules ${activePanel === 'rules' ? 'active' : ''} ${activePanel && activePanel !== 'rules' ? 'inactive' : ''}`}
+                        className={`mission-brief__panel mission-brief__panel--rules reactive-border ${activePanel === 'rules' ? 'active' : ''} ${activePanel && activePanel !== 'rules' ? 'inactive' : ''}`}
                         onMouseEnter={() => handlePanelHover('rules')}
                         onMouseLeave={() => setActivePanel(null)}
                     >
@@ -198,7 +198,7 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
 
                     {/* Right: Phase Timeline */}
                     <div
-                        className={`mission-brief__panel mission-brief__panel--phases ${activePanel === 'phases' ? 'active' : ''} ${activePanel && activePanel !== 'phases' ? 'inactive' : ''}`}
+                        className={`mission-brief__panel mission-brief__panel--phases reactive-border ${activePanel === 'phases' ? 'active' : ''} ${activePanel && activePanel !== 'phases' ? 'inactive' : ''}`}
                         onMouseEnter={() => handlePanelHover('phases')}
                         onMouseLeave={() => setActivePanel(null)}
                     >
@@ -250,13 +250,13 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
                     <div className="mission-brief__footer-actions">
                         <button
                             onClick={handleBackToTeamCode}
-                            className="btn-secondary mission-brief__back-btn"
+                            className="btn-secondary mission-brief__back-btn reactive-border reactive-border--subtle"
                         >
                             <Icons.ArrowLeft /> Change Team
                         </button>
                         <button
                             onClick={handleStart}
-                            className="btn-primary mission-brief__launch-btn"
+                            className="btn-primary mission-brief__launch-btn reactive-border reactive-border--intense"
                             disabled={loading}
                         >
                             {loading ? <div className="loading-spinner--small" /> : <Icons.Rocket />}

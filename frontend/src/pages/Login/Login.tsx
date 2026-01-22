@@ -49,7 +49,7 @@ export const Login: React.FC = () => {
                 <div className="noise-overlay"></div>
             </div>
 
-            <div className="login-card">
+            <div className="login-card reactive-border reactive-border--intense">
                 <div className="login-header">
                     <div className="login-logo">
                         <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -124,15 +124,15 @@ export const Login: React.FC = () => {
             </div>
 
             <div className="login-features">
-                <div className="feature-item stagger-1">
+                <div className="feature-item stagger-1 reactive-border reactive-border--subtle">
                     <span className="feature-icon">⚡</span>
                     <span>Real-time Synthesis</span>
                 </div>
-                <div className="feature-item stagger-2">
+                <div className="feature-item stagger-2 reactive-border reactive-border--subtle">
                     <span className="feature-icon">🛡️</span>
                     <span>Secure Protocols</span>
                 </div>
-                <div className="feature-item stagger-3">
+                <div className="feature-item stagger-3 reactive-border reactive-border--subtle">
                     <span className="feature-icon">🧠</span>
                     <span>AI-Core Analysis</span>
                 </div>
