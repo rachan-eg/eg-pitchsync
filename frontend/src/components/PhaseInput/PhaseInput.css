@@ -186,17 +186,17 @@
     color: #000;
     background: var(--primary);
     font-weight: 950;
-    font-size: 0.85rem;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
+    font-size: 0.75rem;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
     box-shadow:
-        0 0 15px var(--primary-glow),
-        inset 0 0 10px rgba(255, 255, 255, 0.4);
+        0 0 12px var(--primary-glow),
+        inset 0 0 8px rgba(255, 255, 255, 0.4);
     position: relative;
     z-index: 1;
 }
@@ -204,7 +204,7 @@
 .pi-question-num::after {
     content: '';
     position: absolute;
-    inset: -4px;
+    inset: -3px;
     border-radius: 50%;
     border: 1px solid var(--primary-glow);
     opacity: 0.3;
@@ -511,6 +511,43 @@
     border-radius: 50%;
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
     animation: pulse-glow 1.5s infinite;
+}
+
+/* Question Transitions */
+@keyframes question-slide-in {
+    0% {
+        opacity: 0;
+        transform: translateX(20px) scale(0.98);
+        filter: blur(2px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes question-slide-back {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px) scale(0.98);
+        filter: blur(2px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+.animate-question-next {
+    animation: question-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+}
+
+.animate-question-prev {
+    animation: question-slide-back 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
 }
 
 /* -----------------------------------------------------------------------------
@@ -1608,9 +1645,9 @@
     right: -2px;
     width: 8px;
     height: 8px;
-    background: var(--warning);
+    background: var(--danger);
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--warning);
+    box-shadow: 0 0 10px var(--danger);
     border: 2px solid var(--bg-card);
     z-index: 5;
     animation: pulse-glow 1.5s infinite;

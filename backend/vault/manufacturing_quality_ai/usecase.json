@@ -1,0 +1,9 @@
+{
+    "id": "manufacturing_quality_ai",
+    "title": "AI production quality saas",
+    "domain": "Manufacturing",
+    "complexity": "High",
+    "target_market": "Manufacturing Firms",
+    "theme_id": "cyberpunk",
+    "description": "Build an AI platform that predicts production quality issues early by analyzing process, sensor, and quality data\u2014enabling proactive interventions to reduce rework, scrap, and delays."
+}

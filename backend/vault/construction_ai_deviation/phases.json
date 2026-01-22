@@ -5,7 +5,7 @@
         "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's construction AI solution.",
         "weight": 0.3,
         "time_limit_seconds": 600,
-        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "contributors": "Project Directors, Site Supervisors, Safety Directors, CFO",
         "questions": [
             {
                 "id": "q1_1",
@@ -13,7 +13,7 @@
                 "criteria": "Identification of field expertise gap, impact of delayed defect detection, failure of manual inspections, financial/safety risk specificity",
                 "focus": "Identify specific manual inspection failures and expertise gap financial impacts.",
                 "hint_text": "Describe the inability of field workers to diagnose defects instantly and the shortage of qualified inspectors. Mention how manual walkthroughs are periodic and miss critical anomalies that lead to expensive rework.",
-                "ideal_answer": "Construction teams suffer from a massive expertise gap where workers discover anomalies but cannot diagnose them instantly. Today, they rely on periodic manual inspections by scarce experts, leading to defects being caught too late—when they've already caused structural damage or safety hazards. This results in millions in rework costs, project delays, and liability risks that manual, paper-based, or legacy digital checklists simply cannot prevent.",
+                "ideal_answer": "Construction teams suffer from a massive expertise gap where workers discover anomalies but cannot diagnose them instantly. Today, they rely on periodic manual inspections by scarce experts, leading to defects being caught too late\u2014when they've already caused structural damage or safety hazards. This results in millions in rework costs, project delays, and liability risks that manual, paper-based, or legacy digital checklists simply cannot prevent.",
                 "hint_penalty": 25
             },
             {
@@ -21,7 +21,7 @@
                 "text": "What measurable value will the customer realize, and how quickly?",
                 "criteria": "Quantifiable rework cost reduction, time savings for site supervisors, ROI timeline clarity (days/weeks), safety incident reduction",
                 "focus": "Quantify immediate site rework savings and project ROI timeline speed.",
-                "hint_text": "Focus on immediate value like reduced remediation costs and faster inspection cycles. Mention how quickly a project can see ROI—often within the first few weeks of deployment.",
+                "hint_text": "Focus on immediate value like reduced remediation costs and faster inspection cycles. Mention how quickly a project can see ROI\u2014often within the first few weeks of deployment.",
                 "ideal_answer": "Customers realize immediate value through a 40% reduction in rework costs and 60% faster inspection cycles. Within 30 days of deployment, site teams can identify and resolve 95% of visual defects on-site without waiting for external experts, preventing budget overruns and ensuring project timelines are met. The ROI is often achieved by preventing a single major structural failure.",
                 "hint_penalty": 25
             },
@@ -31,7 +31,7 @@
                 "criteria": "Proprietary defect dataset, ease of use for field frontline, seamless project management integration, domain-specific AI accuracy",
                 "focus": "Highlight proprietary defect accuracy against generic AI model limitations specifically.",
                 "hint_text": "Highlight our unique library of 1M+ construction defect images and our 'field-first' design that requires zero training for workers. Contrast this with generic AI models.",
-                "ideal_answer": "EG stands apart due to our proprietary database of 1M+ construction-specific defect images, enabling 99.8% diagnostic accuracy that generic AI cannot match. Our solution is designed for the field, not the office—requiring zero training for workers and integrating directly with Procore and PlanGrid. We aren't just an AI company; we are construction experts who understand the realities of a job site.",
+                "ideal_answer": "EG stands apart due to our proprietary database of 1M+ construction-specific defect images, enabling 99.8% diagnostic accuracy that generic AI cannot match. Our solution is designed for the field, not the office\u2014requiring zero training for workers and integrating directly with Procore and PlanGrid. We aren't just an AI company; we are construction experts who understand the realities of a job site.",
                 "hint_penalty": 25
             }
         ]
@@ -42,7 +42,7 @@
         "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
         "weight": 0.3,
         "time_limit_seconds": 600,
-        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "contributors": "Project Directors, Site Supervisors, Safety Directors, CFO",
         "questions": [
             {
                 "id": "q2_1",
@@ -68,7 +68,7 @@
                 "criteria": "Confidence scores, human-in-the-loop triggers, explainable AI (visual highlights), data security, verification loops",
                 "focus": "Explain explainable AI pattern highlighting and human expert verification loops.",
                 "hint_text": "Highlight how the AI 'shows its work' by highlighting specific defect patterns and how low-confidence results are automatically escalated to human engineers.",
-                "ideal_answer": "We build trust through 'Explainable AI'—our system highlights the exact visual patterns it used for diagnosis. Every result comes with a confidence score; any diagnosis below 90% is automatically flagged for human-in-the-loop review by an EG engineer. All data is encrypted at rest and in transit, ensuring project proprietary information never leaves the customer's secure environment.",
+                "ideal_answer": "We build trust through 'Explainable AI'\u2014our system highlights the exact visual patterns it used for diagnosis. Every result comes with a confidence score; any diagnosis below 90% is automatically flagged for human-in-the-loop review by an EG engineer. All data is encrypted at rest and in transit, ensuring project proprietary information never leaves the customer's secure environment.",
                 "hint_penalty": 25
             }
         ]
@@ -79,7 +79,7 @@
         "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
         "weight": 0.4,
         "time_limit_seconds": 600,
-        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "contributors": "Project Directors, Site Supervisors, Safety Directors, CFO",
         "questions": [
             {
                 "id": "q3_1",

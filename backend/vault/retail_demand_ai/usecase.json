@@ -1,0 +1,9 @@
+{
+    "id": "retail_demand_ai",
+    "title": "AI Demand & Inventory SaaS",
+    "domain": "Retail",
+    "complexity": "High",
+    "target_market": "Retail Firms",
+    "theme_id": "cyberpunk",
+    "description": "Design an AI-driven demand and inventory optimization solution that uses real-time signals to forecast demand accurately, reduce stockouts and overstock, and improve working capital efficiency."
+}

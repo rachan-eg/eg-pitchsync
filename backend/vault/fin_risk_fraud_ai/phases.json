@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's financial services AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "Chief Risk Officer, Compliance Directors, Fraud Investigators, Head of Retail Banking",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Fraud detection delay, false positive burden, evolving scheme adaptation difficulty, cross-channel pattern visibility, regulatory explanation gaps",
+                "focus": "Identify the inability to detect sophisticated fraud quickly while minimizing customer friction from false alerts.",
+                "hint_text": "Describe how fraud teams discover schemes only after significant losses accumulate. Mention the overwhelming false positive rates that burden investigators and frustrate legitimate customers. Explain the challenge of detecting evolving fraud patterns and providing regulatory-compliant explanations.",
+                "ideal_answer": "Financial institutions struggle with fraud detection systems that identify schemes too late, only after fraudsters have successfully executed multiple transactions and moved funds beyond recovery. Rule-based systems generate overwhelming false positive rates\u2014legitimate transactions flagged as suspicious\u2014requiring investigators to manually review countless alerts while fraudulent activity slips through undetected. Traditional models cannot adapt quickly to evolving fraud schemes, requiring months of manual rule updates while criminals exploit detection gaps. Teams lack the ability to identify subtle patterns across accounts, channels, and transaction types that signal coordinated fraud rings. When systems do flag transactions, explaining the decision rationale to customers and regulators proves difficult with black-box models, creating compliance risk and customer satisfaction problems.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Fraud loss reduction metrics, false positive decrease quantification, investigation efficiency gains, customer friction reduction, regulatory compliance improvement",
+                "focus": "Quantify early fraud detection impact on losses and operational efficiency with clear customer experience benefits.",
+                "hint_text": "Focus on how earlier detection prevents fraud losses before funds transfer. Mention the reduction in false positives improving investigator efficiency. Emphasize both loss prevention and customer experience improvement from fewer legitimate transaction declines.",
+                "ideal_answer": "Fraud teams see measurable improvements within initial deployment, with more accurate detection catching suspicious activity earlier in transaction sequences before significant losses occur. Investigators experience dramatically reduced false positive volumes, focusing attention on genuine threats rather than reviewing countless legitimate transactions incorrectly flagged. The dual benefit manifests as both prevented fraud losses and improved operational efficiency, with investigation teams handling higher-value cases more thoroughly. Customer experience improves simultaneously as fewer legitimate transactions are incorrectly declined or delayed, reducing friction and support call volumes. The financial impact appears through direct fraud loss reduction, decreased investigation labor costs, improved customer retention from better experience, and strengthened regulatory compliance through explainable detection reasoning.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Financial services AI specialization, behavioral pattern detection sophistication, adaptive learning capability, explainable AI architecture, regulatory compliance design",
+                "focus": "Highlight financial crime expertise and explainable AI capabilities that generic fraud tools cannot deliver.",
+                "hint_text": "Highlight AI trained specifically on financial fraud patterns versus generic anomaly detection. Contrast sophisticated behavioral analysis with simple rule-based systems. Emphasize explainable AI providing regulatory-compliant reasoning for every decision.",
+                "ideal_answer": "The solution delivers superior fraud detection through AI purpose-built for financial crime scenarios, trained on diverse fraud schemes and behavioral patterns rather than generic anomaly detection adapted for finance. Unlike rule-based systems that evaluate transactions in isolation, the platform analyzes complex behavioral patterns across accounts, channels, and time periods\u2014identifying subtle signals that indicate coordinated fraud activity before schemes fully execute. The architecture adapts continuously to emerging fraud tactics through machine learning that doesn't require manual rule updates. Critical differentiation comes through explainable AI that provides clear reasoning for every detection decision, essential for regulatory compliance and customer dispute resolution. Deep financial services expertise ensures implementation addresses industry-specific requirements and integrates with risk management frameworks.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "Chief Risk Officer, Compliance Directors, Fraud Investigators, Head of Retail Banking",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Core banking system connectivity, transaction monitoring integration, case management workflow, real-time scoring capability, regulatory reporting automation",
+                "focus": "Detail seamless connection to existing financial systems and real-time risk scoring within current workflows.",
+                "hint_text": "Explain connections to core banking platforms, payment processing systems, and existing fraud case management tools. Mention real-time transaction scoring without processing delays. Describe automated alert routing into investigator workflows and regulatory report generation.",
+                "ideal_answer": "The platform integrates seamlessly with existing core banking systems, payment processors, and account management platforms through secure financial services connectors, analyzing transactions in real-time without introducing processing delays or customer-facing friction. Risk scores and fraud alerts flow directly into existing case management systems and investigator dashboards, eliminating separate monitoring tools and preserving established workflows. Integration with customer relationship management platforms enables investigators to access account history and customer context during reviews. The architecture supports both real-time transaction scoring for immediate decisions and batch analytics for pattern detection across historical data. Automated regulatory reporting capabilities generate required suspicious activity reports with complete documentation, and audit trail integration ensures compliance officers have full visibility into detection decisions.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Investigator case clarity, analyst pattern visibility, operations manager queue oversight, compliance officer explanation access, customer communication transparency",
+                "focus": "Compare detailed investigator case insights with strategic fraud trend analytics for risk management leadership.",
+                "hint_text": "Describe rich case details for investigators showing exactly why transactions were flagged versus pattern analytics for fraud analysts. Explain operations dashboards showing queue management and compliance interfaces providing explainable decision documentation.",
+                "ideal_answer": "Fraud investigators receive detailed case information showing exactly which behavioral patterns triggered alerts\u2014specific transaction characteristics, account history anomalies, cross-account relationships\u2014enabling efficient review without extensive manual research. Fraud analysts access pattern detection tools identifying emerging schemes across the customer base, enabling proactive strategy adjustments. Operations managers view queue dashboards showing investigator workload, case aging, and alert prioritization helping optimize resource allocation. Compliance officers access explainable decision documentation for every detection, with clear reasoning suitable for regulatory inquiries or customer disputes. Customer service teams receive appropriate information to communicate with customers about declined transactions professionally when legitimate activity is incorrectly flagged, preserving relationships while maintaining security.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Decision explainability completeness, confidence scoring transparency, human review integration, model bias monitoring, performance tracking, regulatory audit readiness",
+                "focus": "Explain comprehensive decision explainability and human oversight integration critical for financial services compliance.",
+                "hint_text": "Highlight how every detection decision includes complete explainable reasoning showing which factors drove the assessment. Describe confidence scoring and automatic human review escalation. Explain ongoing model performance monitoring and bias detection ensuring fairness.",
+                "ideal_answer": "Every fraud detection decision includes comprehensive explainable reasoning detailing which specific factors contributed to the risk assessment\u2014unusual transaction patterns, behavioral anomalies, relationship network characteristics\u2014enabling investigators and compliance officers to understand and validate the logic. Decisions include confidence scores indicating certainty levels, with lower-confidence cases automatically escalated for human review rather than automated action. The system continuously monitors for model bias across customer demographics, ensuring fair treatment and regulatory compliance. Performance tracking validates detection accuracy, false positive rates, and missed fraud patterns over time through comparison with investigation outcomes. Complete audit trails document every decision, model version, and contributing factors, providing regulatory examination readiness. Human investigators maintain override authority, and their decisions feed back to improve model accuracy.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "Chief Risk Officer, Compliance Directors, Fraud Investigators, Head of Retail Banking",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Pilot product validation, multi-channel expansion, enterprise-wide deployment, organizational capability building, measurable risk transformation",
+                "focus": "Map pilot product validation milestones toward enterprise-wide intelligent risk management transformation.",
+                "hint_text": "Define progression from pilot product with validated detection improvement to expanded channel coverage to company-wide fraud detection standard. Show evolution from tactical fraud prevention to strategic risk management capability.",
+                "ideal_answer": "At the initial milestone, success means validating the approach on pilot products or channels with measurable fraud detection improvement, documented false positive reduction, and investigator confidence in case quality. Expansion phase success involves scaling across additional product lines, transaction channels, and customer segments, with AI-powered fraud detection fully integrated into risk management workflows and demonstrated performance across diverse fraud scenarios. Full maturity represents the platform functioning as the enterprise-wide fraud detection standard, with intelligent risk management embedded in organizational culture. Leadership reports substantial fraud loss reduction, improved operational efficiency from optimized investigation resources, enhanced customer satisfaction from reduced friction, strengthened regulatory compliance posture, and competitive advantage through superior security that builds customer trust and enables business growth.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Financial sector relevance, operational scale similarity, validated performance metrics, regulatory approval, industry recognition",
+                "focus": "Reference comparable financial institution results and independently validated fraud reduction outcomes with regulatory acceptance.",
+                "hint_text": "Mention deployments in similar financial institutions with comparable transaction volumes. Describe validated fraud loss reduction and false positive improvements. Reference regulatory approval or financial services industry recognition.",
+                "ideal_answer": "The platform has proven success in financial institutions similar to yours, with documented deployments across organizations of comparable scale, product complexity, and regulatory environment. Reference customers report substantial fraud loss reduction and significant false positive decreases, with outcomes validated through financial audits confirming economic impact. Regulatory examiners have reviewed implementations, validating the explainable AI approach and audit trail completeness as compliant with financial services requirements. Several institutions have received industry recognition for fraud prevention excellence and risk management innovation. The approach has delivered consistent results across diverse financial contexts\u2014retail banking, commercial finance, payment processing\u2014demonstrating effectiveness across different risk profiles and customer bases. Financial services references are available to discuss implementation experience, regulatory engagement strategies, and measurable fraud reduction they have achieved.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Dedicated implementation support, investigator training programs, technical assistance accessibility, continuous model optimization, executive success reviews",
+                "focus": "Outline dedicated financial crime team support and comprehensive investigator enablement programs.",
+                "hint_text": "Detail implementation support from financial crime and compliance experts. Describe investigator training on interpreting AI insights. Explain continuous model tuning and regular business reviews tracking fraud loss reduction impact.",
+                "ideal_answer": "Your fraud team receives dedicated implementation support from specialists combining data science expertise and financial crime knowledge, configuring detection models for your specific risk profile and product portfolio. Comprehensive training prepares investigators to interpret AI insights effectively and integrate intelligent detection into their case workflows, with practical sessions using real fraud scenarios. Compliance teams receive guidance on leveraging explainable AI for regulatory documentation. Continuous technical support provides rapid assistance whenever questions arise during fraud reviews. Regular optimization sessions analyze detection performance, tune models based on emerging fraud patterns in your environment, and identify opportunities to enhance accuracy while reducing false positives. Executive business reviews track key metrics\u2014fraud loss trends, false positive rates, investigation efficiency, customer impact\u2014ensuring leadership maintains visibility into how AI-powered fraud detection is strengthening risk management and enabling secure business growth.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

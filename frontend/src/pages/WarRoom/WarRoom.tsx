@@ -54,7 +54,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
     };
 
     return (
-        <div className="war-room page-transition">
+        <div className="war-room">
             {/* Tactical Sidebar */}
             <aside className="war-room__sidebar">
                 <header className="war-room__sidebar-header">
@@ -178,7 +178,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
 
             {/* Operation Center */}
             <main className="war-room__main">
-                <div className="war-room__content">
+                <div key={session.current_phase} className="war-room__content page-transition">
                     {children}
                 </div>
             </main>

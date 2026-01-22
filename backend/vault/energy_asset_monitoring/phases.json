@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's energy AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Infrastructure, Asset Managers, Reliability Engineers, Operations Directors",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Reactive maintenance limitations, unplanned outage impact, equipment degradation invisibility, maintenance resource inefficiency, failure prediction absence",
+                "focus": "Identify the inability to predict equipment failures before they cause outages and the cost of reactive maintenance.",
+                "hint_text": "Describe how utilities discover equipment problems only after failures occur causing outages. Mention the inability to detect gradual degradation patterns in sensor data. Explain the inefficiency of time-based maintenance that services healthy equipment while missing assets approaching failure.",
+                "ideal_answer": "Energy and utility operators struggle with fundamentally reactive asset management, discovering equipment failures only when outages occur\u2014transformers failing unexpectedly, transmission components degrading beyond safe operation, generation equipment breaking down during peak demand periods. Traditional maintenance approaches rely on fixed schedules that service equipment based on age rather than actual condition, wasting resources on healthy assets while missing degrading equipment that fails between service intervals. Operations teams lack tools to identify subtle patterns in sensor data, operational parameters, and environmental conditions that signal impending failures weeks or months in advance. This reactive approach results in costly unplanned outages disrupting customer service, emergency repair expenses far exceeding planned maintenance costs, shortened asset lifespan from operating equipment beyond optimal conditions, and regulatory penalties from reliability standard violations.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Unplanned outage reduction, maintenance cost optimization, asset life extension, reliability improvement, resource efficiency gains",
+                "focus": "Quantify predictive maintenance impact on reliability and cost with clear asset life extension benefits.",
+                "hint_text": "Focus on how failure prediction enables planned maintenance preventing outages. Mention the shift from time-based to condition-based maintenance optimizing spending. Emphasize asset life extension through optimal operating conditions and timely interventions.",
+                "ideal_answer": "Operations teams experience measurable improvements as predictive alerts enable planned maintenance interventions before failures occur, substantially reducing unplanned outages and emergency repair costs. Maintenance resources shift from fixed schedules to condition-based deployment, focusing effort on assets actually requiring attention rather than servicing equipment unnecessarily. Asset lifespan extends as equipment operates within optimal parameters and receives timely interventions before minor issues escalate into major failures requiring replacement. The economic impact manifests through improved system reliability, decreased outage-related customer compensation, reduced emergency labor and expedited parts costs, deferred capital expenditure from extended asset life, and improved regulatory performance metrics. Many organizations observe return on investment within the first year as prevented outages and optimized maintenance deliver immediate financial benefits.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Energy sector AI specialization, multi-sensor pattern recognition, asset-specific modeling, environmental factor integration, utility operations expertise",
+                "focus": "Highlight energy infrastructure expertise and multi-variable degradation modeling that generic IoT platforms cannot achieve.",
+                "hint_text": "Highlight AI trained on energy infrastructure failure patterns versus generic predictive maintenance models. Contrast multi-variable degradation analysis with simple threshold alerts. Emphasize utility operations expertise and understanding of regulatory reliability requirements.",
+                "ideal_answer": "The solution delivers superior prediction accuracy through AI purpose-built for energy infrastructure, trained on diverse equipment types and failure modes specific to utility operations rather than generic industrial assets. Unlike simple threshold monitoring that treats sensor readings independently, the platform analyzes complex degradation patterns correlating operational data, environmental conditions, load profiles, and maintenance history\u2014identifying failure signatures unique to specific asset classes. The architecture incorporates energy sector knowledge about seasonal stress patterns, grid interaction effects, and weather impacts that generic platforms miss. Deep utility operations expertise ensures implementation aligns with outage management processes, regulatory reliability reporting, and field crew workflows. The system continuously learns from each utility's specific asset population and operating environment, becoming increasingly accurate rather than applying one-size-fits-all models.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Infrastructure, Asset Managers, Reliability Engineers, Operations Directors",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Asset management system connectivity, sensor data ingestion, work management integration, weather data incorporation, outage management synchronization",
+                "focus": "Detail seamless connection to existing utility systems and predictive alert delivery within current maintenance workflows.",
+                "hint_text": "Explain connections to existing asset management databases, sensor networks, and work order systems. Mention automatic ingestion of weather and operational data. Describe how maintenance recommendations flow into field crew scheduling and work management platforms.",
+                "ideal_answer": "The platform integrates seamlessly with existing asset management systems, sensor networks, and operational databases through standard utility industry protocols, continuously ingesting equipment telemetry, operational parameters, and asset condition data without requiring infrastructure changes. External data streams\u2014weather forecasts, grid load patterns, and environmental conditions\u2014enrich predictions with contextual factors affecting equipment stress. Predictive maintenance alerts automatically flow into work management systems, enabling planners to schedule interventions during optimal windows and coordinate crew resources efficiently. Integration with outage management platforms ensures reliability teams understand asset health context during event response. The architecture supports both real-time monitoring for critical assets requiring immediate attention and batch analytics for strategic planning, ensuring maintenance teams work within familiar systems and established processes.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Maintenance planner alert clarity, field technician guidance detail, reliability engineer analytics depth, operations manager oversight, executive performance visibility",
+                "focus": "Compare actionable maintenance planner scheduling recommendations with strategic executive asset health dashboards.",
+                "hint_text": "Describe clear maintenance alerts for planners with recommended intervention timing versus asset health analytics for reliability engineers. Explain field technician guidance on what to inspect and operations dashboards showing fleet-wide performance.",
+                "ideal_answer": "Maintenance planners receive prioritized asset alerts with recommended intervention timing, suggested maintenance activities, and optimal scheduling windows considering operational constraints\u2014enabling efficient work planning without extensive analysis. Field technicians access detailed guidance on specific equipment showing predicted failure modes and inspection priorities, focusing their diagnostic efforts effectively. Reliability engineers use analytical tools exploring sensor data patterns, historical failure correlations, and degradation trends across asset classes, leveraging their expertise for deeper investigations. Operations managers view fleet-wide asset health dashboards identifying systemic issues and resource allocation priorities across service territories. Executive leadership sees strategic performance metrics quantifying reliability improvements, maintenance cost optimization, asset life extension, and regulatory compliance status, providing visibility into how predictive asset management strengthens operational and financial performance.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Prediction confidence scoring, asset-specific validation, sensor data quality monitoring, override capabilities, performance tracking, engineering review integration",
+                "focus": "Explain degradation pattern transparency and engineering validation processes that build operational confidence in predictions.",
+                "hint_text": "Highlight how the system shows which sensor patterns and operating conditions are driving each failure prediction. Describe automatic escalation of uncertain predictions to reliability engineers. Explain tracking of prediction accuracy against actual equipment outcomes.",
+                "ideal_answer": "Every failure prediction includes confidence scoring and transparent reasoning showing which sensor patterns, operational trends, and environmental factors are indicating degradation\u2014reliability engineers can validate the technical basis rather than accepting unexplained alerts. Asset-specific models account for equipment type differences, and the system flags when sensor data quality issues might compromise prediction reliability. Predictions with lower confidence automatically escalate for engineering review rather than generating potentially unnecessary maintenance actions. Maintenance teams retain full authority to adjust timing or scope based on operational priorities and field observations. Performance tracking compares predictions against actual equipment outcomes, false positive rates, and maintenance effectiveness, providing ongoing validation of prediction accuracy. Engineering reviews regularly assess model performance for different asset classes, building confidence through demonstrated reliability and continuous improvement.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Infrastructure, Asset Managers, Reliability Engineers, Operations Directors",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Pilot asset validation, fleet expansion, enterprise-wide deployment, organizational capability building, measurable reliability transformation",
+                "focus": "Map pilot asset validation milestones toward enterprise-wide predictive asset management transformation.",
+                "hint_text": "Define progression from pilot asset class with validated prediction accuracy to expanded equipment coverage to system-wide predictive maintenance standard. Show evolution from tactical failure prevention to strategic asset management capability.",
+                "ideal_answer": "At the initial milestone, success means validating predictions on pilot asset classes with documented accuracy, measurable outage prevention, and maintenance team confidence in recommendations. Expansion phase success involves scaling across additional equipment types and service territories, with predictive maintenance fully integrated into work management processes and demonstrated performance across diverse asset populations. Full maturity represents the platform functioning as the enterprise-wide asset monitoring standard, with condition-based maintenance embedded in organizational culture. Leadership reports substantial reliability improvement through reduced unplanned outages, optimized maintenance spending through condition-based resource deployment, extended asset lifecycles deferring capital investment, improved regulatory compliance with reliability standards, and operational excellence that differentiates the utility through superior service quality and cost efficiency.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Utility sector relevance, system scale similarity, validated performance metrics, regulatory acceptance, industry recognition",
+                "focus": "Reference comparable utility environment results and independently validated reliability improvement outcomes.",
+                "hint_text": "Mention deployments in similar utilities with comparable asset populations. Describe validated outage reduction and maintenance optimization results. Reference regulatory recognition or utility industry awards acknowledging outcomes.",
+                "ideal_answer": "The platform has proven success in utility environments similar to yours, with documented deployments across electric, gas, and water systems of comparable scale and asset complexity. Reference customers report substantial unplanned outage reduction and significant maintenance cost optimization, with outcomes validated through regulatory reliability reporting confirming service improvement. Several utilities have received industry recognition for operational excellence and innovation in asset management. Implementations span diverse equipment types\u2014transformers, circuit breakers, pumps, compressors\u2014demonstrating effectiveness across different infrastructure categories. Independent engineering assessments have validated prediction accuracy and failure prevention effectiveness. Utility references are available to discuss their transformation from reactive to predictive maintenance, the change management approach that drove adoption, and the measurable reliability and financial benefits they have achieved.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Dedicated implementation support, maintenance team training, technical assistance accessibility, continuous optimization process, executive success reviews",
+                "focus": "Outline dedicated utility operations team support and comprehensive maintenance team enablement programs.",
+                "hint_text": "Detail implementation support from utility asset management and reliability engineering experts. Describe maintenance planner and field technician training. Explain continuous model refinement and regular reviews tracking reliability impact.",
+                "ideal_answer": "Your operations team receives dedicated implementation support from specialists combining data science expertise and utility asset management experience, configuring prediction models for your specific equipment population and operating environment. Comprehensive training prepares maintenance planners to interpret alerts and integrate predictive insights into work scheduling, with practical sessions addressing your asset types and maintenance practices. Field technicians learn to use prediction guidance effectively during inspections. Reliability engineers receive training on analytical tools for deeper investigation. Continuous technical support provides rapid assistance whenever questions arise during daily operations. Regular optimization sessions analyze prediction performance, refine models as your asset population and operating conditions evolve, and identify new opportunities to expand coverage to additional equipment types. Executive business reviews track reliability metrics, maintenance efficiency, cost savings, and regulatory compliance performance, ensuring leadership maintains visibility into how predictive asset management is strengthening operational excellence and financial outcomes.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

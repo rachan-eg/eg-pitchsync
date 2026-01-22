@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's logistics AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Supply Chain, Fleet Managers, Dispatchers, Operations Directors",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Reactive exception management, delay visibility gaps, root cause identification difficulty, corrective action inefficiency, cross-network pattern blindness",
+                "focus": "Identify the inability to predict and prevent disruptions before they cascade through the supply chain.",
+                "hint_text": "Describe how logistics teams discover delays only after shipments are already late. Mention the inability to identify patterns across thousands of shipments that signal emerging issues. Explain the manual effort required to investigate exceptions and determine corrective actions.",
+                "ideal_answer": "Logistics operations struggle with fundamentally reactive exception management, discovering delivery delays only after customers complain or shipments miss commitment dates. Dispatchers and operations managers cannot monitor thousands of simultaneous shipments to identify early warning signals\u2014weather developing along routes, carrier capacity constraints emerging, facility congestion building\u2014that will cause future delays. When exceptions occur, teams manually investigate root causes across disconnected systems, wasting critical time that could be used for intervention. This reactive approach results in customer dissatisfaction from late deliveries, emergency expediting costs trying to salvage compromised shipments, carrier relationship strain from last-minute requests, and competitive disadvantage as rivals deliver more reliably through superior operational visibility and proactive management.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "On-time delivery improvement, exception reduction metrics, operational cost savings, customer satisfaction gains, decision speed enhancement",
+                "focus": "Quantify predictive intervention impact on delivery reliability and the speed of operational improvement realization.",
+                "hint_text": "Focus on how early exception alerts enable proactive intervention before delays occur. Mention the timeline for seeing delivery performance improvements. Emphasize both reliability gains and cost savings from preventing emergency responses.",
+                "ideal_answer": "Operations teams see measurable impact within the first weeks of deployment, with early warning alerts enabling proactive interventions that prevent delays before they occur. Dispatchers reroute shipments around developing weather, adjust carrier assignments based on predicted capacity constraints, and allocate resources to address facility bottlenecks before they disrupt service. On-time delivery performance improves as exceptions decrease, customer satisfaction increases from more reliable service, and operational costs decline as emergency expediting becomes unnecessary. The value compounds as the system learns network-specific patterns, with operations teams shifting from firefighting crises to managing by exception. Leadership sees strengthened customer relationships through superior reliability, improved competitive positioning, and better asset utilization from optimized resource deployment.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Logistics-specific AI models, multi-modal network intelligence, real-time signal integration, prescriptive recommendation capability, supply chain domain expertise",
+                "focus": "Highlight logistics network expertise and predictive capabilities that generic tracking systems cannot deliver.",
+                "hint_text": "Highlight AI trained specifically on logistics networks versus generic tracking tools. Contrast predictive exception identification with reactive status monitoring. Emphasize prescriptive recommendations that guide corrective actions, not just alerts.",
+                "ideal_answer": "The solution delivers superior predictive accuracy through AI purpose-built for logistics networks, trained on diverse transportation modes and supply chain scenarios rather than generic tracking systems adapted for predictions. Unlike basic shipment monitoring that reports current status reactively, the platform predicts future exceptions by correlating real-time signals\u2014weather forecasts, traffic patterns, carrier performance trends, facility utilization rates, and historical delay patterns\u2014identifying risks before they materialize. The differentiation extends to prescriptive intelligence, not just alerting to problems but recommending specific corrective actions based on available alternatives and network constraints. Deep supply chain domain expertise ensures implementation aligns with logistics operations realities, and the system continuously learns from outcomes to improve both prediction accuracy and recommendation effectiveness over time.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Supply Chain, Fleet Managers, Dispatchers, Operations Directors",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Transportation management system connectivity, carrier data ingestion, warehouse management integration, external signal incorporation, workflow tool embedding",
+                "focus": "Detail seamless connection to existing logistics systems and real-time exception delivery within current operational workflows.",
+                "hint_text": "Explain native connections to transportation management systems, carrier tracking feeds, and warehouse systems. Mention automatic ingestion of external signals like weather and traffic. Describe how alerts and recommendations flow directly into dispatcher and operations manager tools.",
+                "ideal_answer": "The platform integrates seamlessly with existing transportation management systems, warehouse management platforms, and order management tools through standard logistics connectors, automatically ingesting shipment data, carrier tracking updates, and facility status without manual data entry. External signals\u2014weather forecasts, traffic conditions, carrier capacity trends, and facility congestion indicators\u2014flow continuously into the prediction engine, enriching exception forecasts with real-time context. Predictive alerts and corrective action recommendations deliver directly into the dashboards and workflow tools dispatchers and operations managers use daily, eliminating separate monitoring systems. Integration with carrier communication platforms enables recommended actions to execute quickly, and the architecture synchronizes with customer notification systems to provide proactive delivery updates when interventions occur.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Dispatcher alert actionability, operations manager exception visibility, customer service proactive communication, executive performance reporting, role-specific decision support",
+                "focus": "Compare actionable dispatcher intervention recommendations with strategic executive network performance dashboards.",
+                "hint_text": "Describe clear exception alerts for dispatchers with specific corrective action recommendations versus network health dashboards for operations managers. Explain proactive customer communication tools for service teams and strategic reliability metrics for executives.",
+                "ideal_answer": "Dispatchers receive prioritized exception alerts with specific corrective action recommendations\u2014which shipments face delay risk, why the risk exists, and what alternative routing or carrier options can prevent the issue\u2014enabling quick intervention without extensive investigation. Operations managers view network-wide exception patterns, identifying systemic issues like recurring carrier performance problems or facility bottlenecks requiring strategic attention. Customer service teams access proactive communication tools showing which deliveries will be late despite interventions, enabling outreach before customers discover problems. Executives see strategic performance dashboards quantifying on-time delivery trends, exception reduction over time, operational cost improvements, and customer satisfaction impacts, providing visibility into how predictive operations management is strengthening service reliability and competitive positioning.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Prediction confidence scoring, recommendation validation, reasoning transparency, override capabilities, performance tracking, feedback incorporation",
+                "focus": "Explain prediction reasoning transparency and dispatcher override capabilities that build operational confidence.",
+                "hint_text": "Highlight how the system shows which signals are driving each exception prediction and provides confidence levels. Describe dispatcher override authority and how the system learns from corrections. Explain performance tracking validating prediction accuracy over time.",
+                "ideal_answer": "Every exception prediction includes confidence scoring and transparent reasoning showing which factors are driving the forecast\u2014specific weather patterns, historical carrier performance on similar routes, facility utilization trends\u2014enabling dispatchers to validate the logic rather than trusting black-box alerts. Operations teams retain full override authority, choosing different corrective actions based on their network knowledge and business priorities, with the system learning from these decisions to improve future recommendations. Predictions with lower confidence are clearly flagged, allowing teams to prioritize attention appropriately. Performance dashboards track prediction accuracy against actual outcomes, false positive rates, and intervention effectiveness over time, providing ongoing validation that the system maintains reliability as network conditions evolve and building trust through demonstrated results.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Supply Chain, Fleet Managers, Dispatchers, Operations Directors",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Pilot lane validation, network expansion, enterprise-wide deployment, organizational capability building, measurable reliability transformation",
+                "focus": "Map pilot lane validation milestones toward enterprise-wide predictive operations management transformation.",
+                "hint_text": "Define progression from pilot lanes with validated prediction accuracy to expanded network coverage to company-wide predictive operations standard. Show evolution from tactical exception management to strategic network optimization capability.",
+                "ideal_answer": "At the initial milestone, success means validating the approach on pilot shipping lanes with measurable prediction accuracy, documented exception reduction, and dispatcher confidence in recommendations. Expansion phase success involves scaling across the broader logistics network\u2014additional lanes, transportation modes, and facilities\u2014with predictive exception management fully integrated into operations workflows and demonstrated performance across diverse network segments. Full maturity represents the platform functioning as the enterprise-wide standard for operations intelligence, with proactive network management embedded in organizational culture. Leadership reports substantial on-time delivery improvement, reduced operational costs from eliminated emergency responses, strengthened customer satisfaction and retention, and competitive differentiation through superior service reliability that enables premium positioning or market share growth.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Logistics sector relevance, network complexity similarity, validated performance metrics, independent verification, industry recognition",
+                "focus": "Reference comparable logistics environment results and independently validated reliability improvement outcomes.",
+                "hint_text": "Mention deployments in similar logistics environments with comparable network complexity. Describe validated on-time delivery improvements and exception reduction. Reference third-party validation or industry recognition of results.",
+                "ideal_answer": "The platform has proven success in logistics environments similar to yours, with documented deployments across networks of comparable complexity and operational scale. Reference customers report substantial on-time delivery improvements and significant exception reduction, with outcomes validated through customer satisfaction surveys and operational audits confirming service reliability gains. Several implementations have received industry recognition for operational excellence and customer service achievements. The approach has delivered consistent results across diverse logistics contexts\u2014parcel delivery, freight transportation, multi-modal networks\u2014demonstrating effectiveness across different operational models and service requirements. Logistics references are available to discuss their transformation from reactive to predictive operations management and the competitive advantage they have gained through superior reliability.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Dedicated implementation support, operations team training, technical assistance accessibility, continuous optimization process, executive success reviews",
+                "focus": "Outline dedicated logistics operations team support and comprehensive dispatcher enablement programs.",
+                "hint_text": "Detail implementation support from logistics operations experts. Describe dispatcher and operations manager training. Explain ongoing prediction optimization and regular business reviews tracking service reliability impact.",
+                "ideal_answer": "Your operations team receives dedicated implementation support from specialists combining data science expertise and logistics operations experience, configuring the system for your specific network characteristics and operational priorities. Comprehensive training prepares dispatchers to interpret predictions and execute recommended interventions effectively, with practical sessions using real network scenarios. Operations managers learn to leverage network-wide analytics for strategic decision-making. Continuous technical support provides rapid assistance whenever questions arise during daily operations. Regular optimization sessions analyze prediction performance, refine models based on your network's evolving characteristics, and identify new opportunities to enhance reliability through predictive intelligence. Executive business reviews track key performance indicators\u2014on-time delivery trends, exception rates, cost savings, customer satisfaction\u2014ensuring leadership maintains visibility into how predictive operations management is strengthening service performance and competitive positioning.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

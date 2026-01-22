@@ -52,6 +52,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     } = useApp();
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [direction, setDirection] = useState<'next' | 'prev' | 'none'>('none');
     const [answers, setAnswers] = useState<string[]>([]);
     const [originalAnswers, setOriginalAnswers] = useState<string[]>([]);
     const [hintsUsed, setHintsUsed] = useState<boolean[]>([]);
@@ -318,6 +319,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const handleNext = useCallback(() => {
         if (currentQuestionIndex < phase.questions.length - 1) {
             if (isListening) stopVoice();
+            setDirection('next');
             setCurrentQuestionIndex(prev => prev + 1);
             setIsEditing(false);
         }
@@ -326,6 +328,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const handlePrev = useCallback(() => {
         if (currentQuestionIndex > 0) {
             if (isListening) stopVoice();
+            setDirection('prev');
             setCurrentQuestionIndex(prev => prev - 1);
             setIsEditing(false);
         }
@@ -333,6 +336,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
     const handleGoToQuestion = (index: number) => {
         if (isListening) stopVoice();
+        setDirection(index > currentQuestionIndex ? 'next' : 'prev');
         setCurrentQuestionIndex(index);
         setIsEditing(false);
     };
@@ -502,7 +506,10 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
                 </header>
 
-                <main className="pi-body reactive-border">
+                <main
+                    key={currentQuestionIndex}
+                    className={`pi-body reactive-border ${direction === 'next' ? 'animate-question-next' : direction === 'prev' ? 'animate-question-prev' : ''}`}
+                >
                     <div className="pi-question-box">
                         <div className="pi-question">
                             <span className="pi-question-num">Q{currentQuestionIndex + 1}</span>

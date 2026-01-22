@@ -1,29 +1,64 @@
 {
     "team_codes": {
-        "ALPHA2026": {
-            "team_name": "Alpha Innovators",
+        "ORION26": {
+            "team_name": "Team Orion",
             "usecase_id": "construction_ai_deviation",
             "description": "Construction AI Deviation Detection team"
         },
-        "BETA2026": {
-            "team_name": "Beta Builders",
-            "usecase_id": "construction_ai_deviation",
-            "description": "Construction tech challenge team"
-        },
-        "HEALTH2026": {
-            "team_name": "HealthTech Pioneers",
+        "AURORA26": {
+            "team_name": "Aurora Unit",
             "usecase_id": "healthcare_onprem_ai",
             "description": "Healthcare AI team"
         },
-        "MEDAI2026": {
-            "team_name": "MedAI Solutions",
-            "usecase_id": "healthcare_onprem_ai",
-            "description": "Medical AI innovation team"
+        "VORTEX26": {
+            "team_name": "Vortex Collective",
+            "usecase_id": "manufacturing_quality_ai",
+            "description": "Manufacturing quality AI team"
         },
-        "DEMO2026": {
-            "team_name": "Demo Team",
-            "usecase_id": "construction_ai_deviation",
-            "description": "Demonstration and testing team"
+        "ZENITH26": {
+            "team_name": "Zenith Squad",
+            "usecase_id": "retail_demand_ai",
+            "description": "Retail demand forecasting team"
+        },
+        "NEXUS26": {
+            "team_name": "Nexus Alliance",
+            "usecase_id": "logistics_ops_copilot",
+            "description": "Logistics operations copilot team"
+        },
+        "SIRIUS26": {
+            "team_name": "Sirius Command",
+            "usecase_id": "fin_risk_fraud_ai",
+            "description": "Financial risk and fraud detection team"
+        },
+        "TITAN26": {
+            "team_name": "Titan Syndicate",
+            "usecase_id": "energy_asset_monitoring",
+            "description": "Energy asset monitoring AI team"
+        },
+        "PULSE26": {
+            "team_name": "Pulse Core",
+            "usecase_id": "education_student_success",
+            "description": "Education student success AI team"
+        },
+        "PHOENIX26": {
+            "team_name": "Phoenix Vanguard",
+            "usecase_id": "real_estate_portfolio_ai",
+            "description": "Real estate portfolio analysis team"
+        },
+        "VEGA26": {
+            "team_name": "Vega Horizon",
+            "usecase_id": "hospitality_guest_experience",
+            "description": "Hospitality guest experience AI team"
+        },
+        "APOLLO26": {
+            "team_name": "Apollo Mission",
+            "usecase_id": "construction_project_risk",
+            "description": "Construction project risk management team"
+        },
+        "NOVA26": {
+            "team_name": "Nova Insight",
+            "usecase_id": "professional_services_delivery",
+            "description": "Professional services delivery AI team"
         }
     }
 }
