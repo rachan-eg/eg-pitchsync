@@ -197,14 +197,16 @@
 }
 
 .header-project-info__title {
-    color: #e4e4e7;
-    font-weight: 500;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
     /* Enable flex shrinkage */
     flex: 1;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 .header-project-info__sep {
@@ -243,22 +245,64 @@
     flex: 1;
 }
 
-.header-score-group {
+/* New Score Pill Styles */
+.header-score-pill {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
-.header-tier-badge {
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 4px;
+.header-score-pill:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+}
+
+.header-score-tier {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    /* Circle looks modern */
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 900;
-    font-size: 0.75rem;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
+
+.header-score-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-right: 0.5rem;
+}
+
+.header-score-label-small {
+    font-size: 0.5rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.header-score-value-large {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.125rem;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(to right, #fff, #a1a1aa);
+    /* Silver/White gradient */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
 
 .header-tier-badge--s {
     background: linear-gradient(to right, #facc15, #f97316);
@@ -283,30 +327,6 @@
 .header-tier-badge--default {
     background: #3f3f46;
     color: #a1a1aa;
-}
-
-.header-score-info {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.header-score-value {
-    font-size: 1rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 900;
-    color: var(--primary);
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-}
-
-.header-score-label {
-    font-size: 0.65rem;
-    color: #52525b;
-    text-transform: uppercase;
-    font-weight: 800;
-    letter-spacing: 0.15em;
 }
 
 .header-leaderboard-btn {
@@ -369,12 +389,24 @@
         display: none;
     }
 
-    .header-score-group {
-        gap: 0.25rem;
+    /* Adjusted score pill for mobile */
+    .header-score-pill {
+        padding: 0.25rem;
+        gap: 0.5rem;
     }
 
-    .header-score-value {
-        font-size: 0.875rem;
+    .header-score-value-large {
+        font-size: 0.9rem;
+    }
+
+    .header-score-label-small {
+        font-size: 0.45rem;
+    }
+
+    .header-score-tier {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.7rem;
     }
 
     .header-phase-badge {

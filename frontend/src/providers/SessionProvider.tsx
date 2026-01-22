@@ -385,15 +385,23 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setSelectedUsecase(data.usecase);
         setSelectedTheme(data.theme);
 
+        // ALWAYS reset uploadedImages to prevent cross-team data leakage
+        // This must happen regardless of whether final_output exists
+        setUploadedImages(initialSubmissions);
+
+        if (initialSubmissions.length > 0) {
+            setActiveRevealSubmission(initialSubmissions[initialSubmissions.length - 1]);
+        } else {
+            setActiveRevealSubmission(null);
+        }
+
         if (data.final_output) {
             if (data.final_output.image_prompt) setCuratedPrompt(data.final_output.image_prompt);
             const url = getFullUrl(data.final_output.image_url);
             setGeneratedImageUrl(url);
 
-            setUploadedImages(initialSubmissions);
-            if (initialSubmissions.length > 0) {
-                setActiveRevealSubmission(initialSubmissions[initialSubmissions.length - 1]);
-            } else if (data.final_output && data.final_output.image_url) {
+            // If no uploaded images but we have a final_output image, use that as active reveal
+            if (initialSubmissions.length === 0 && data.final_output.image_url) {
                 setActiveRevealSubmission({
                     image_url: url,
                     prompt: data.final_output.image_prompt,
@@ -975,6 +983,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         stopTimer();
         setCuratedPrompt('');
         setGeneratedImageUrl('');
+        // Clear uploaded images to prevent cross-team data leakage
+        setUploadedImages([]);
+        setActiveRevealSubmission(null);
     }, [stopTimer]);
 
     // =========================================================================

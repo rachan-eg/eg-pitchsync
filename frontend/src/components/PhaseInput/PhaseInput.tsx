@@ -153,8 +153,15 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         });
         const initialHints = phase.questions.map((q: any) => {
             const id = typeof q === 'string' ? q : q.id;
-            const prev = initialResponses.find(r => r.hint_used === true && r.question_id === id);
-            return !!prev;
+            const prev = initialResponses.find(r => r.question_id === id);
+            return prev?.hint_used === true;
+        });
+
+        // Debug logging
+        console.log('🔍 PhaseInput Init:', {
+            phaseId: currentId,
+            initialResponses: initialResponses.map(r => ({ qid: r.question_id, hint_used: r.hint_used })),
+            initialHints
         });
 
         // Reinitialize if:
@@ -204,11 +211,37 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         setAnswers(newAnswers);
     };
 
-    const unlockHint = () => {
+    const unlockHint = async () => {
         const newHints = [...hintsUsed];
         newHints[currentQuestionIndex] = true;
         setHintsUsed(newHints);
         setHintModalOpen(false);
+
+        // Immediately sync to provider (bypass debounce) to ensure hint persists on navigation
+        syncToProvider(answers, newHints);
+
+        // Immediately save hint to backend
+        const currentQuestion = phase.questions[currentQuestionIndex];
+        const questionId = typeof currentQuestion === 'string' ? currentQuestion : currentQuestion.id;
+        const phaseName = phaseConfig[phaseNumber]?.name;
+
+        if (session?.session_id && phaseName && questionId) {
+            try {
+                const { getApiUrl } = await import('../../utils');
+                await fetch(getApiUrl('/api/save-hint'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: session.session_id,
+                        phase_name: phaseName,
+                        question_id: questionId
+                    })
+                });
+                console.log('💡 Hint saved to backend');
+            } catch (e) {
+                console.error('Failed to save hint to backend:', e);
+            }
+        }
     };
 
 
@@ -456,12 +489,12 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                             return (
                                 <button
                                     key={i}
-                                    className={`pi-btn ${i === currentQuestionIndex ? 'pi-btn--primary' : 'pi-btn--secondary'} ${isDone ? 'pi-btn--done' : ''} ${hasChanged ? 'pi-btn--changed' : ''}`}
-                                    style={{ padding: '0.35rem 0.75rem', minWidth: '40px', position: 'relative' }}
+                                    className={`pi-btn-liquid ${i === currentQuestionIndex ? 'pi-btn-liquid--active' : ''} ${isDone ? 'pi-btn-liquid--done' : ''} ${hasChanged ? 'pi-btn-liquid--changed' : ''}`}
                                     onClick={() => handleGoToQuestion(i)}
                                 >
-                                    {i + 1}
+                                    <span className="pi-btn-liquid-text">Q{i + 1}</span>
                                     {hasChanged && <span className="pi-btn-dot" />}
+                                    <div className="pi-btn-liquid-bg"></div>
                                 </button>
                             );
                         })}
@@ -513,6 +546,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 placeholder={isListening ? "" : "Type your response here (min 100 chars). Press Ctrl+Enter for next."}
                                 readOnly={isListening}
                                 onClick={handleInputClick}
+                                maxLength={3000}
                             />
                         ) : (
                             <div

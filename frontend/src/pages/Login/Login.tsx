@@ -138,7 +138,8 @@ export const Login: React.FC = () => {
                 </div>
             </div>
 
-            <Branding />
+            <Branding className="branding-bottom-left" />
+            <Branding useBackLogo={true} />
         </div >
     );
 };

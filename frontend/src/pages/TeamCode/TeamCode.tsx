@@ -171,7 +171,8 @@ export const TeamCode: React.FC = () => {
                 )}
             </div>
 
-            <Branding />
+            <Branding className="branding-bottom-left" />
+            <Branding useBackLogo={true} />
         </div>
     );
 };

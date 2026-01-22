@@ -74,19 +74,10 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
             case '/war-room':
                 return (
                     <div className="header-left-content">
-                        <div className="header-phase-badge">
-                            <div className="header-phase-badge__group">
-                                <span className="header-phase-badge__label">PHASE</span>
-                                <span className="header-phase-badge__number">
-                                    {currentPhaseNumber}<span className="header-phase-badge__sep">/</span>{totalPhases}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="header-project-info">
-                            <span className="header-project-info__title" title={session?.usecase.title}>{session?.usecase.title}</span>
-                            <span className="header-project-info__sep">/</span>
-                            <span className="header-project-info__team">{session?.team_id}</span>
+                        <div className="header-project-info" style={{ borderLeft: 'none', paddingLeft: 0, marginLeft: 0 }}>
+                            <span className="header-project-info__title" title={session?.usecase.title}>
+                                {session?.usecase.title}
+                            </span>
                         </div>
                     </div>
                 );
@@ -117,17 +108,17 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
         if (!session) return null;
         return (
             <div className="global-header__right">
-                <div className="header-score-group">
+                <div className="header-score-pill">
                     {tier && (
-                        <div className={`header-tier-badge ${tier.className}`}>
+                        <div className={`header-score-tier ${tier.className}`}>
                             {tier.label}
                         </div>
                     )}
-                    <div className="header-score-info">
-                        <div className="header-score-value">
+                    <div className="header-score-content">
+                        <span className="header-score-label-small">SCORE</span>
+                        <span className="header-score-value-large">
                             {session.total_score.toFixed(0)}
-                        </div>
-                        <div className="header-score-label">Score</div>
+                        </span>
                     </div>
                 </div>
 

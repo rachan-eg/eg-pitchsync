@@ -1464,3 +1464,93 @@
     transform: none !important;
     box-shadow: none !important;
 }
+
+/* Liquid Button Style */
+.pi-btn-liquid {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    z-index: 1;
+}
+
+.pi-btn-liquid:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.pi-btn-liquid-text {
+    position: relative;
+    z-index: 2;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pi-btn-liquid-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: var(--primary);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease;
+    z-index: 1;
+    opacity: 0;
+}
+
+/* Active State */
+.pi-btn-liquid--active {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px rgba(167, 139, 250, 0.2);
+}
+
+.pi-btn-liquid--active .pi-btn-liquid-bg {
+    width: 150%;
+    height: 150%;
+    opacity: 1;
+}
+
+.pi-btn-liquid--active .pi-btn-liquid-text {
+    color: #000;
+}
+
+/* Done State */
+.pi-btn-liquid--done {
+    border-color: var(--success);
+}
+
+.pi-btn-liquid--done:not(.pi-btn-liquid--active) .pi-btn-liquid-text {
+    color: var(--success);
+}
+
+/* Changed State */
+.pi-btn-liquid--changed {
+    border-color: var(--warning);
+}
+
+.pi-btn-liquid--changed .pi-btn-dot {
+    z-index: 3;
+    width: 6px;
+    height: 6px;
+    top: 6px;
+    right: 6px;
+    background: var(--warning);
+    box-shadow: 0 0 4px var(--warning);
+    position: absolute;
+}

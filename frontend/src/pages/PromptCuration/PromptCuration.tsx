@@ -329,6 +329,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                                     placeholder="Refine: 'cinematic', 'neon glow', 'abstract'..."
                                     className="curate-refine__input"
                                     disabled={isRegenerating}
+                                    maxLength={1000}
                                 />
                                 <button
                                     onClick={handleRegenerate}
@@ -343,8 +344,8 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                             {conversationHistory.length > 0 && (
                                 <div className="curate-refine__history">
                                     {[...conversationHistory.filter(m => m.role === 'user')].reverse().slice(0, 5).map((msg, i) => (
-                                        <div key={i} className="curate-refine__tag">
-                                            <Icons.Zap /> <span>{msg.content}</span>
+                                        <div key={i} className="curate-refine__tag" title={msg.content}>
+                                            <Icons.Zap /> <span>{msg.content.split(' ').slice(0, 2).join(' ') + (msg.content.split(' ').length > 2 ? '...' : '')}</span>
                                         </div>
                                     ))}
                                 </div>

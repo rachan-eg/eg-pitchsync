@@ -240,11 +240,17 @@ async def start_phase(req: StartPhaseRequest):
                     
                     if status != "passed":
                         # Update existing entry if not passed (don't overwrite passed data with drafts)
+                        print(f"📝 Saving leaving phase responses for '{l_name}':")
+                        for r in req.leaving_phase_responses:
+                            print(f"   - Q: {r.question_id}, hint_used: {r.hint_used}")
+                        
                         if isinstance(leaving_pdata, dict):
                             leaving_pdata['responses'] = req.leaving_phase_responses
                         else:
                             leaving_pdata.responses = req.leaving_phase_responses
                         session.phases[l_name] = leaving_pdata
+                    else:
+                        print(f"⏭️ Skipping response save for '{l_name}' - phase already passed")
     
     # STEP 2: Get or initialize the target phase's data
     key = f"phase_{req.phase_number}"
@@ -295,6 +301,16 @@ async def start_phase(req: StartPhaseRequest):
             previous_responses = phase_data.get('responses')
         else:
             previous_responses = getattr(phase_data, 'responses', None)
+    
+    # Debug logging for hint persistence
+    if previous_responses:
+        print(f"📤 Returning previous responses for '{phase_name}':")
+        for r in previous_responses:
+            hint = getattr(r, 'hint_used', r.get('hint_used') if isinstance(r, dict) else False)
+            qid = getattr(r, 'question_id', r.get('question_id') if isinstance(r, dict) else '?')
+            print(f"   - Q: {qid}, hint_used: {hint}")
+    else:
+        print(f"📤 No previous responses for '{phase_name}'")
 
     return StartPhaseResponse(
         phase_id=phase_def.get("id", f"phase_{req.phase_number}"),
@@ -306,6 +322,68 @@ async def start_phase(req: StartPhaseRequest):
         previous_responses=previous_responses,
         elapsed_seconds=accumulated_seconds
     )
+
+
+@router.post("/save-hint")
+async def save_hint(req: dict):
+    """
+    Immediately save hint usage for a question.
+    Called when user unlocks a hint - persists before phase submission.
+    """
+    session_id = req.get("session_id")
+    phase_name = req.get("phase_name")
+    question_id = req.get("question_id")
+    
+    if not session_id or not phase_name or not question_id:
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Get or create phase data
+    if phase_name not in session.phases:
+        # Create new phase entry
+        from backend.models import PhaseData, PhaseStatus, PhaseResponse
+        session.phases[phase_name] = PhaseData(
+            phase_id=phase_name,
+            status=PhaseStatus.IN_PROGRESS,
+            responses=[]
+        )
+    
+    phase_data = session.phases[phase_name]
+    
+    # Find the response for this question and mark hint as used
+    response_found = False
+    if hasattr(phase_data, 'responses'):
+        for r in phase_data.responses:
+            qid = getattr(r, 'question_id', r.get('question_id') if isinstance(r, dict) else None)
+            if qid == question_id:
+                if hasattr(r, 'hint_used'):
+                    r.hint_used = True
+                elif isinstance(r, dict):
+                    r['hint_used'] = True
+                response_found = True
+                break
+    
+    # If response doesn't exist yet, create a placeholder with hint_used=True
+    if not response_found:
+        from backend.models import PhaseResponse
+        new_response = PhaseResponse(
+            q="",
+            a="",
+            question_id=question_id,
+            hint_used=True
+        )
+        if isinstance(phase_data.responses, list):
+            phase_data.responses.append(new_response)
+    
+    session.phases[phase_name] = phase_data
+    update_session(session)
+    
+    print(f"💡 Hint saved for session {session_id[:8]}, phase '{phase_name}', question '{question_id}'")
+    
+    return {"success": True, "message": "Hint saved"}
 
 
 @router.post("/submit-phase-stream")
