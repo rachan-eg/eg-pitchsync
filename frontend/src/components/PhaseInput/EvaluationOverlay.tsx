@@ -100,7 +100,7 @@ export const EvaluationOverlay: React.FC<EvaluationOverlayProps> = ({
         <div className="pi-eval-overlay">
             <div className="pi-eval-backdrop" />
 
-            <div className="pi-eval-content reactive-border reactive-border--intense">
+            <div className="pi-eval-content">
                 {/* Animated Core */}
                 <div className="pi-eval-orb">
                     <div className="pi-eval-ring pi-eval-ring--1" />

@@ -78,7 +78,7 @@ interface SessionContextType {
     // Actions
     initSession: (teamId: string) => Promise<{ success: boolean; isResumed: boolean; isComplete: boolean; currentPhase: number }>;
     initSessionFromTeamCode: (teamName: string, usecaseId: string) => Promise<{ success: boolean; isResumed: boolean; isComplete: boolean; currentPhase: number }>;
-    startPhase: (phaseNum: number) => Promise<void>;
+    startPhase: (phaseNum: number) => Promise<boolean>;
     submitPhase: (responses: PhaseResponse[]) => Promise<void>;
     handleFeedbackAction: (action: 'CONTINUE' | 'RETRY') => Promise<{ navigateTo?: string }>;
     curatePrompt: (force?: boolean) => Promise<void>;
@@ -526,8 +526,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }, [setLoading, setError, processInitResponse]); // Stable dependencies
 
-    const startPhase = useCallback(async (phaseNum: number) => {
-        if (!session) return;
+    const startPhase = useCallback(async (phaseNum: number): Promise<boolean> => {
+        if (!session) return false;
 
         const leavingPhaseNum = session.current_phase;
         const leavingElapsed = elapsedSeconds;
@@ -606,14 +606,17 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     startTimer(data.elapsed_seconds ?? 0);
                 }
 
+                return true; // Success
             } else {
                 console.error('Failed to start phase, status:', res.status);
                 const errorData = await res.json().catch(() => ({}));
                 setError(errorData.detail || `Server error: ${res.status}`);
+                return false;
             }
         } catch (e) {
             console.error("Failed to start phase", e);
             setError("Network error establishing phase connection.");
+            return false;
         } finally {
             setLoading(false);
         }

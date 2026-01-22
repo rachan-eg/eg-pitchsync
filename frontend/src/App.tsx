@@ -244,7 +244,6 @@ const GameLayout: React.FC = () => {
     const location = useLocation();
     const {
         session,
-        phaseConfig,
         phaseResult,
         setPhaseResult,
         error,
@@ -278,8 +277,6 @@ const GameLayout: React.FC = () => {
             {/* Global Header */}
             <GlobalHeader
                 session={session}
-                currentPhaseNumber={session?.current_phase}
-                totalPhases={Object.keys(phaseConfig).length}
             />
 
             {/* Main Content Area */}

@@ -255,7 +255,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
 
     return (
-        <div className="prompt-curation war-room-bg">
+        <div className="prompt-curation war-room-bg page-transition">
             {/* Loading Overlay */}
             {isLoading && (
                 <div className="curate-overlay">

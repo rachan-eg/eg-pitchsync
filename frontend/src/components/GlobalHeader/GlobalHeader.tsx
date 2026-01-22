@@ -8,8 +8,6 @@ import './GlobalHeader.css';
 
 interface GlobalHeaderProps {
     session: SessionState | null;
-    currentPhaseNumber?: number;
-    totalPhases?: number;
 }
 
 const Icons = {
@@ -25,9 +23,7 @@ const Icons = {
 };
 
 export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
-    session,
-    currentPhaseNumber,
-    totalPhases
+    session
 }) => {
     const navigate = useNavigate();
     const location = useLocation();

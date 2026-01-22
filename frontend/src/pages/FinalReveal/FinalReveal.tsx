@@ -101,7 +101,7 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
     const retryCount = Object.values(session.phases).reduce((acc, p) => acc + (p.metrics?.retries || 0), 0);
 
     return (
-        <div className="final-reveal">
+        <div className="final-reveal page-transition">
             <div className="final-reveal__container">
 
                 {/* Header */}

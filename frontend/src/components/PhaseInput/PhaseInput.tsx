@@ -482,7 +482,8 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                         <h2 className="pi-header__name">{phase.name}</h2>
                     </div>
 
-                    <div className="pi-controls">
+                    <div className="pi-controls-liquid" style={{ '--active-index': currentQuestionIndex } as React.CSSProperties}>
+                        <div className="pi-liquid-thumb"></div>
                         {phase.questions.map((_: any, i: number) => {
                             const isDone = answers[i]?.trim().length >= 100;
                             const hasChanged = originalAnswers[i] !== undefined && answers[i] !== originalAnswers[i];
@@ -504,7 +505,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                 <main className="pi-body reactive-border">
                     <div className="pi-question-box">
                         <div className="pi-question">
-                            <span className="pi-question-num">{currentQuestionIndex + 1}</span>
+                            <span className="pi-question-num">Q{currentQuestionIndex + 1}</span>
                             <div className="pi-question-flex">
                                 <span className="pi-question-text">
                                     {typeof currentQuestion === 'string' ? currentQuestion : currentQuestion.text || currentQuestion.question}

@@ -121,7 +121,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
     return (
         <div className="leaderboard">
-            <div className="leaderboard__container animate-fadeIn">
+            <div className="leaderboard__container page-transition">
                 {/* Header */}
                 <div className="leaderboard__header">
                     <button onClick={handleBack} className="leaderboard__back-btn btn-secondary">

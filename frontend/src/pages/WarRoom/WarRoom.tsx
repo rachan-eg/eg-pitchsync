@@ -54,7 +54,7 @@ export const WarRoom: React.FC<WarRoomProps> = ({
     };
 
     return (
-        <div className="war-room animate-fade-in">
+        <div className="war-room page-transition">
             {/* Tactical Sidebar */}
             <aside className="war-room__sidebar">
                 <header className="war-room__sidebar-header">

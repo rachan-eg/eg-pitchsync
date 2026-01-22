@@ -55,12 +55,12 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
     const isStarted = highestUnlockedPhase > 1;
 
     const handleStart = async () => {
-        if (isComplete) {
-            navigate('/curate');
-            return;
+        // If complete, land them back in Phase 1 for review/re-run as requested
+        const targetPhase = isComplete ? 1 : (session?.current_phase || 1);
+        const success = await startPhase(targetPhase);
+        if (success) {
+            navigate('/war-room');
         }
-        await startPhase(session?.current_phase || 1);
-        navigate('/war-room');
     };
 
     const handleBackToTeamCode = () => {
@@ -70,7 +70,7 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
     };
 
     return (
-        <div className="mission-brief war-room-bg">
+        <div className="mission-brief war-room-bg page-transition">
             <div className="mission-brief__viewport">
                 {/* Top: Title & Tags */}
                 <div className="mission-brief__header">

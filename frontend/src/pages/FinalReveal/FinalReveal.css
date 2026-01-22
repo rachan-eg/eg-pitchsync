@@ -388,7 +388,6 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 1.25rem;
     overflow-y: auto;
     cursor: grab;
     user-select: none;
@@ -396,6 +395,25 @@
 
 .final-reveal__carousel.is-dragging .final-reveal__slide {
     cursor: grabbing;
+}
+
+.final-reveal__panel {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.final-reveal__panel--full {
+    height: 100%;
+}
+
+.final-reveal__panel--vision {
+    background: linear-gradient(135deg, rgba(244, 114, 182, 0.05) 0%, transparent 100%);
+    border-color: rgba(244, 114, 182, 0.2) !important;
 }
 
 /* Slide Header */
