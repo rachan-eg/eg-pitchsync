@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's workplace AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Workplace utilization inefficiency, remote work policy arbitrariness, space cost optimization difficulty, employee satisfaction balancing, data-driven decision absence",
+                "focus": "Identify the inability to optimize workplace balance decisions based on actual utilization and employee needs.",
+                "hint_text": "Describe how managers make remote work policies without utilization data. Mention wasted office space costs with unclear occupancy patterns. Explain the challenge balancing employee flexibility with operational needs.",
+                "ideal_answer": "Facility managers struggle optimizing workplace balance without data-driven insights into actual office utilization, employee work patterns, and space effectiveness. Remote work policies are created based on intuition rather than evidence about when physical presence adds value versus when remote work is equally effective. Organizations pay for office space that sits empty while unable to articulate which activities genuinely benefit from in-person collaboration. Employee satisfaction suffers when workplace requirements feel arbitrary rather than purposeful. Managers lack tools to understand patterns across teams, departments, and work types that would inform intelligent balance between flexibility and operational effectiveness.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Space utilization optimization, cost reduction through rightsizing, employee satisfaction improvement, policy effectiveness validation, operational efficiency gains",
+                "focus": "Quantify space cost optimization and employee satisfaction with clear decision quality improvement.",
+                "hint_text": "Focus on space cost savings from utilization optimization. Mention employee satisfaction from balanced policies. Emphasize data-driven decisions replacing arbitrary rules.",
+                "ideal_answer": "Managers gain visibility into actual workplace utilization patterns, enabling data-driven balance decisions that optimize space costs while maintaining employee satisfaction. Office space requirements become clearer, supporting rightsizing decisions that reduce facility costs without compromising operational effectiveness. Remote work policies align with empirical evidence about when physical presence adds value, creating purposeful guidelines rather than arbitrary rules. Employee satisfaction improves through balanced flexibility respecting work patterns while supporting collaboration needs. Financial benefits manifest through optimized space costs, improved facility utilization, and enhanced productivity from workplace strategies matching actual work patterns.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Workplace analytics specialization, utilization pattern intelligence, policy recommendation sophistication, employee experience understanding, continuous learning capability",
+                "focus": "Highlight workplace management expertise and balanced optimization that generic analytics lack.",
+                "hint_text": "Highlight understanding of workplace dynamics versus simple occupancy tracking. Contrast balanced optimization considering cost and satisfaction. Emphasize integration with existing workplace systems.",
+                "ideal_answer": "The solution delivers superior workplace intelligence through deep understanding of workplace dynamics, analyzing not just occupancy but work pattern effectiveness, collaboration needs, and employee preferences rather than generic space analytics. Unlike simple occupancy tracking, the platform identifies when physical presence genuinely adds value versus when remote work is equally effective, informing purposeful policies. The approach balances cost optimization with employee satisfaction, recognizing that effective workplace strategy requires both considerations. Integration with existing workplace management systems provides comprehensive insight, and continuous learning from utilization patterns improves recommendations as organizational needs evolve.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Workplace management system connectivity, occupancy sensor integration, employee feedback incorporation, calendar system access, space planning compatibility",
+                "focus": "Detail seamless connection to workplace systems and insight delivery within current workflows.",
+                "hint_text": "Explain connection to occupancy sensors and workplace booking systems. Mention employee feedback and preference data integration. Describe insight flow into facility management dashboards.",
+                "ideal_answer": "The platform integrates seamlessly with existing workplace management systems, occupancy sensors, and space booking tools through standard connectors, automatically ingesting utilization data, reservation patterns, and occupancy metrics without manual consolidation. Employee feedback and preference surveys enrich analysis with satisfaction context beyond utilization numbers. Calendar system integration provides work pattern insights respecting privacy while informing collaboration needs. Policy recommendations and utilization analytics flow directly into facility manager dashboards and executive reporting tools. The architecture supports both real-time utilization monitoring and strategic planning analysis, ensuring managers access intelligence within established workplace management processes.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Facility manager utilization clarity, HR policy guidance, team leader space insight, executive strategic visibility, employee transparency appropriateness",
+                "focus": "Compare actionable facility manager recommendations with strategic executive workplace dashboards.",
+                "hint_text": "Describe utilization insights for facility managers with space optimization recommendations versus policy guidance for HR. Explain team-level patterns for leaders and strategic dashboards for executives.",
+                "ideal_answer": "Facility managers view detailed utilization patterns showing space usage by area, time, and team with optimization recommendations for layout and capacity adjustments. HR teams access policy guidance based on empirical work pattern data, informing remote work guidelines grounded in operational evidence. Team leaders see department-level insights about collaboration patterns and space needs without individual tracking. Executives view strategic dashboards quantifying space cost efficiency, policy effectiveness, and workplace satisfaction trends informing real estate and workplace strategy. Employee-facing communications remain aggregate and purposeful, explaining workplace policies through operational rationale rather than surveillance, maintaining trust while optimizing utilization.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Privacy protection rigor, aggregate analysis focus, recommendation transparency, override capabilities, policy alignment validation, bias monitoring",
+                "focus": "Explain privacy protections and aggregate analysis building organizational confidence.",
+                "hint_text": "Highlight privacy-protective aggregate analysis without individual tracking. Describe transparent recommendation rationale. Explain management authority over policy decisions with AI as advisory input.",
+                "ideal_answer": "All analysis operates at aggregate levels protecting individual privacy, with utilization patterns identified across teams or spaces rather than tracking specific employees. Recommendations include transparent reasoning showing which utilization patterns and operational factors inform suggestions\u2014managers understand the logic rather than accepting unexplained guidance. Leadership retains complete authority over workplace policies, with AI providing advisory input rather than dictating decisions. Policy recommendations align with organizational culture and employee agreements, respecting contractual commitments and workplace values. Regular monitoring ensures analysis doesn't introduce bias across employee groups, and transparent communication about data usage maintains trust while enabling optimization, balancing efficiency with workplace culture and employee wellbeing.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Initial insight validation, policy optimization implementation, space strategy evolution, organizational adoption, measurable transformation",
+                "focus": "Map initial insights through policy implementation toward strategic workplace transformation.",
+                "hint_text": "Define progression from utilization insight validation to policy adjustments to strategic space optimization. Show evolution from data collection to operational transformation.",
+                "ideal_answer": "Initial success means validating utilization insights with measurable pattern identification, facility team confidence in recommendations, and initial policy adjustments informed by data. Expansion involves implementing optimized workplace policies with demonstrated employee satisfaction maintenance while improving space efficiency. Full maturity represents data-driven workplace strategy as organizational standard, with continuous optimization embedded in facility management culture. Leadership reports substantial space cost reduction through rightsizing informed by actual utilization, maintained or improved employee satisfaction through balanced policies, and competitive advantage through workplace strategies matching modern work patterns, transforming facility management from cost center to strategic enabler of organizational effectiveness.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Workplace management sector relevance, organizational scale similarity, cost impact validation, satisfaction maintenance evidence, industry recognition",
+                "focus": "Reference comparable organization results and validated space optimization outcomes.",
+                "hint_text": "Mention deployments in similar organizations managing workplace balance. Describe validated space cost reductions while maintaining satisfaction. Reference workplace management recognition.",
+                "ideal_answer": "The platform has proven success in organizations similar to yours, with documented implementations across companies managing comparable workplace complexity and employee populations. Reference organizations report measurable space cost reductions through utilization optimization, with outcomes validated through financial analysis. Employee satisfaction surveys confirm maintained or improved experience despite space efficiency gains. Several organizations have received recognition for innovative workplace strategies balancing cost efficiency with employee needs. References are available to discuss implementation experience, change management approaches for policy adjustments, and the strategic advantages gained through data-driven workplace optimization.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Implementation support dedication, stakeholder training, change management guidance, continuous optimization, performance reviews",
+                "focus": "Outline dedicated workplace strategy support and comprehensive stakeholder enablement.",
+                "hint_text": "Detail implementation support for workplace systems integration. Describe stakeholder training for facility, HR, and leadership. Explain continuous optimization and change management guidance.",
+                "ideal_answer": "Your organization receives dedicated implementation support for workplace system integration, ensuring privacy-protective data collection and proper analytics configuration. Comprehensive guidance prepares facility managers to interpret utilization insights, HR teams to develop data-informed policies, and leadership to communicate workplace strategy changes effectively. Change management support helps navigate employee communication about policy adjustments, maintaining trust through transparency. Continuous optimization refines recommendations based on policy outcomes and evolving organizational needs. Regular performance reviews track space utilization, cost savings, employee satisfaction, and policy effectiveness, ensuring leadership visibility into how intelligent workplace balance is strengthening organizational efficiency while supporting employee needs and modern work patterns.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

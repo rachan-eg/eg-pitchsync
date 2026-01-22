@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's energy AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Complex interface navigation difficulty, energy data interpretation challenges, report generation time consumption, insight extraction inefficiency, technical barrier to system usage",
+                "focus": "Identify the complexity barrier preventing energy professionals from accessing insights efficiently.",
+                "hint_text": "Describe how energy managers struggle navigating complicated interfaces to find consumption data. Mention time wasted generating routine reports manually. Explain the technical expertise required to extract meaningful insights from energy management systems.",
+                "ideal_answer": "Energy management professionals face overwhelming interface complexity when trying to access critical consumption data and performance insights. Navigation through multiple screens and technical menus creates frustration and time waste for routine information needs. Report generation requires manual data extraction, formatting, and analysis consuming hours that could be spent on strategic energy optimization. Non-technical stakeholders cannot independently access insights, creating bottlenecks through the energy team. System complexity becomes a barrier to effective energy management rather than an enabler, with valuable data trapped behind unintuitive interfaces that require extensive training to navigate effectively.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Time savings quantification, accessibility improvement, decision speed enhancement, user adoption increase, insight utilization expansion",
+                "focus": "Quantify efficiency gains and accessibility improvements with clear adoption timeline.",
+                "hint_text": "Focus on time saved accessing energy data through conversational queries. Mention instant report generation. Emphasize broader team access to insights without technical training.",
+                "ideal_answer": "Energy professionals experience immediate productivity gains through conversational access to consumption data and performance insights without navigating complex menus. Report generation that previously required hours completes in moments through simple requests. Non-technical stakeholders gain independent access to energy information, reducing bottlenecks through specialist teams. Decision-making accelerates as insights become readily available when needed rather than requiring scheduled analysis. The efficiency impact manifests through energy team capacity freed for strategic optimization rather than routine reporting, broader organizational engagement with energy performance, and faster response to consumption anomalies enabling cost control.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Energy management domain knowledge, natural language understanding sophistication, report generation intelligence, existing system integration, user experience focus",
+                "focus": "Highlight energy management expertise and intuitive interaction design that generic chatbots lack.",
+                "hint_text": "Highlight understanding of energy terminology and domain concepts versus generic assistants. Contrast intelligent report generation with simple data retrieval. Emphasize integration with existing energy management systems.",
+                "ideal_answer": "The assistant delivers superior usability through deep energy management domain knowledge, understanding industry terminology, consumption patterns, and performance metrics rather than generic conversational interfaces. Unlike basic chatbots that retrieve data mechanically, the solution interprets intent, generates contextually appropriate analyses, and creates formatted reports matching professional standards. Seamless integration with existing energy management systems provides comprehensive data access without migration or duplication. The interface design reflects understanding of energy professional workflows and information needs. Continuous learning from user interactions improves response relevance and anticipates common information requests, creating increasingly valuable assistance over time.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Energy management system connectivity, data access comprehensiveness, authentication integration, existing interface coexistence, mobile accessibility",
+                "focus": "Detail seamless connection to energy systems and conversational access within current workflows.",
+                "hint_text": "Explain connection to existing energy management platforms. Mention authentication through current credentials. Describe access from desktop and mobile devices alongside traditional interfaces.",
+                "ideal_answer": "The assistant integrates directly with existing energy management systems through secure connections, accessing comprehensive consumption data, equipment performance metrics, and historical trends without data migration. Authentication uses current organizational credentials, maintaining security standards and access controls. The conversational interface coexists with traditional system views, allowing users to choose interaction methods based on task requirements. Mobile accessibility enables energy professionals to access insights from anywhere, and the architecture supports both real-time data queries and historical analysis, ensuring users work within established security frameworks and operational processes.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Energy manager query simplicity, facilities team accessibility, executive reporting ease, technical user advanced capability, non-technical user empowerment",
+                "focus": "Compare simple conversational queries for all users with advanced analytical capabilities for specialists.",
+                "hint_text": "Describe natural language queries for energy managers accessing consumption patterns versus report requests for executives. Explain how non-technical users get insights without training.",
+                "ideal_answer": "Energy managers ask conversational questions about consumption patterns, equipment performance, or cost trends receiving instant responses with relevant visualizations. Facilities teams query specific building energy usage without navigating complex interfaces. Executives request formatted reports for leadership reviews generated immediately in professional formats. Technical users access advanced analytical capabilities through natural dialogue while non-technical stakeholders get straightforward answers without energy management expertise. All users benefit from consistent, intuitive interaction regardless of technical background or system familiarity, democratizing access to energy intelligence across the organization.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Data source transparency, calculation methodology clarity, access control respect, uncertainty acknowledgment, response validation capability",
+                "focus": "Explain data source transparency and validation capabilities building user confidence.",
+                "hint_text": "Highlight how responses cite data sources and timeframes. Describe access control enforcement. Explain how uncertain queries prompt clarification rather than incorrect responses.",
+                "ideal_answer": "Every response includes transparent data sourcing showing which systems, timeframes, and metrics inform answers\u2014users validate information against their operational knowledge. Calculation methodologies are explained when relevant, ensuring technical users understand analytical approaches. Access controls from existing systems are respected, with users seeing only data appropriate to their permissions. When queries are ambiguous or information is unavailable, the assistant requests clarification rather than providing potentially incorrect responses. Users can validate results against traditional interface views, and feedback mechanisms enable correction of misunderstandings, building confidence through transparency and demonstrated accuracy over time.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Initial adoption validation, organization-wide utilization, usage pattern maturation, workflow integration depth, efficiency transformation",
+                "focus": "Map initial adoption through organizational embrace toward productivity transformation.",
+                "hint_text": "Define progression from energy team adoption to broader organizational usage to standard interaction method. Show evolution from supplementary tool to primary interface.",
+                "ideal_answer": "Initial success means energy team adoption with measurable time savings, positive user feedback, and routine usage replacing traditional navigation for common tasks. Expansion involves broader organizational adoption with facilities teams and executives accessing energy insights independently, demonstrating value across user groups. Full maturity represents the assistant as the primary interaction method for most energy information needs, with conversational access embedded in daily workflows. Leadership reports substantial productivity gains from reduced reporting burden, improved energy decision-making from accessible insights, and enhanced organizational energy awareness through democratized data access, transforming energy management from specialized function to enterprise capability.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Energy management sector relevance, organizational scale similarity, adoption metrics validation, productivity impact documentation, user satisfaction evidence",
+                "focus": "Reference comparable organization results and validated productivity improvements.",
+                "hint_text": "Mention deployments in similar organizations with energy management needs. Describe validated time savings and user adoption rates. Reference user satisfaction feedback.",
+                "ideal_answer": "The assistant has proven success in organizations similar to yours, with documented implementations across facilities managing comparable energy complexity. Reference users report substantial time savings accessing energy data and generating reports, with outcomes validated through usage analytics confirming adoption. User satisfaction surveys document preference for conversational access over traditional interfaces. Several organizations report broader energy awareness and engagement across teams previously unable to access insights effectively. References are available to discuss implementation experience, adoption strategies that drove cultural acceptance, and productivity improvements realized through simplified energy data access.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Implementation support dedication, user training accessibility, technical assistance availability, continuous improvement process, adoption tracking reviews",
+                "focus": "Outline dedicated support and user enablement driving organizational adoption.",
+                "hint_text": "Detail implementation support for system integration. Describe user onboarding simplicity. Explain continuous improvement from usage feedback and adoption tracking.",
+                "ideal_answer": "Your organization receives dedicated implementation support for system integration, ensuring secure connection to energy management platforms and proper access control configuration. User onboarding is intentionally simple, with intuitive interaction requiring minimal training beyond introduction to capabilities. Continuous technical support provides assistance for complex queries or system questions. Regular optimization sessions analyze usage patterns, incorporate feedback about response quality, and identify opportunities to enhance value through new capabilities addressing emerging needs. Adoption reviews track usage metrics across user groups, satisfaction trends, and productivity impacts, ensuring leadership visibility into how simplified energy data access is strengthening organizational energy management effectiveness and decision-making quality.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

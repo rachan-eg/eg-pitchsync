@@ -1,0 +1,14 @@
+{
+    "id": "civic_trust",
+    "name": "Civic Trust",
+    "mood": "Transparent, Official, Efficient",
+    "visual_style": "Clean layouts, subtle paper textures, official blue and white, accessible typography",
+    "colors": {
+        "primary": "#004a99",
+        "secondary": "#ffffff",
+        "bg": "#f0f2f5",
+        "success": "#00855B",
+        "error": "#D93539",
+        "warning": "#956D00"
+    }
+}

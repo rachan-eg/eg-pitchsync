@@ -1,0 +1,14 @@
+{
+    "id": "enterprise_growth",
+    "name": "Enterprise Growth",
+    "mood": "Professional, Scalable, Data-Driven",
+    "visual_style": "Geometric patterns, navy and teal accents, clean dashboards, modern sans-serif fonts",
+    "colors": {
+        "primary": "#002D62",
+        "secondary": "#20B2AA",
+        "bg": "#FFFFFF",
+        "success": "#00855B",
+        "error": "#D93539",
+        "warning": "#956D00"
+    }
+}

@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's construction AI solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Interface complexity overwhelming small users, feature discovery difficulty, task completion inefficiency, training time burden, competitive simplicity advantage",
+                "focus": "Identify how interface complexity creates frustration and churn risk for smaller construction customers.",
+                "hint_text": "Describe how small contractors struggle navigating complex interfaces designed for enterprise needs. Mention time wasted finding basic functions. Explain competitive pressure from simpler alternatives even if less capable.",
+                "ideal_answer": "Small construction companies face overwhelming interface complexity when trying to accomplish basic project management tasks. Navigation designed for enterprise workflows confuses smaller teams who need straightforward task completion rather than comprehensive feature access. Contractors waste valuable time searching for basic functions buried in menus optimized for large organizations. Training requirements create adoption barriers when small teams cannot afford extended learning curves. Simpler competitor tools attract frustrated users despite offering fewer capabilities, as ease of use outweighs feature depth for teams managing smaller project portfolios. Interface complexity transforms a potentially valuable tool into a source of frustration, driving churn as contractors seek alternatives matching their operational simplicity needs.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Task completion speed improvement, training time reduction, user satisfaction increase, feature utilization expansion, retention rate enhancement",
+                "focus": "Quantify usability improvements and retention impact with clear adoption acceleration.",
+                "hint_text": "Focus on faster task completion through simplified workflows. Mention reduced training needs enabling quick team adoption. Emphasize retention improvement from satisfaction gains.",
+                "ideal_answer": "Small contractors experience immediate productivity improvements through simplified workflows enabling faster task completion without extensive navigation. Training time decreases dramatically as intuitive interfaces require minimal instruction, accelerating team adoption and value realization. User satisfaction improves as daily interactions become efficient rather than frustrating, reducing churn risk from usability concerns. Feature utilization expands as intelligent guidance surfaces relevant capabilities at appropriate moments rather than hiding them in complex menus. The retention impact manifests through renewed customer relationships, positive referrals from satisfied users, and competitive differentiation through accessibility that attracts smaller contractors seeking capable yet approachable project management tools.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Small contractor understanding, adaptive interface intelligence, context-aware simplification, enterprise capability preservation, continuous learning from usage",
+                "focus": "Highlight understanding of small contractor needs and intelligent simplification maintaining capability.",
+                "hint_text": "Highlight understanding small contractor workflows versus enterprise complexity. Contrast intelligent adaptive interfaces with one-size-fits-all designs. Emphasize preserving capability while simplifying access.",
+                "ideal_answer": "The solution delivers superior usability through deep understanding of small contractor workflows and needs, adapting interfaces to organizational complexity rather than forcing enterprise navigation on smaller teams. Unlike static simplification that removes features, the approach uses intelligent interfaces that surface relevant capabilities based on user context and task intent, preserving comprehensive functionality while simplifying daily interactions. The architecture learns from usage patterns, continuously improving interface appropriateness for different user types and common workflows. Understanding construction operations ensures simplification maintains industry-specific requirements and terminology. The commitment to small contractor success demonstrates through interface evolution that respects their operational reality while delivering enterprise-grade capability.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Current data preservation, workflow continuity, gradual transition capability, mobile optimization, offline functionality",
+                "focus": "Detail seamless transition to simplified interface without workflow disruption or data migration.",
+                "hint_text": "Explain how existing project data remains accessible through new interface. Mention workflow continuity without retraining on completely new systems. Describe mobile optimization for field use.",
+                "ideal_answer": "The simplified interface operates with existing project data and workflows, requiring no migration or disruption to ongoing work. Users access familiar information through intuitive navigation that removes complexity without changing underlying functionality. Transition happens gradually with optional interface switching, allowing teams to adopt at comfortable pace. Mobile optimization ensures field teams benefit from simplification where usability matters most. Offline capability supports jobsite usage without connectivity dependence. The architecture preserves all existing integrations and data relationships while transforming interaction layer, ensuring continuity while delivering usability improvements that immediately enhance daily operations.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Field crew task simplicity, project manager workflow efficiency, office staff administrative ease, owner reporting clarity, role-appropriate complexity",
+                "focus": "Compare simplified field crew interfaces with appropriately detailed project manager views.",
+                "hint_text": "Describe streamlined task interfaces for field crews versus project tracking for managers. Explain how complexity adapts to role needs rather than forcing uniform navigation.",
+                "ideal_answer": "Field crews access streamlined task interfaces showing only relevant daily work without overwhelming options, enabling quick updates and information access from jobsites. Project managers view appropriately detailed workflows for planning and tracking without unnecessary enterprise complexity obscuring core functions. Office staff navigate administrative tasks through simplified processes reducing training needs. Owners access clear reporting and project visibility without technical interface expertise. Role-appropriate complexity ensures each user sees relevant capabilities without unnecessary features creating confusion, with intelligent guidance surfacing additional functionality when context suggests usefulness rather than presenting everything simultaneously.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Data consistency validation, feature access transparency, override capabilities, complexity opt-in availability, performance preservation assurance",
+                "focus": "Explain data integrity assurance and optional complexity access building user confidence.",
+                "hint_text": "Highlight how simplified interface accesses same reliable data as before. Describe ability to access advanced features when needed. Explain performance improvements without functionality loss.",
+                "ideal_answer": "Data consistency validation ensures simplified interfaces access the same reliable information as previous systems, maintaining accuracy and completeness users depend on. Feature access remains transparent with clear paths to advanced capabilities when needed, avoiding oversimplification that limits power users. Teams retain ability to access detailed functionality when situations require, with intelligent defaults serving common needs while preserving comprehensive access. Performance monitoring validates that simplification improves efficiency without introducing errors or data integrity issues. Users maintain control over complexity levels, adjusting interface detail to match their comfort and task requirements, building confidence through preserved capability, demonstrated reliability, and respected user agency in determining interaction preferences.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Initial adoption validation, churn reduction demonstration, satisfaction improvement measurement, competitive positioning strengthening, customer advocacy development",
+                "focus": "Map early adoption through retention improvement toward competitive differentiation achievement.",
+                "hint_text": "Define progression from at-risk customer retention to broader satisfaction improvement to market positioning strength. Show evolution from churn prevention to growth enabler.",
+                "ideal_answer": "Initial success means retaining at-risk customers through demonstrated usability improvements, with measurable satisfaction gains and positive feedback validating interface effectiveness. Expansion involves broader small contractor adoption with documented efficiency improvements, reduced support burden from intuitive design, and competitive win rate increases against simpler alternatives. Full maturity represents interface simplification as market differentiator, with small contractor segment satisfaction driving referrals and growth. Leadership reports substantial churn reduction, improved customer lifetime value through retention, enhanced market positioning against simple competitors, and customer advocacy from satisfied users becoming reference accounts, transforming potential weakness into competitive strength that enables small contractor market expansion and sustainable growth.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Small contractor validation, usability improvement documentation, retention impact evidence, satisfaction measurement, competitive displacement examples",
+                "focus": "Reference small contractor results and validated retention improvements from usability gains.",
+                "hint_text": "Mention validation with small contractors facing similar complexity challenges. Describe documented satisfaction improvements and churn reduction. Reference competitive wins against simpler alternatives.",
+                "ideal_answer": "The simplified interface has proven success with small contractors similar to your at-risk customers, with documented validation across teams managing comparable project complexity. Reference users report substantial satisfaction improvements and daily efficiency gains, with outcomes validated through usage analytics and retention metrics. Churn reduction is documented through customer lifecycle analysis confirming retention improvements. Several previously at-risk accounts have become advocates, providing referrals and testimonials about usability transformation. Competitive analysis shows increased win rates against simpler alternatives as interface improvements neutralize their primary advantage. Small contractor references are available to discuss their experience with interface transition and how usability improvements restored value perception.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Transition support dedication, simplified training provision, responsive assistance accessibility, continuous improvement process, satisfaction tracking reviews",
+                "focus": "Outline dedicated small contractor support ensuring successful transition and sustained satisfaction.",
+                "hint_text": "Detail transition support helping customers adopt simplified interface. Describe minimal training requirements. Explain continuous improvement from user feedback and satisfaction tracking.",
+                "ideal_answer": "At-risk customers receive dedicated transition support ensuring smooth adoption of simplified interface with minimal disruption to ongoing work. Training is intentionally streamlined, reflecting interface intuitiveness and respecting small contractor time constraints. Responsive technical assistance provides quick help for questions during transition and ongoing usage. Continuous improvement processes analyze usage patterns and incorporate feedback about remaining complexity pain points, evolving interfaces based on real contractor needs. Regular satisfaction reviews track usability perception, efficiency improvements, and retention risk mitigation, ensuring leadership visibility into how interface simplification is strengthening customer relationships, reducing churn, and positioning the solution competitively in the small contractor market segment.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}

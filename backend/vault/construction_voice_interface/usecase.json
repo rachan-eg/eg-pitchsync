@@ -1,0 +1,9 @@
+{
+    "id": "construction_voice_interface",
+    "title": "AI Voice Interface for Field Operations",
+    "domain": "Construction",
+    "complexity": "Medium",
+    "target_market": "Field Crews, Safety Officers, Project Managers",
+    "theme_id": "voice_active",
+    "description": "A hands-free AI voice interface that allows field workers to document progress, report safety issues, and access project data without removing their gloves."
+}

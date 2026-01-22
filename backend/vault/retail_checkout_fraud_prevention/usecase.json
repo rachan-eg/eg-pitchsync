@@ -1,0 +1,9 @@
+{
+    "id": "retail_checkout_fraud_prevention",
+    "title": "AI Checkout Fraud Prevention",
+    "domain": "Retail",
+    "complexity": "High",
+    "target_market": "Retailers, Supermarkets, Loss Prevention Teams",
+    "theme_id": "secure_retail",
+    "description": "An AI-powered computer vision and behavioral analysis platform that detects and prevents self-checkout fraud without disrupting the honest customer experience."
+}

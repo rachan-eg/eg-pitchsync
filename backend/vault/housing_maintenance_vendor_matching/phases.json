@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points, unique value proposition, and competitive advantage of EG's maintenance matching solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Quality Control, Site Supervisors, Safety Directors, CFO",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
+                "criteria": "Vendor selection time consumption, quality uncertainty, availability verification difficulty, tenant frustration from delays, property manager administrative burden",
+                "focus": "Identify the inefficiency and uncertainty in matching maintenance needs to appropriate qualified vendors.",
+                "hint_text": "Describe how property managers struggle finding qualified vendors for diverse maintenance needs. Mention time wasted calling vendors checking availability and capabilities. Explain tenant frustration from delayed repairs while vendors are located.",
+                "ideal_answer": "Property managers waste substantial time matching maintenance requests to appropriate qualified vendors across diverse needs—plumbing emergencies, electrical repairs, appliance service, HVAC maintenance, general handyman work. Vendor selection involves manual research, availability verification, capability confirmation, and pricing negotiation for each request. Quality uncertainty exists without comprehensive performance tracking across the vendor network. Tenants experience frustrating delays while managers search for available qualified providers. Emergency situations create pressure for quick vendor selection without adequate quality vetting. The inefficiency results in tenant dissatisfaction from slow maintenance response, administrative burden consuming property manager productivity, suboptimal vendor selection from limited search time, and missed opportunities for preferred vendor relationships through inconsistent assignment patterns that prevent performance-based selection.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "What measurable value will the customer realize, and how quickly?",
+                "criteria": "Response time improvement, vendor quality enhancement, manager productivity gains, tenant satisfaction increase, cost optimization through performance-based selection",
+                "focus": "Quantify response speed and quality improvements with clear tenant satisfaction benefits.",
+                "hint_text": "Focus on faster vendor matching reducing tenant wait times. Mention quality improvement from performance-based selection. Emphasize manager time savings from automated matching.",
+                "ideal_answer": "Property managers experience immediate efficiency as intelligent matching identifies appropriate qualified vendors within moments rather than hours of manual search and coordination. Maintenance response time improves dramatically reducing tenant frustration and improving satisfaction with property management responsiveness. Vendor quality enhances through performance-based matching favoring providers with proven track records for specific maintenance types. Manager productivity increases as automated matching eliminates administrative search burden, enabling focus on tenant relationships and property operations. Cost optimization occurs through competitive selection and performance accountability encouraging vendor excellence. The operational impact manifests through improved tenant retention from responsive maintenance service, enhanced manager capacity from reduced administrative burden, better vendor relationship development through consistent quality-based assignment, and competitive property positioning through superior maintenance service quality.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "Why is EG the right partner? What differentiates EG?",
+                "criteria": "Property maintenance expertise, vendor capability intelligence, performance tracking sophistication, tenant need interpretation, continuous matching improvement",
+                "focus": "Highlight property management expertise and intelligent performance-based matching that generic directories lack.",
+                "hint_text": "Highlight understanding property maintenance requirements versus generic vendor directories. Contrast performance-based intelligent matching with manual vendor lists. Emphasize tenant need interpretation and vendor capability matching.",
+                "ideal_answer": "The solution delivers superior vendor matching through deep property maintenance expertise, understanding diverse repair and service needs, urgency levels, and quality requirements rather than generic vendor directories requiring manual search. Intelligent matching considers vendor specialties, performance history, availability patterns, geographic coverage, and pricing competitiveness simultaneously rather than simple keyword lookup. Performance tracking creates accountability through comprehensive vendor quality monitoring across completed work, tenant feedback, cost competitiveness, and response reliability. Tenant need interpretation translates maintenance descriptions into appropriate service categories and urgency levels informing matching logic. Continuous learning improves matching as the system understands which vendors excel for specific property types, maintenance categories, and service contexts, delivering property management-specific intelligence rather than generic vendor coordination requiring extensive manual oversight.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail the integration, user journey, and trust mechanisms that ensure user adoption and confidence.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "VP of Technology, Quality Control Directors, Field Operations Managers",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the solution integrate into their existing workflows and systems?",
+                "criteria": "Property management system connectivity, maintenance request integration, vendor network access, tenant portal compatibility, work order synchronization",
+                "focus": "Detail seamless connection to property systems and vendor matching within current workflows.",
+                "hint_text": "Explain integration with property management platforms and tenant request systems. Mention vendor network data and availability verification. Describe work order creation and tracking synchronization.",
+                "ideal_answer": "The platform integrates seamlessly with existing property management systems and tenant portals through standard connectors, automatically accessing maintenance requests, property information, and tenant details without manual data transfer. Vendor network connectivity provides real-time availability verification and capability confirmation. Matched vendor recommendations flow directly into work order creation workflows property managers currently use. Tenant communication integration enables automated status updates as vendors are assigned and work progresses. Work order synchronization ensures completion tracking, quality feedback, and payment processing occur within established property management processes. The architecture supports both routine maintenance and emergency requests with appropriate urgency-based matching, ensuring property managers coordinate vendor services within familiar operational workflows and existing tenant communication channels.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
+                "criteria": "Property manager matching simplicity, tenant communication clarity, vendor assignment transparency, portfolio manager performance visibility, accounting cost tracking",
+                "focus": "Compare simple property manager vendor selection with tenant communication transparency and portfolio performance visibility.",
+                "hint_text": "Describe streamlined vendor recommendations for property managers with quality indicators versus tenant status communication. Explain vendor assignment transparency and portfolio manager performance analytics.",
+                "ideal_answer": "Property managers receive prioritized vendor recommendations for each maintenance request showing specialties, performance ratings, availability, and estimated costs—enabling quick confident selection without extensive research. Tenants see clear communication about assigned vendors, expected timing, and service progress through familiar portal interfaces maintaining transparency. Vendors receive clear assignment details, property access information, and tenant contact enabling efficient service delivery. Portfolio managers view performance analytics across properties showing vendor quality trends, cost patterns, and maintenance response metrics informing strategic vendor relationship decisions. Accounting teams access cost tracking integrated with existing financial systems. Each stakeholder experiences appropriate information and interaction supporting their role in effective maintenance coordination without unnecessary complexity or communication gaps.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
+                "criteria": "Vendor qualification verification, performance rating transparency, manager override authority, feedback incorporation, quality tracking validation",
+                "focus": "Explain vendor qualification transparency and manager selection authority building operational confidence.",
+                "hint_text": "Highlight verification of vendor credentials and qualifications. Describe performance rating basis from historical work quality. Explain manager authority to select different vendors based on situational knowledge.",
+                "ideal_answer": "Every vendor recommendation includes qualification verification showing credentials, insurance coverage, specialty certifications, and licensing appropriate to maintenance requirements. Performance ratings transparently show historical work quality, tenant feedback, cost competitiveness, and response reliability providing evidence-based selection confidence. Property managers retain complete authority to select alternative vendors based on situational knowledge, established relationships, or specific property needs the system cannot fully capture. Feedback incorporation ensures tenant satisfaction and work quality assessments continuously improve vendor performance tracking. Quality tracking validation monitors vendor performance over time, identifying declining service requiring relationship review. Manager control over vendor network inclusion and performance thresholds ensures matching aligns with organizational standards and tenant service expectations, building confidence through transparency, validation, and preserved professional selection authority.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for success, evidence of performance, and the support model for organizational-wide rollout.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, Quality Control Directors, Site Operations Leaders, Safety Managers",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
+                "criteria": "Initial response improvement, portfolio-wide adoption, vendor network optimization, tenant satisfaction transformation, operational efficiency gains",
+                "focus": "Map initial response improvement through adoption toward maintenance service excellence transformation.",
+                "hint_text": "Define progression from pilot property response improvement to portfolio adoption to maintenance service differentiation. Show evolution from tactical vendor coordination to strategic vendor network optimization.",
+                "ideal_answer": "Initial success means validating response time improvements at pilot properties with measurable tenant satisfaction gains, documented manager efficiency benefits, and confidence in vendor matching quality. Expansion involves portfolio-wide adoption with intelligent vendor matching as standard maintenance coordination practice, demonstrated value across diverse property types and maintenance categories. Full maturity represents optimized vendor network management as organizational standard, with performance-based vendor relationships driving service excellence. Leadership reports substantial tenant satisfaction improvement from responsive maintenance service supporting retention, enhanced property manager productivity from eliminated coordination burden, optimized maintenance costs through competitive performance-based vendor selection, and competitive property positioning through superior maintenance service quality attracting and retaining quality tenants, transforming maintenance coordination from administrative burden to strategic service excellence capability differentiating properties in competitive rental markets.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "What evidence do we have that this works for companies like them?",
+                "criteria": "Property management sector validation, portfolio scale similarity, response metrics documentation, tenant satisfaction evidence, cost optimization confirmation",
+                "focus": "Reference comparable property portfolio results and validated tenant satisfaction improvements.",
+                "hint_text": "Mention deployments in similar property portfolios with comparable maintenance volumes. Describe validated response time improvements and satisfaction gains. Reference cost optimization through performance-based vendor selection.",
+                "ideal_answer": "The platform has proven success in property portfolios similar to yours, with documented implementations across residential property managers handling comparable maintenance volumes and vendor coordination complexity. Reference organizations report measurable maintenance response time improvements and tenant satisfaction gains, with outcomes validated through tenant surveys and retention metrics. Property manager productivity improvements are documented through time tracking showing coordination efficiency gains. Cost optimization is confirmed through maintenance expense analysis showing competitive vendor selection benefits. Several property management companies have received recognition for tenant service excellence. Property management references are available to discuss implementation experience, vendor network development approaches, and the tenant satisfaction improvements achieved through intelligent vendor matching eliminating coordination delays and ensuring quality service delivery.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How will we support them through adoption and scale?",
+                "criteria": "Implementation support dedication, property manager training, vendor network setup, performance tracking configuration, satisfaction monitoring reviews",
+                "focus": "Outline dedicated property management support and manager enablement ensuring successful adoption.",
+                "hint_text": "Detail implementation support for system integration and vendor network setup. Describe property manager training on matching usage. Explain continuous vendor performance tracking and satisfaction monitoring.",
+                "ideal_answer": "Your property management team receives dedicated implementation support for system integration with property management platforms and initial vendor network configuration. Vendor network setup assistance helps onboard qualified providers with appropriate credential verification and performance baseline establishment. Comprehensive training prepares property managers to leverage vendor recommendations effectively, provide quality feedback, and handle exceptions appropriately. Performance tracking configuration ensures vendor quality monitoring aligns with organizational service standards and tenant expectations. Continuous vendor network optimization refines matching based on performance outcomes and manager feedback improving selection quality over time. Regular satisfaction reviews track tenant feedback trends, maintenance response metrics, manager efficiency gains, and cost optimization impacts, ensuring leadership visibility into how intelligent vendor matching is transforming maintenance service delivery, improving tenant satisfaction, and supporting competitive property positioning through superior responsive maintenance coordination.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}
