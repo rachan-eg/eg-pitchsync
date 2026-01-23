@@ -18,7 +18,7 @@ services:
       - PYTHONPATH=/app
       - WORKERS=${WORKERS:-4}
       # Higher timeout for long AI calls (Red Team eval can take 30s+)
-      - GUNICORN_TIMEOUT=120
+      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-120}
       # Mode flags
       - DEBUG=${DEBUG:-false}
       - TEST_MODE=${TEST_MODE:-false}

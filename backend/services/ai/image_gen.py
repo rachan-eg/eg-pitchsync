@@ -103,14 +103,21 @@ def overlay_logos(image_path: str, logos: list, padding: int = 30, logo_height: 
                 logo = Image.open(logo_path).convert("RGBA")
                 original_width, original_height = logo.size
                 
-                # Default scale
+                # Default scale with smart aspect ratio adjustment
+                aspect = original_width / original_height
                 current_target_height = logo_height
                 
-                # Specific overrides
+                # Auto-scale wide logos to maintain visibility
+                if aspect > 2.5:
+                    current_target_height = int(logo_height * 1.4)
+                elif aspect > 1.5:
+                    current_target_height = int(logo_height * 1.2)
+                
+                # Specific mission-critical overrides
                 if "Construction.png" in logo_path.name:
-                    current_target_height = int(logo_height * 1.8) # 80% bigger
-                elif "EGDK logo.png" in logo_path.name:
-                    current_target_height = int(logo_height * 1.2) # Slightly bigger for main logo too
+                    current_target_height = int(logo_height * 1.8)
+                elif "EG-Sasha.png" in logo_path.name:
+                    current_target_height = int(logo_height * 1.5)
                 
                 # Calculate new dimensions preserving aspect ratio
                 aspect = original_width / original_height

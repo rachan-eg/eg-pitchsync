@@ -59,6 +59,11 @@
             "team_name": "Growth Ops",
             "usecase_id": "professional_services_onboarding_optimizer",
             "description": "Professional Services Onboarding team"
+        },
+        "SASHA26": {
+            "team_name": "Sasha AI",
+            "usecase_id": "ai_support_bot",
+            "description": "AI Support Bot team"
         }
     }
 }

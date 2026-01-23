@@ -318,6 +318,10 @@ def generate_customer_image_prompt(
     usecase_domain = usecase.get('domain', 'Technology')
     target_market = usecase.get('target_market', 'Businesses')
     brand_colors = _load_brand_colors(usecase, theme)
+    
+    # Extract theme metadata for curative alignment
+    theme_mood = theme.get('mood', 'Professional, Modern') if isinstance(theme, dict) else 'Professional, Modern'
+    theme_style = theme.get('visual_style', 'Clean, high-fidelity') if isinstance(theme, dict) else 'Clean, high-fidelity'
 
     refinement_instruction = ""
     if additional_notes:
@@ -341,12 +345,12 @@ This MUST be prominently reflected in the visual.
     if USE_ORGANIC_CURATOR:
         prompt = _build_organic_curator_prompt(
             raw_qa_context, usecase_title, usecase_domain, target_market,
-            brand_colors, refinement_instruction
+            brand_colors, refinement_instruction, theme_mood, theme_style
         )
     else:
         prompt = _build_classic_curator_prompt(
             phase_summaries, usecase_title, usecase_domain, target_market,
-            brand_colors, refinement_instruction
+            brand_colors, refinement_instruction, theme_mood, theme_style
         )
 
     # Use Claude Sonnet 4.5 for creative image prompt generation
@@ -413,7 +417,9 @@ def _build_organic_curator_prompt(
     usecase_domain: str,
     target_market: str,
     brand_colors: str,
-    refinement_instruction: str
+    refinement_instruction: str,
+    theme_mood: str = "Modern",
+    theme_style: str = "High-fidelity"
 ) -> str:
     """
     ORGANIC CURATOR PROMPT (New Approach)
@@ -433,6 +439,8 @@ Your task: Read the participant's Q&A responses below, deeply understand their I
 Product/Concept: "{usecase_title}"
 Domain: {usecase_domain}
 Target Audience: {target_market}
+Brand Mood: {theme_mood}
+Visual Style Guide: {theme_style}
 {refinement_instruction}
 
 === BRAND COLORS (Must Use) ===
@@ -492,7 +500,9 @@ def _build_classic_curator_prompt(
     usecase_domain: str,
     target_market: str,
     brand_colors: str,
-    refinement_instruction: str
+    refinement_instruction: str,
+    theme_mood: str = "Modern",
+    theme_style: str = "High-fidelity"
 ) -> str:
     """
     CLASSIC CURATOR PROMPT (Original Approach)
@@ -547,6 +557,8 @@ This is NON-NEGOTIABLE - always specify "16:9 aspect ratio" in the prompt.
 PRODUCT NAME: "{usecase_title}"
 DOMAIN: {usecase_domain}
 TARGET MARKET: {target_market}
+BRAND MOOD: {theme_mood}
+VISUAL STYLE: {theme_style}
 
 === SYNTHESIZED STORY FROM Q&A ===
 {story_summary}

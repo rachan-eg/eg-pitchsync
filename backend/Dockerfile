@@ -12,6 +12,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
   build-essential \
   curl \
+  libjpeg-dev \
+  zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # Set python path
@@ -35,7 +37,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Default to 4 workers for production, can be overridden in docker-compose
 ENV WORKERS=4
-ENV GUNICORN_TIMEOUT=120
+ENV GUNICORN_TIMEOUT=180
 
 # Command to run the application using Gunicorn for robust process management
 # -w: Number of worker processes

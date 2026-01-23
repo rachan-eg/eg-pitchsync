@@ -156,17 +156,47 @@ def format_duration(seconds: float) -> str:
 
 
 class DarkThemeReportGenerator:
-    """Updated Dark Theme Generator with Font Support"""
+    """Updated Dark Theme Generator with Font Support - Now Fully Dynamic"""
     
     def __init__(self, session: SessionState):
         self.session = session
         self.team_id = session.team_id
-        register_custom_fonts()  # Ensure fonts are tried
+        
+        # Load Dynamic Colors from Session Theme
+        theme = session.theme_palette or {}
+        theme_colors = theme.get('colors', {})
+        
+        self.primary_color = colors.HexColor(theme_colors.get('primary', "#a78bfa"))
+        self.secondary_color = colors.HexColor(theme_colors.get('secondary', "#3b82f6"))
+        self.accent_color = colors.HexColor(theme_colors.get('accent', "#f472b6"))
+        self.bg_color = colors.HexColor(theme_colors.get('bg_pdf', "#050508")) if 'bg_pdf' in theme_colors else BG_DARK
+        
+        # Dynamic Logo Discovery
+        self.logo_path = self._discover_logo()
+        
+        register_custom_fonts()
         self.styles = self._create_styles()
         self.section_counter = 0
         self.subsection_counter = 0
         self.figure_counter = 0
         self.table_counter = 0
+
+    def _discover_logo(self) -> Optional[Path]:
+        """Find the best logo for this usecase."""
+        usecase_id = self.session.usecase.get('id')
+        if not usecase_id:
+            return None
+            
+        logo_dir = settings.BACKEND_DIR / "vault" / usecase_id / "logo"
+        if logo_dir.exists():
+            # Try to find Sasha or specific logos first, then any PNG
+            for pattern in ["EG-Sasha.png", "EGDK logo.png", "*.png", "*.jpg"]:
+                for logo_file in logo_dir.glob(pattern):
+                    return logo_file
+        
+        # Fallback to the global default if specific mission logo not found
+        fallback = settings.BACKEND_DIR / "vault" / "construction_ai_deviation" / "logo" / "EGDK logo.png"
+        return fallback if fallback.exists() else None
 
     def _get_tier_info(self, score: int) -> Tuple[str, str, colors.Color]:
         if score >= 900: return "S-TIER", "Exceptional", TIER_S
@@ -211,7 +241,7 @@ class DarkThemeReportGenerator:
             fontName=HEADER_FONT,
             fontSize=14,
             leading=18,
-            textColor=PRIMARY,
+            textColor=self.primary_color,
             spaceBefore=14,
             spaceAfter=8
         )
@@ -278,7 +308,7 @@ class DarkThemeReportGenerator:
             fontName=HEADER_FONT,
             fontSize=36,
             leading=40,
-            textColor=PRIMARY,
+            textColor=self.primary_color,
             alignment=TA_CENTER
         )
         
@@ -321,7 +351,7 @@ class DarkThemeReportGenerator:
             fontName=ITALIC_FONT,
             fontSize=12,
             leading=16,
-            textColor=PRIMARY,
+            textColor=self.primary_color,
             alignment=TA_CENTER,
             leftIndent=20,
             rightIndent=20
@@ -361,7 +391,7 @@ class DarkThemeReportGenerator:
     # =========================================================================
     def _draw_dark_background(self, canvas):
         """Draw the solid single-toned dark background."""
-        canvas.setFillColor(BG_DARK)
+        canvas.setFillColor(self.bg_color)
         canvas.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, fill=1, stroke=0)
 
     def _draw_header(self, canvas, doc):
@@ -381,9 +411,9 @@ class DarkThemeReportGenerator:
         
         # 1. Draw EG Logo (PNG) on the LEFT
         logo_cursor_x = MARGIN
-        if LOGO_PATH.exists():
+        if self.logo_path and self.logo_path.exists():
             try:
-                canvas.drawImage(str(LOGO_PATH), logo_cursor_x, logo_y, width=logo_size, height=logo_size, mask='auto', preserveAspectRatio=True)
+                canvas.drawImage(str(self.logo_path), logo_cursor_x, logo_y, width=logo_size, height=logo_size, mask='auto', preserveAspectRatio=True)
                 logo_cursor_x += logo_size + 0.35*cm
             except Exception: pass
 
@@ -402,7 +432,7 @@ class DarkThemeReportGenerator:
             text_y_main = header_y + header_height/2 + 0.05*cm
             text_y_sub = header_y + header_height/2 - 0.30*cm
             
-            canvas.setFillColor(PRIMARY)
+            canvas.setFillColor(self.primary_color)
             canvas.setFont(h_font, 12)
             canvas.drawString(text_x, text_y_main, "PITCH")
             
@@ -457,7 +487,7 @@ class DarkThemeReportGenerator:
 
     def _create_stat_metric(self, label: str, value: str, color: colors.Color = None) -> List:
         """Create a naked stat metric (no box)."""
-        c = color or PRIMARY
+        c = color or self.primary_color
         return [
             Paragraph(label, self.styles["Label"]),
             Spacer(1, 0.1*cm),
@@ -469,7 +499,7 @@ class DarkThemeReportGenerator:
         table = Table(data, colWidths=col_widths)
         
         style_commands = [
-            ('BACKGROUND', (0, 0), (-1, -1), BG_DARK),
+            ('BACKGROUND', (0, 0), (-1, -1), self.bg_color),
             ('TEXTCOLOR', (0, 0), (-1, -1), TEXT_SECONDARY),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -481,7 +511,7 @@ class DarkThemeReportGenerator:
         ]
         
         if has_header and len(data) > 1:
-            style_commands.append(('BACKGROUND', (0, 0), (-1, 0), BG_DARK))
+            style_commands.append(('BACKGROUND', (0, 0), (-1, 0), self.bg_color))
             style_commands.append(('TEXTCOLOR', (0, 0), (-1, 0), TEXT_PRIMARY))
             style_commands.append(('LINEBELOW', (0, 0), (-1, 0), 1, BORDER_LIGHT))
         table.setStyle(TableStyle(style_commands))
@@ -490,7 +520,7 @@ class DarkThemeReportGenerator:
     def _create_section_header(self, title: str) -> List:
         elements = []
         elements.append(Paragraph(title, self.styles["H1"]))
-        line = HRFlowable(width="35%", thickness=4, color=PRIMARY, spaceBefore=0, spaceAfter=12, hAlign='LEFT')
+        line = HRFlowable(width="35%", thickness=4, color=self.primary_color, spaceBefore=0, spaceAfter=12, hAlign='LEFT')
         elements.append(line)
         return elements
 
@@ -548,7 +578,7 @@ class DarkThemeReportGenerator:
             [
                 Paragraph("PURSUIT SCORE", self.styles["Label"]),
                 Spacer(1, 0.2*cm),
-                Paragraph(f'<font color="{PRIMARY.hexval()}" size="42">{score}</font>', self.styles["MetricLarge"])
+                Paragraph(f'<font color="{self.primary_color.hexval()}" size="42">{score}</font>', self.styles["MetricLarge"])
             ],
             [
                 Paragraph("PERFORMANCE TIER", self.styles["Label"]),
@@ -582,10 +612,10 @@ class DarkThemeReportGenerator:
         total_tokens = self.session.total_tokens + self.session.extra_ai_tokens
         
         metrics_data = [[
-            self._create_stat_metric("PHASES", str(phase_count), SECONDARY),
+            self._create_stat_metric("PHASES", str(phase_count), self.secondary_color),
             self._create_stat_metric("RETRIES", str(total_retries), WARNING),
             self._create_stat_metric("DURATION", format_duration(total_dur), INFO),
-            self._create_stat_metric("TOKENS", f"{total_tokens:,}", PRIMARY)
+            self._create_stat_metric("TOKENS", f"{total_tokens:,}", self.primary_color)
         ]]
         
         metrics_row = Table(metrics_data, colWidths=[4.1*cm, 4.1*cm, 4.1*cm, 4.1*cm])
@@ -601,7 +631,7 @@ class DarkThemeReportGenerator:
         
         phases_passed = sum(1 for p in self.session.phases.values() if p.status == PhaseStatus.PASSED)
         overview_text = (
-            f'Team achieved <font color="{PRIMARY.hexval()}"><b>{score}/1000</b></font> points, '
+            f'Team achieved <font color="{self.primary_color.hexval()}"><b>{score}/1000</b></font> points, '
             f'completing <b>{phases_passed}/{phase_count}</b> phases successfully. '
             f'Performance tier: <font color="{tier_color.hexval()}"><b>{tier}</b></font> ({tier_desc}).'
         )
@@ -839,7 +869,7 @@ class DarkThemeReportGenerator:
                     vis_score = int(self.session.final_output.visual_score * 100)
                     if vis_score > 0:
                         vis_text = (
-                            f'Alignment Score: <font color="{PRIMARY.hexval()}"><b>{vis_score}%</b></font> | '
+                            f'Alignment Score: <font color="{self.primary_color.hexval()}"><b>{vis_score}%</b></font> | '
                             f'Assessment: <b>{clean_text(self.session.final_output.visual_alignment or "N/A")}</b>'
                         )
                         visual_block.append(Paragraph(vis_text, self.styles["Body"]))

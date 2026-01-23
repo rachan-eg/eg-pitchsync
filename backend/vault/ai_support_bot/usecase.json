@@ -1,0 +1,9 @@
+{
+    "id": "ai_support_bot",
+    "title": "AI Support Bot",
+    "domain": "Customer Service",
+    "complexity": "Medium",
+    "target_market": "SaaS Companies, E-commerce, Enterprises",
+    "theme_id": "modern_sleek",
+    "description": "An intelligent AI support bot that automates customer queries, provides personalized assistance, and integrates with existing CRM systems."
+}

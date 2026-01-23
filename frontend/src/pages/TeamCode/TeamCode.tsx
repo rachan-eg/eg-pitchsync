@@ -3,8 +3,9 @@
  * Users enter their team code to link to a predefined team and usecase.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../providers';
 import { Branding } from '../../components/Branding/Branding';
 import './TeamCode.css';
@@ -26,6 +27,8 @@ export const TeamCode: React.FC = () => {
     const [isValidating, setIsValidating] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const passwordInputRef = useRef<HTMLInputElement>(null);
 
     // Handle code input change
     const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,6 +41,25 @@ export const TeamCode: React.FC = () => {
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setAdminPassword(e.target.value);
         setError(null);
+    };
+
+    const togglePasswordVisibility = (e: React.MouseEvent) => {
+        e.preventDefault();
+
+        const input = passwordInputRef.current;
+        if (!input) return;
+
+        // Capture cursor position before toggle
+        const selectionStart = input.selectionStart;
+        const selectionEnd = input.selectionEnd;
+
+        setShowPassword(!showPassword);
+
+        // Restore focus and cursor position in next frame
+        requestAnimationFrame(() => {
+            input.focus();
+            input.setSelectionRange(selectionStart, selectionEnd);
+        });
     };
 
     // Handle form submission
@@ -139,10 +161,17 @@ export const TeamCode: React.FC = () => {
                             </svg>
                         </div>
                         <h2 className="success-title">Verification Successful</h2>
-                        <div className="success-details">
-                            <p className="team-name">{teamCodeInfo?.teamName}</p>
-                            <p className="team-description">{teamCodeInfo?.description}</p>
-                        </div>
+                        {teamCodeInfo ? (
+                            <div className="success-details">
+                                <p className="team-name">{teamCodeInfo.teamName}</p>
+                                <p className="team-description">{teamCodeInfo.description}</p>
+                            </div>
+                        ) : (
+                            <div className="success-details">
+                                <p className="team-name">ADMINISTRATOR</p>
+                                <p className="team-description">Command Access Granted</p>
+                            </div>
+                        )}
                         <div className="success-loader">
                             <div className="loader-bar"></div>
                         </div>
@@ -161,8 +190,8 @@ export const TeamCode: React.FC = () => {
                                 {showAdminLogin ? 'Admin Authorization' : 'Mission Access'}
                             </h1>
                             <p className="teamcode-subtitle">
-                                {showAdminLogin 
-                                    ? 'Enter the administrative override password to access the command dashboard.' 
+                                {showAdminLogin
+                                    ? 'Enter the administrative override password to access the command dashboard.'
                                     : 'Enter your designated squad authorization code to proceed to the briefings.'}
                             </p>
                         </div>
@@ -170,15 +199,28 @@ export const TeamCode: React.FC = () => {
                         <form className="teamcode-form" onSubmit={handleSubmit}>
                             <div className="input-group reactive-border reactive-border--subtle">
                                 {showAdminLogin ? (
-                                    <input
-                                        type="password"
-                                        className={`teamcode-input ${error ? 'error' : ''}`}
-                                        placeholder="••••••••"
-                                        value={adminPassword}
-                                        onChange={handlePasswordChange}
-                                        autoFocus
-                                        disabled={isValidating}
-                                    />
+                                    <div className="password-input-wrapper">
+                                        <input
+                                            ref={passwordInputRef}
+                                            type={showPassword ? "text" : "password"}
+                                            className={`teamcode-input ${error ? 'error' : ''}`}
+                                            placeholder="••••••••"
+                                            value={adminPassword}
+                                            onChange={handlePasswordChange}
+                                            autoFocus
+                                            disabled={isValidating}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="password-toggle-btn"
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={togglePasswordVisibility}
+                                            tabIndex={-1}
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                        </button>
+                                    </div>
                                 ) : (
                                     <input
                                         type="text"
@@ -218,9 +260,9 @@ export const TeamCode: React.FC = () => {
                             </button>
 
                             {showAdminLogin && (
-                                <button 
-                                    type="button" 
-                                    className="btn-link" 
+                                <button
+                                    type="button"
+                                    className="btn-link"
                                     style={{ marginTop: '1rem', width: '100%', opacity: 0.7 }}
                                     onClick={() => {
                                         setShowAdminLogin(false);

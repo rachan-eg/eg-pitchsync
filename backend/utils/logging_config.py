@@ -26,23 +26,16 @@ def setup_logging():
     # Determine log level
     log_level = logging.DEBUG if settings.DEBUG else logging.INFO
     
-    # Create formatter
-    formatter = logging.Formatter(
-        fmt='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+    # Configure root logger with force=True to wipe out any existing handlers (like uvicorn's defaults)
+    logging.basicConfig(
+        format='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        level=log_level,
+        stream=sys.stdout,
+        force=True
     )
     
-    # Console handler
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(formatter)
-    console_handler.setLevel(log_level)
-    
-    # Configure root logger
-    root_logger = logging.getLogger()
-    root_logger.setLevel(log_level)
-    root_logger.addHandler(console_handler)
-    
-    # Configure specific loggers
+    # Configure specific loggers for fine-grained control
     loggers_config = {
         "pitchsync": log_level,
         "pitchsync.api": log_level,
@@ -50,6 +43,7 @@ def setup_logging():
         "pitchsync.db": log_level,
         "pitchsync.image": log_level,
         "pitchsync.resilience": log_level,
+        "backend": log_level,  # Explicitly cover our services
         # Reduce noise from third-party libraries
         "uvicorn": logging.WARNING,
         "uvicorn.access": logging.WARNING,
@@ -60,10 +54,7 @@ def setup_logging():
     }
     
     for logger_name, level in loggers_config.items():
-        logger = logging.getLogger(logger_name)
-        logger.setLevel(level)
-        if not logger.handlers:
-            logger.addHandler(console_handler)
+        logging.getLogger(logger_name).setLevel(level)
     
     # Log startup
     startup_logger = logging.getLogger("pitchsync")

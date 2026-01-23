@@ -1,0 +1,14 @@
+{
+    "id": "modern_sleek",
+    "name": "Modern Sleek",
+    "mood": "Professional, Corporate, Secure",
+    "visual_style": "Clean interfaces, vibrant blue accents, standard corporate typography, high-contrast layouts",
+    "colors": {
+        "primary": "#2563EB",
+        "secondary": "#004792",
+        "bg": "#F8FAFC",
+        "success": "#10B981",
+        "error": "#EF4444",
+        "warning": "#F59E0B"
+    }
+}

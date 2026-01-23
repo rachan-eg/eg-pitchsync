@@ -1,0 +1,113 @@
+{
+    "1": {
+        "id": "phase_1",
+        "name": "Phase 1: Market Fit & Strategy",
+        "description": "Define the critical pain points in customer support and how your AI bot provides a unique, scalable solution.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "Director of Customer Success, COO, Product Manager, Support Leads",
+        "questions": [
+            {
+                "id": "q1_1",
+                "text": "What is the primary customer friction point this AI Support Bot solves?",
+                "criteria": "Response lag times, high cost of human agents, repetitive query fatigue, lack of 24/7 coverage, inconsistent information",
+                "focus": "Identify how human support teams are overwhelmed by high-volume, repetitive queries.",
+                "hint_text": "Mention long wait times and the cost of scaling human teams. Explain how many support questions are repetitive and don't require human empathy.",
+                "ideal_answer": "Companies struggle with high support volumes that lead to long customer wait times and high operational costs. Human teams are often bogged down by repetitive 'Level 1' queries like password resets or order status checks, which leads to burnout and prevents agents from handling complex issues. 24/7 coverage is expensive to maintain globally. Our AI support bot eliminates these bottlenecks by instantly resolving repetitive queries, freeing up human agents for high-value interactions and providing consistent, accurate information around the clock without increasing headcount.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_2",
+                "text": "How does this solution impact the customer's bottom line immediately?",
+                "criteria": "Cost-per-ticket reduction, deflection rate, agent productivity, CSAT scores, churn reduction",
+                "focus": "Quantify efficiency gains through automated ticket deflection.",
+                "hint_text": "Focus on ticket deflection rates. Mention lowering the cost-per-interaction. Explain the correlation between instant responses and customer retention.",
+                "ideal_answer": "The AI bot delivers an immediate ROI by deflecting up to 60-80% of routine tickets, which significantly lowers the cost-per-interaction. By resolving issues instantly, CSAT (Customer Satisfaction) scores rise while churn decreases due to improved service speed. Human agents become more productive as they focus only on complex cases. Within the first month, companies see a measurable decrease in support overhead and faster overall resolution cycles, allowing the support organization to scale without a linear increase in budget.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q1_3",
+                "text": "What makes your AI superior to simple, older rule-based chatbots?",
+                "criteria": "Natural Language Understanding (NLU), context awareness, multi-turn dialogue, CRM integration, sentiment analysis",
+                "focus": "Highlight the transition from rigid scripts to fluid, context-aware AI conversations.",
+                "hint_text": "Compare scripted 'if-this-then-that' bots with modern LLM-powered interfaces. Mention the ability to understand nuanced intent and emotional context.",
+                "ideal_answer": "Unlike traditional rule-based chatbots that rely on rigid scripts and often frustrate users with 'unknown command' errors, our solution uses advanced Natural Language Understanding (NLU) to handle nuanced intent and multi-turn conversations. It maintains context throughout a dialogue, understands emotional sentiment to prioritize urgent cases, and integrates with CRM systems to provide personalized answers based on user history. It doesn't just match keywords; it understands the customer's problem and solves it in a human-like, conversational manner.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "2": {
+        "id": "phase_2",
+        "name": "Phase 2: Product & Experience",
+        "description": "Detail how the bot integrates with current tools and how it ensures a seamless handover to human agents.",
+        "weight": 0.3,
+        "time_limit_seconds": 600,
+        "contributors": "Head of Engineering, UI/UX Lead, Support Operations Manager",
+        "questions": [
+            {
+                "id": "q2_1",
+                "text": "How does the bot integrate with existing support stacks like Zendesk, Salesforce, or Intercom?",
+                "criteria": "API connectivity, bidirectional sync, ticket creation, user profile enrichment, knowledge base ingestion",
+                "focus": "Describe the bot as a seamless layer on top of existing data and workflows.",
+                "hint_text": "Explain how the bot reads current help documentation and writes data back to the CRM. Mention that no new dashboard is needed for agents.",
+                "ideal_answer": "The bot integrates via native APIs with platforms like Zendesk or Salesforce, instantly ingesting existing knowledge base articles to learn how to answer questions. It performs bidirectional syncing, updating user profiles in real-time and creating tickets for unresolved issues so human agents have a full transcript of the AI interaction. This 'plug-and-play' approach ensures that the support team doesn't need to change their existing tools or dashboards to benefit from the AI.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_2",
+                "text": "What is the experience when the AI reaches its limit and needs a human?",
+                "criteria": "Graceful handover, context preservation, agent briefing, escalation priority, seamless transition",
+                "focus": "Ensure the handoff to a human feels helpful, not like a restart.",
+                "hint_text": "Describe how the agent receives a summary of the AI conversation. Emphasize that the customer shouldn't have to repeat themselves.",
+                "ideal_answer": "When the bot detects a complex issue or high frustration, it triggers a 'graceful handover' to a live agent. The agent receives a concise summary of the conversation and the specific problem, allowing them to step in with full context. For the customer, the transition is seamless—they stay in the same window and don't have to repeat information. This 'human-in-the-loop' strategy ensures that technology never becomes a barrier to resolution for sensitive or high-stakes queries.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q2_3",
+                "text": "How do you ensure the AI doesn't hallucinate or give wrong advice?",
+                "criteria": "Knowledge base grounding (RAG), human-verified responses, confidence thresholds, feedback loops, guardrails",
+                "focus": "Explain the technical safety measures ensuring accurate information.",
+                "hint_text": "Mention Retrieval-Augmented Generation (RAG). Explain how the bot only speaks from verified documentation and flags low-confidence answers for review.",
+                "ideal_answer": "We use Retrieval-Augmented Generation (RAG) to ground the AI in the company's verified documentation, ensuring it only provides answers based on official facts. If a query falls outside the knowledge base or triggers a low confidence score, the bot is programmed to escalate to a human rather than guess. Continuous feedback loops allow support leads to review AI-generated answers and 'teach' the system, creating a constantly improving circle of accuracy and safety.",
+                "hint_penalty": 25
+            }
+        ]
+    },
+    "3": {
+        "id": "phase_3",
+        "name": "Phase 3: Execution & Scale",
+        "description": "Outline the roadmap for deployment and how the AI scales across languages and departments.",
+        "weight": 0.4,
+        "time_limit_seconds": 600,
+        "contributors": "CEO, CFO, Head of International Expansion, CTO",
+        "questions": [
+            {
+                "id": "q3_1",
+                "text": "What is the milestones for a 12-month rollout across a global enterprise?",
+                "criteria": "Pilot phase, knowledge base audit, multi-language expansion, cross-department rollout, full automation target",
+                "focus": "Map the journey from a single department pilot to a company-wide standard.",
+                "hint_text": "Break down the timeline from day 1 to day 360. Mention going from English-only to multi-lingual support.",
+                "ideal_answer": "The rollout begins with a 30-day pilot in a single department to validate deflection rates and CSAT. By 90 days, we expand to all core customer support teams and integrate full multi-lingual capabilities. At 6 months, we roll the bot out to internal departments like HR and IT helpdesks. By 12 months, the AI is the unified interface for all support queries across the enterprise, achieving a target deflection rate of 75% and freeing significant budget for strategic initiatives.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_2",
+                "text": "How does the bot adapt to new product launches or policy changes?",
+                "criteria": "Real-time updates, instant learning, batch processing, automated training, delta updates",
+                "focus": "Show that the AI is dynamic and never goes out of date.",
+                "hint_text": "Explain how syncing a new PDF or help article updates the bot instantly. Contrast this with the weeks of training needed for human teams.",
+                "ideal_answer": "Our AI is built for agility. When a new product is launched or a policy changes, simply updating the connected knowledge base or uploading a new spec sheet updates the bot's 'brain' instantly. There is no downtime for retraining. This allows the bot to support new features on day one, whereas human teams might require days or weeks of training sessions. The system can even proactively suggest updates to help articles based on common questions it couldn't answer.",
+                "hint_penalty": 25
+            },
+            {
+                "id": "q3_3",
+                "text": "How do we measure success beyond just 'money saved'?",
+                "criteria": "Customer effort score, agent churn reduction, proactive resolution, brand perception, scalability index",
+                "focus": "Value the qualitative impact on the workforce and brand identity.",
+                "hint_text": "Focus on the 'Human Experience.' Mention how staff turnover drops because agents are happier. Discuss how being 'instantly helpful' improves brand loyalty.",
+                "ideal_answer": "True success includes a dramatic reduction in agent churn; by removing the soul-crushing repetitive work, job satisfaction among support staff increases. We also track 'Customer Effort Score'—how easy it was for them to get help. Being 'instantly helpful' at 3 AM builds immense brand trust and loyalty. Finally, we measure scalability: the ability to handle a 10x surge in holiday traffic without hiring a single extra person. We are moving support from a cost center to a brand-building asset.",
+                "hint_penalty": 25
+            }
+        ]
+    }
+}
