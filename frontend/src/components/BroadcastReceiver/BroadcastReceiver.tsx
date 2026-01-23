@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getApiUrl } from '../../utils';
+import { playBroadcastReceivedSound } from '../../utils/audio';
 
 interface BroadcastMessage {
     message: string;
@@ -41,6 +42,7 @@ export const BroadcastReceiver: React.FC = () => {
                         setLastSeenId(data.id);
                         localStorage.setItem('pitch_sync_last_broadcast_id', data.id.toString());
                         setIsVisible(true);
+                        playBroadcastReceivedSound();
 
                         // Dynamic duration: 100ms per character, min 5s, max 15s
                         const duration = Math.min(15000, Math.max(5000, data.message.length * 100));

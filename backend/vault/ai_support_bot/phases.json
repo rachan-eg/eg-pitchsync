@@ -9,7 +9,7 @@
         "questions": [
             {
                 "id": "q1_1",
-                "text": "What is the primary customer friction point this AI Support Bot solves?",
+                "text": "What specific pain point are we solving that the customer cannot efficiently address today?",
                 "criteria": "Response lag times, high cost of human agents, repetitive query fatigue, lack of 24/7 coverage, inconsistent information",
                 "focus": "Identify how human support teams are overwhelmed by high-volume, repetitive queries.",
                 "hint_text": "Mention long wait times and the cost of scaling human teams. Explain how many support questions are repetitive and don't require human empathy.",
@@ -18,7 +18,7 @@
             },
             {
                 "id": "q1_2",
-                "text": "How does this solution impact the customer's bottom line immediately?",
+                "text": "What measurable value will the customer realize, and how quickly?",
                 "criteria": "Cost-per-ticket reduction, deflection rate, agent productivity, CSAT scores, churn reduction",
                 "focus": "Quantify efficiency gains through automated ticket deflection.",
                 "hint_text": "Focus on ticket deflection rates. Mention lowering the cost-per-interaction. Explain the correlation between instant responses and customer retention.",
@@ -27,7 +27,7 @@
             },
             {
                 "id": "q1_3",
-                "text": "What makes your AI superior to simple, older rule-based chatbots?",
+                "text": "Why is EG the right partner? What differentiates EG?",
                 "criteria": "Natural Language Understanding (NLU), context awareness, multi-turn dialogue, CRM integration, sentiment analysis",
                 "focus": "Highlight the transition from rigid scripts to fluid, context-aware AI conversations.",
                 "hint_text": "Compare scripted 'if-this-then-that' bots with modern LLM-powered interfaces. Mention the ability to understand nuanced intent and emotional context.",
@@ -46,7 +46,7 @@
         "questions": [
             {
                 "id": "q2_1",
-                "text": "How does the bot integrate with existing support stacks like Zendesk, Salesforce, or Intercom?",
+                "text": "How does the solution integrate into their existing workflows and systems?",
                 "criteria": "API connectivity, bidirectional sync, ticket creation, user profile enrichment, knowledge base ingestion",
                 "focus": "Describe the bot as a seamless layer on top of existing data and workflows.",
                 "hint_text": "Explain how the bot reads current help documentation and writes data back to the CRM. Mention that no new dashboard is needed for agents.",
@@ -55,7 +55,7 @@
             },
             {
                 "id": "q2_2",
-                "text": "What is the experience when the AI reaches its limit and needs a human?",
+                "text": "What does the user experience look like for different stakeholders or personas at the customer?",
                 "criteria": "Graceful handover, context preservation, agent briefing, escalation priority, seamless transition",
                 "focus": "Ensure the handoff to a human feels helpful, not like a restart.",
                 "hint_text": "Describe how the agent receives a summary of the AI conversation. Emphasize that the customer shouldn't have to repeat themselves.",
@@ -64,7 +64,7 @@
             },
             {
                 "id": "q2_3",
-                "text": "How do you ensure the AI doesn't hallucinate or give wrong advice?",
+                "text": "What safeguards and controls give them confidence in the AI's outputs?",
                 "criteria": "Knowledge base grounding (RAG), human-verified responses, confidence thresholds, feedback loops, guardrails",
                 "focus": "Explain the technical safety measures ensuring accurate information.",
                 "hint_text": "Mention Retrieval-Augmented Generation (RAG). Explain how the bot only speaks from verified documentation and flags low-confidence answers for review.",
@@ -83,7 +83,7 @@
         "questions": [
             {
                 "id": "q3_1",
-                "text": "What is the milestones for a 12-month rollout across a global enterprise?",
+                "text": "What does success look like at 90 days, 6 months, and 12 months?",
                 "criteria": "Pilot phase, knowledge base audit, multi-language expansion, cross-department rollout, full automation target",
                 "focus": "Map the journey from a single department pilot to a company-wide standard.",
                 "hint_text": "Break down the timeline from day 1 to day 360. Mention going from English-only to multi-lingual support.",
@@ -92,7 +92,7 @@
             },
             {
                 "id": "q3_2",
-                "text": "How does the bot adapt to new product launches or policy changes?",
+                "text": "What evidence do we have that this works for companies like them?",
                 "criteria": "Real-time updates, instant learning, batch processing, automated training, delta updates",
                 "focus": "Show that the AI is dynamic and never goes out of date.",
                 "hint_text": "Explain how syncing a new PDF or help article updates the bot instantly. Contrast this with the weeks of training needed for human teams.",
@@ -101,7 +101,7 @@
             },
             {
                 "id": "q3_3",
-                "text": "How do we measure success beyond just 'money saved'?",
+                "text": "How will we support them through adoption and scale?",
                 "criteria": "Customer effort score, agent churn reduction, proactive resolution, brand perception, scalability index",
                 "focus": "Value the qualitative impact on the workforce and brand identity.",
                 "hint_text": "Focus on the 'Human Experience.' Mention how staff turnover drops because agents are happier. Discuss how being 'instantly helpful' improves brand loyalty.",

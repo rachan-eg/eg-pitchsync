@@ -4,6 +4,7 @@ Final pitch generation endpoint.
 Optimized for multi-user concurrency with async AI calls.
 """
 
+import logging
 import json
 import hashlib
 from datetime import datetime, timezone
@@ -24,6 +25,8 @@ from backend.services.ai import (
     evaluate_visual_asset_async,
     get_client
 )
+
+logger = logging.getLogger("pitchsync.api")
 
 router = APIRouter(prefix="/api", tags=["synthesis"])
 
@@ -56,8 +59,6 @@ async def prepare_synthesis(req: PrepareSynthesisRequest):
 @router.post("/final-synthesis", response_model=FinalSynthesisResponse)
 async def final_synthesis(req: FinalSynthesisRequest):
     """Generate final pitch with visionary hook and image (async for multi-user)."""
-    import logging
-    logger = logging.getLogger("pitchsync.api")
     
     session = get_session(req.session_id)
     if not session:
@@ -168,8 +169,6 @@ async def curate_prompt(req: PrepareSynthesisRequest):
     except TimeoutError as e:
         raise HTTPException(status_code=504, detail=str(e))
     except Exception as e:
-        import logging
-        logger = logging.getLogger("pitchsync.api")
         logger.error(f"❌ Prompt curation failed: {e}")
         
         # Provide fallback prompt

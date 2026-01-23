@@ -11,7 +11,10 @@ import { Branding } from '../../components/Branding/Branding';
 import { VirtualList } from '../../components/VirtualList/VirtualList';
 import { getApiUrl, getFullUrl } from '../../utils';
 import type { LeaderboardEntry, SessionState, PitchSubmission } from '../../types';
+import { useVoiceInput } from '../../hooks/useVoiceInput';
+import { appendTranscript } from '../../utils/transcriptParser';
 import './AdminDashboard.css';
+import { playBroadcastSound } from '../../utils/audio';
 
 interface TeamData {
     session_id: string;
@@ -53,6 +56,21 @@ export const AdminDashboard: React.FC = () => {
 
     // Search
     const [searchQuery, setSearchQuery] = useState('');
+
+    // --- VOICE INPUT ---
+    const {
+        state: voiceState,
+        toggle: toggleVoice,
+        stop: stopVoice,
+        volume: voiceVolume,
+    } = useVoiceInput({
+        lang: 'en-IN',
+        onFinalSegment: (text, pauseDuration) => {
+            setBroadcastMsg(prev => appendTranscript(prev, text, pauseDuration));
+        }
+    });
+
+    const isListening = voiceState === 'listening' || voiceState === 'requesting';
 
     // Welcome Toast
     useEffect(() => {
@@ -132,6 +150,8 @@ export const AdminDashboard: React.FC = () => {
         }
     }, [adminToken]);
 
+
+
     // Send Broadcast
     const handleSendBroadcast = async () => {
         if (!broadcastMsg.trim() || !adminToken) return;
@@ -145,6 +165,11 @@ export const AdminDashboard: React.FC = () => {
                 },
                 body: JSON.stringify({ message: broadcastMsg, active: true })
             });
+
+            // Play success sound
+            playBroadcastSound();
+
+            if (isListening) stopVoice();
             setShowBroadcast(false);
             setBroadcastMsg('');
             alert('Broadcast Sent Successfully');
@@ -240,18 +265,45 @@ export const AdminDashboard: React.FC = () => {
                     }}>
                         <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#fff' }}>SYSTEM BROADCAST</h2>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>Message will appear instantly for all active mission sessions.</p>
-                        <textarea
-                            value={broadcastMsg}
-                            onChange={(e) => setBroadcastMsg(e.target.value)}
-                            placeholder="Enter alert message..."
-                            style={{
-                                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px',
-                                padding: '1rem', height: '120px', color: '#fff', fontSize: '1rem', fontFamily: 'inherit', resize: 'none'
-                            }}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <textarea
+                                value={broadcastMsg}
+                                onChange={(e) => setBroadcastMsg(e.target.value)}
+                                placeholder={isListening ? "Listening..." : "Enter alert message..."}
+                                style={{
+                                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px',
+                                    padding: '1rem', height: '120px', color: '#fff', fontSize: '1rem', fontFamily: 'inherit', resize: 'none',
+                                    paddingRight: '3.5rem', width: '100%', boxSizing: 'border-box'
+                                }}
+                            />
+                            <button
+                                onClick={toggleVoice}
+                                style={{
+                                    position: 'absolute', right: '12px', bottom: '12px',
+                                    background: isListening ? '#ef4444' : 'rgba(255,255,255,0.1)',
+                                    border: 'none', borderRadius: '50%', width: '36px', height: '36px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+                                    cursor: 'pointer', transition: 'all 0.2s',
+                                    boxShadow: isListening ? '0 0 20px rgba(239, 68, 68, 0.5)' : 'none',
+                                    transform: `scale(${isListening ? 1 + (voiceVolume * 0.3) : 1})`,
+                                    zIndex: 10
+                                }}
+                                title={isListening ? "Stop Voice Input" : "Start Voice Input"}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                    <line x1="12" y1="19" x2="12" y2="23" />
+                                    <line x1="8" y1="23" x2="16" y2="23" />
+                                </svg>
+                            </button>
+                        </div>
                         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
                             <button
-                                onClick={() => setShowBroadcast(false)}
+                                onClick={() => {
+                                    if (isListening) stopVoice();
+                                    setShowBroadcast(false);
+                                }}
                                 style={{ padding: '0.75rem 1.5rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', color: '#cbd5e1', fontWeight: 700 }}
                             >
                                 CANCEL
