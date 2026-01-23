@@ -4,8 +4,8 @@
     "mood": "Sterile, Trustworthy, Precision",
     "visual_style": "High-contrast white, soft blue accents, medical iconography, thin lines",
     "colors": {
-        "primary": "#007BFF",
-        "secondary": "#6C757D",
+        "primary": "#469593",
+        "secondary": "#144241",
         "bg": "#F8F9FA",
         "success": "#00855B",
         "error": "#D93539",
