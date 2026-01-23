@@ -4,8 +4,8 @@
     "mood": "Reliable, Efficient, Tech-forward",
     "visual_style": "Clean lines, soft shadows, geometric patterns, deep blues and teals",
     "colors": {
-        "primary": "#007BFF",
-        "secondary": "#6C757D",
+        "primary": "#3E88EF",
+        "secondary": "#003A78",
         "bg": "#F8F9FA",
         "success": "#00855B",
         "error": "#D93539",
