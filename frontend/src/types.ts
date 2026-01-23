@@ -89,6 +89,7 @@ export interface PhaseData {
     strengths: string[];
     improvements: string[];
     history?: PhaseMetrics[];
+    image_data?: string; // URL to phase evidence image
 }
 
 export interface PitchSubmission {
@@ -205,6 +206,9 @@ export interface ScoreBreakdown {
     input_tokens?: number;
     output_tokens?: number;
     total_ai_tokens?: number;
+    visual_score?: number;
+    visual_feedback?: string;
+    visual_alignment?: string;
 }
 
 export interface SubmitPhaseResponse {

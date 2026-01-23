@@ -375,6 +375,7 @@
     margin: 0;
     background: linear-gradient(to right, #fff, #94a3b8);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -716,6 +717,45 @@
     font-size: 0.9rem;
     font-weight: 900;
     color: #a78bfa;
+}
+
+.sub-alignment-mini {
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.sub-alignment-mini.high {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.sub-alignment-mini.medium {
+    background: rgba(251, 191, 36, 0.1);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.sub-alignment-mini.low {
+    background: rgba(248, 113, 113, 0.1);
+    color: #f87171;
+    border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.sub-alignment-mini.critical-mismatch {
+    background: #450a0a;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.sub-alignment-mini.n-a {
+    background: rgba(255, 255, 255, 0.05);
+    color: #64748b;
 }
 
 /* Empty State */
