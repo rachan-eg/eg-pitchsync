@@ -205,8 +205,8 @@ def overlay_logos(image_path: str, logos: list, padding: int = 30, logo_height: 
             y_text = (header_height - text_height) // 2
             
             # Determine text color based on header background brightness
-            # Sample the TOP border area of the header (first 20% of header height)
-            sample_top_height = max(5, int(header_height * 0.2))
+            # Sample the TOP border area of the header (first 1% of header height)
+            sample_top_height = max(5, int(header_height * 0.01))
             sample_region = header_bg.crop((0, 0, base_width, sample_top_height))
             avg_color = sample_region.resize((1, 1), Image.Resampling.LANCZOS).getpixel((0, 0))
             
