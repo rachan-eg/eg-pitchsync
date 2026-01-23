@@ -36,10 +36,16 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
     const [activePanel, setActivePanel] = React.useState<'mission' | 'rules' | 'phases' | null>(null);
     const [isInteractionReady, setIsInteractionReady] = React.useState(false);
 
+    const mountedRef = React.useRef(true);
+
     React.useEffect(() => {
+        mountedRef.current = true;
         // Prevent accidental hover activation on immediate load
         const timer = setTimeout(() => setIsInteractionReady(true), 800);
-        return () => clearTimeout(timer);
+        return () => {
+            clearTimeout(timer);
+            mountedRef.current = false;
+        };
     }, []);
 
     const handlePanelHover = (panel: 'mission' | 'rules' | 'phases') => {
@@ -54,12 +60,25 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
     const isComplete = session?.is_complete || highestUnlockedPhase > totalPhases;
     const isStarted = highestUnlockedPhase > 1;
 
+    const [isLaunching, setIsLaunching] = React.useState(false);
+
     const handleStart = async () => {
-        // If complete, land them back in Phase 1 for review/re-run as requested
-        const targetPhase = isComplete ? 1 : (session?.current_phase || 1);
-        const success = await startPhase(targetPhase);
-        if (success) {
-            navigate('/war-room');
+        if (isLaunching || loading) return;
+
+        setIsLaunching(true);
+        try {
+            // If complete, land them back in Phase 1 for review/re-run as requested
+            const targetPhase = isComplete ? 1 : (session?.current_phase || 1);
+            const success = await startPhase(targetPhase);
+            if (success) {
+                navigate('/war-room');
+            }
+        } catch (error) {
+            console.error("Launch failed:", error);
+        } finally {
+            if (mountedRef.current) {
+                setIsLaunching(false);
+            }
         }
     };
 

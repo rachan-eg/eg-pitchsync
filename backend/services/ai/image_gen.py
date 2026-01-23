@@ -96,35 +96,41 @@ def overlay_logos(image_path: str, logos: list, padding: int = 30, logo_height: 
         base_image = Image.open(image_path).convert("RGBA")
         base_width, base_height = base_image.size
         
-        # Prepare logos
+        # Prepare logos with consistent sizing
         logo_images = []
+        MAX_LOGO_WIDTH = int(base_width * 0.25)  # Max 25% of image width
+        MIN_LOGO_HEIGHT = 60  # Minimum height to ensure visibility
+        TARGET_HEIGHT = max(logo_height, MIN_LOGO_HEIGHT)  # Use larger of default or minimum
+        
         for logo_path in logos:
             if logo_path.exists():
                 logo = Image.open(logo_path).convert("RGBA")
                 original_width, original_height = logo.size
-                
-                # Default scale with smart aspect ratio adjustment
                 aspect = original_width / original_height
-                current_target_height = logo_height
                 
-                # Auto-scale wide logos to maintain visibility
-                if aspect > 2.5:
-                    current_target_height = int(logo_height * 1.4)
-                elif aspect > 1.5:
-                    current_target_height = int(logo_height * 1.2)
+                # Step 1: Start with target height
+                # Make right-side logos (use-case specific) slightly larger
+                is_main_eg_logo = "EGDK logo.png" in logo_path.name
+                effective_target_height = TARGET_HEIGHT if is_main_eg_logo else int(TARGET_HEIGHT * 1.3)
                 
-                # Specific mission-critical overrides
-                if "Construction.png" in logo_path.name:
-                    current_target_height = int(logo_height * 1.8)
-                elif "EG-Sasha.png" in logo_path.name:
-                    current_target_height = int(logo_height * 1.5)
+                target_h = effective_target_height
+                target_w = int(target_h * aspect)
                 
-                # Calculate new dimensions preserving aspect ratio
-                aspect = original_width / original_height
-                new_width = int(current_target_height * aspect)
+                # Step 2: If logo is too wide, constrain by width instead
+                if target_w > MAX_LOGO_WIDTH:
+                    target_w = MAX_LOGO_WIDTH
+                    target_h = int(target_w / aspect)
+                    # But ensure we don't go below minimum height
+                    if target_h < MIN_LOGO_HEIGHT:
+                        target_h = MIN_LOGO_HEIGHT
+                        target_w = int(target_h * aspect)
                 
-                # Always resize to normalized height for consistency
-                logo = logo.resize((new_width, current_target_height), Image.Resampling.LANCZOS)
+                # Step 3: Enforce minimum dimensions
+                target_h = max(target_h, MIN_LOGO_HEIGHT)
+                target_w = max(target_w, int(target_h * aspect))
+                
+                # Apply final resize with high-quality resampling
+                logo = logo.resize((target_w, target_h), Image.Resampling.LANCZOS)
                 
                 logo_images.append(logo)
         

@@ -23,6 +23,9 @@ from backend.models.ai_responses import (
     parse_ai_response
 )
 
+import logging
+logger = logging.getLogger("pitchsync.evaluator")
+
 
 def evaluate_phase(
     usecase: Dict[str, Any],
