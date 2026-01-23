@@ -6,6 +6,7 @@ Provides real-time progress updates during AI evaluation using Server-Sent Event
 import json
 import asyncio
 from typing import Dict, Any, List, Optional, AsyncGenerator
+import logging
 from backend.services.ai.client import get_client
 from backend.models.ai_responses import (
     RedTeamReport,
@@ -79,6 +80,10 @@ async def evaluate_phase_streaming(
         progress.stage_progress = stage_progress
         progress.message = message
         return f"data: {json.dumps(progress.to_dict())}\n\n"
+    
+    
+    logger = logging.getLogger("pitchsync.ai.stream")
+    logger.info(f"📡 Starting evaluation stream for session {usecase.get('id') if isinstance(usecase, dict) else 'N/A'}")
     
     try:
         client = get_client()
@@ -193,5 +198,6 @@ async def evaluate_phase_streaming(
         
     except Exception as e:
         # Send error event
+        logger.error(f"❌ Streaming Evaluation Failed: {e}")
         error_data = {"error": str(e), "type": type(e).__name__}
         yield f"event: error\ndata: {json.dumps(error_data)}\n\n"

@@ -257,5 +257,5 @@ def shutdown_ai_executor():
     Called during application shutdown.
     """
     _ai_executor.shutdown(wait=True)
-    print("🛑 AI executor thread pool shut down.")
+    logger.info("🛑 AI executor thread pool shut down.")
 

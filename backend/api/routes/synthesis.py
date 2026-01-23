@@ -43,7 +43,7 @@ async def prepare_synthesis(req: PrepareSynthesisRequest):
     except TimeoutError as e:
         raise HTTPException(status_code=504, detail=str(e))
     except Exception as e:
-        print(f"⚠️ Draft synthesis failed, using fallback: {e}")
+        logger.warning(f"⚠️ Draft synthesis failed for session {session.session_id[:8]}, using fallback: {e}")
         usecase_title = session.usecase.get('title', 'Product') if isinstance(session.usecase, dict) else 'Product'
         draft = f"A revolutionary {usecase_title} solution designed to solve core customer pain points with efficiency and innovation."
     
@@ -139,6 +139,7 @@ async def curate_prompt(req: PrepareSynthesisRequest):
     force = getattr(req, 'force_regenerate', False)
     
     if session.answers_hash == current_hash and session.final_output.image_prompt and not has_refinements and not force:
+        logger.debug(f"♻️ Using cached image prompt for session {session.session_id[:8]} (Hash match)")
         # Ensure the cached prompt is a JSON string if it was stored as such
         cached_prompt_str = session.final_output.image_prompt
         if isinstance(cached_prompt_str, dict): # If it was stored as a dict for some reason
@@ -163,6 +164,7 @@ async def curate_prompt(req: PrepareSynthesisRequest):
             theme=session.theme_palette,
             additional_notes=additional_notes
         )
+        logger.info(f"🎨 Generated new curated prompt for session {session.session_id[:8]} (Refined: {has_refinements})")
     except TimeoutError as e:
         raise HTTPException(status_code=504, detail=str(e))
     except Exception as e:
@@ -191,6 +193,7 @@ async def curate_prompt(req: PrepareSynthesisRequest):
     session.answers_hash = current_hash
     
     update_session(session)
+    logger.debug(f"💾 Updated session {session.session_id[:8]} with new pitch manifest")
     
     return {
         "session_id": session.session_id,
@@ -227,7 +230,7 @@ async def submit_pitch_image(
         # Convert to Base64 for Claude
         image_b64 = base64.b64encode(file_content).decode("utf-8")
         
-        print(f"🕵️ Running Visual Forensics on upload for session {session_id}...")
+        logger.info(f"🕵️ Running Visual Forensics on upload for session {session_id[:8]}...")
         client = get_client()
         
         # Use the PROMPT (Manifest) as the Source of Truth for what the image SHOULD be.
@@ -241,7 +244,7 @@ async def submit_pitch_image(
         v_result = visual_eval["result"]
         v_usage = visual_eval["usage"]
         
-        print(f"✅ Visual Score: {v_result.visual_score} ({v_result.alignment_rating})")
+        logger.info(f"✅ Visual Analysis complete: Session={session_id[:8]}, Score={v_result.visual_score}, Alignment={v_result.alignment_rating}")
 
         # 3. Save to Disk
         filename = f"pitch_{os.urandom(4).hex()}.png"
@@ -250,7 +253,7 @@ async def submit_pitch_image(
         with open(filepath, "wb") as buffer:
             buffer.write(file_content)
             
-        print(f"DEBUG: Uploaded image saved to {filename}")
+        logger.debug(f"💾 Pitch image persisted to {filename}")
         
         # 4. Overlay logos first (on original resolution)
         logos_to_overlay = get_logos_for_usecase(session.usecase)
@@ -259,7 +262,7 @@ async def submit_pitch_image(
         # Note: session.team_id is actually the team name (e.g., "Team Orion") 
         # passed from frontend during init, not the team code
         team_name = session.team_id  # This is already the display name
-        print(f"DEBUG: Using team_name = '{team_name}'")
+        logger.debug(f"🖌️ Overlaying logos for team '{team_name}' on session {session_id[:8]}")
         
         overlay_logos(str(filepath), logos_to_overlay, team_name=team_name)
         
@@ -336,7 +339,7 @@ async def submit_pitch_image(
 
     except Exception as e:
         import traceback
-        traceback.print_exc()
-        print(f"Image Upload/Processing Error: {e}")
+        logger.error(f"❌ Image Upload/Processing Error for session {session_id[:8]}: {e}")
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Image processing failed: {str(e)}")
 

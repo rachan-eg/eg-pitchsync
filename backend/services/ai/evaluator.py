@@ -73,9 +73,8 @@ def evaluate_phase(
         # STEP 2: THE LEAD PARTNER AGENT (JUDGE)
         # Goal: Synthesize the Red Team's report with the original idea to make a final decision.
         # This agent balances the critique with the potential upside.
-        logger.info("⚖️ Starting Lead Partner Verdict...")
         final_result = _run_lead_partner_agent(client, prompt, red_team_result["report"])
-        logger.info(f"✅ Evaluation complete. Final Score: {final_result.get('score', 0.0)}")
+        logger.info(f"✅ Lead Partner Verdict complete. Score: {final_result.get('score', 0.0)}")
         
         
         # STEP 3: THE VISUAL ANALYST (FORENSICS)
@@ -348,12 +347,11 @@ def evaluate_visual_asset(client, prompt: str, image_b64: str) -> Dict[str, Any]
     media_type = "image/png"
     try:
         if len(image_b64) > 6000000:
-            print(f"⚠️ Image too large ({len(image_b64)} chars). Compressing...")
             image_b64 = _compress_image(image_b64)
             media_type = "image/jpeg"
-            print(f"✅ Compressed to {len(image_b64)} chars.")
+            logger.info(f"✅ Compressed visual asset to {len(image_b64)} chars.")
     except Exception as compress_err:
-        print(f"WARNING: Compression failed: {compress_err}")
+        logger.warning(f"⚠️ Visual Asset Compression failed: {compress_err}")
 
     # Use multi-modal generation
     raw_response, usage = client.generate_content(
@@ -367,7 +365,7 @@ def evaluate_visual_asset(client, prompt: str, image_b64: str) -> Dict[str, Any]
     
     # Handle complete parsing failures
     if result.visual_score == 0.0 and not result.rationale:
-        print(f"⚠️ Visual Analyst Parsing FAILURE. Raw response: {raw_response[:200]}")
+        logger.warning(f"⚠️ Visual Analyst Parsing FAILURE. Raw response: {raw_response[:200]}")
         result = VisualAnalysisResult(
             visual_score=0.5,
             rationale="Visual link synchronization intermittent. Analysis incomplete.",
@@ -410,5 +408,5 @@ def _compress_image(image_b64: str, max_size_mb: float = 3.5) -> str:
         return base64.b64encode(output.getvalue()).decode("utf-8")
         
     except Exception as e:
-        print(f"Internal Image Compression Error: {e}")
+        logger.error(f"❌ Internal Image Compression Error: {e}")
         return image_b64

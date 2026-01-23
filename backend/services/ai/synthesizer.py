@@ -4,8 +4,11 @@ Prompt culmination and customer-centric filtering.
 """
 
 import json
+import logging
 from typing import Dict, Any, Tuple
 from pathlib import Path
+
+logger = logging.getLogger("pitchsync.ai")
 
 
 from backend.services.ai.client import get_client, get_creative_client
@@ -46,7 +49,7 @@ def _load_brand_colors(usecase: Dict[str, Any] = None, theme: Dict[str, Any] = N
                         if theme_colors.get("warning"):
                             colors.append(f"Warning: {theme_colors['warning']}")
                 except Exception as e:
-                    print(f"WARNING: Could not load vault theme for {usecase_id}: {e}")
+                    logger.warning(f"Could not load vault theme for {usecase_id}: {e}")
 
     # Priority 2: Use colors from the passed theme object (if Priority 1 didn't find anything)
     if not colors and isinstance(theme, dict) and theme.get("colors"):
@@ -105,7 +108,7 @@ Return ONLY the summary text.
         response, usage = client.generate_content(prompt=prompt, temperature=0.7)
         return response.strip()
     except Exception as e:
-        print(f"Draft Synthesis Error: {e}")
+        logger.error(f"Draft Synthesis Error: {e}")
         raise e
 
 
@@ -136,7 +139,7 @@ def synthesize_pitch(
         final_image_prompt_json_str = json.dumps(final_image_prompt_struct, indent=2)
         
     except Exception as e:
-        print(f"Curator fallback error: {e}")
+        logger.warning(f"Curator fallback error: {e}")
         # Fallback to simple string if curator fails
         theme_name = theme.get('name', 'Modern') if isinstance(theme, dict) else str(theme)
         prompt_string_for_gen = f"{filtered_base_prompt}. Theme: {theme_name}. Cinematic, 8k Resolution."
@@ -155,7 +158,7 @@ def synthesize_pitch(
         }
         
     except Exception as e:
-        print(f"Final Synthesis Error: {e}")
+        logger.error(f"Final Synthesis Error: {e}")
         return {
             "visionary_hook": filtered_base_prompt,
             "customer_pitch": filtered_base_prompt,
@@ -212,7 +215,7 @@ RETURN ONLY THE FINAL PARAGRAPH.
         response, usage = client.generate_content(prompt=prompt, system_prompt=system_prompt, temperature=0.8)
         return response.strip()
     except Exception as e:
-        print(f"Customer Filter Error: {e}")
+        logger.error(f"Customer Filter Error: {e}")
         raise e
 
 
@@ -273,7 +276,7 @@ def auto_generate_pitch(
     try:
         image_url = generate_image(prompt_str, usecase=usecase)
     except Exception as e:
-        print(f"Auto-gen image failed: {e}")
+        logger.warning(f"Auto-gen image failed: {e}")
         image_url = ""
     
     return {
@@ -350,7 +353,7 @@ This MUST be prominently reflected in the visual.
     client = get_creative_client()
     try:
         mode_label = "ORGANIC" if USE_ORGANIC_CURATOR else "CLASSIC"
-        print(f"DEBUG: [{mode_label}] Curator generating prompt for {usecase_title}...")
+        logger.debug(f"[{mode_label} CURATOR] Analyzing idea for '{usecase_title}'...")
         
         response_text, usage = client.generate_content(
             prompt=prompt,
@@ -366,8 +369,8 @@ This MUST be prominently reflected in the visual.
                 final_prompt = parsed_json.get("final_combined_prompt", "")
                 
                 if USE_ORGANIC_CURATOR:
-                    print(f"DEBUG: Curator interpretation: {parsed_json.get('idea_interpretation', 'N/A')}")
-                    print(f"DEBUG: Chosen layout: {parsed_json.get('chosen_layout', 'N/A')}")
+                    logger.debug(f"[{mode_label} CURATOR] Interpretation: {parsed_json.get('idea_interpretation', 'N/A')}")
+                    logger.debug(f"[{mode_label} CURATOR] Layout: {parsed_json.get('chosen_layout', 'N/A')}")
                 
                 if not final_prompt:
                     raise ValueError("Empty prompt")
@@ -391,11 +394,11 @@ This MUST be prominently reflected in the visual.
         
         parsed_json["final_combined_prompt"] = final_prompt
         
-        print(f"DEBUG: Successfully generated [{mode_label}] curator prompt")
+        logger.info(f"✅ Success: [{mode_label} CURATOR] prompt generated for '{usecase_title}'")
         return parsed_json, usage
         
     except Exception as e:
-        print(f"Critical Image Curator Error: {e}")
+        logger.error(f"❌ Critical Image Curator Error: {e}")
         return {
             "final_combined_prompt": f"Professional 16:9 widescreen single-slide pitch for {usecase_title}. Clean modern layout. Light-mode, bright white background. Brand colors: {brand_colors}. 8K resolution.",
             "idea_interpretation": "Fallback due to error",
@@ -641,7 +644,7 @@ Return ONLY `{{ "visionary_hook": "...", "customer_pitch": "..." }}`
         }
 
     except Exception as e:
-        print(f"Pitch Narrative Generation Error: {e}")
+        logger.error(f"Pitch Narrative Generation Error: {e}")
         return {
             "visionary_hook": f"{usecase_title}: The Future is Here.",
             "customer_pitch": "Leveraging advanced insights to deliver unparalleled value."

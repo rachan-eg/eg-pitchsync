@@ -3,11 +3,14 @@ Session API Routes
 Endpoints for session initialization, phase submission.
 """
 
+import logging
 import random
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+
+logger = logging.getLogger("pitchsync.api")
 
 from backend.config import settings
 from backend.models import (
@@ -54,7 +57,7 @@ async def init_session(req: InitRequest):
             should_resume = True
         
         if should_resume:
-            print(f"📌 Resuming session for team '{req.team_id}': phase {existing.current_phase}, complete: {existing.is_complete}")
+            logger.info(f"📌 Resuming session for team '{req.team_id}': ID={existing.session_id}, phase={existing.current_phase}, complete={existing.is_complete}")
             
             # Ensure phase start time exists (fix for older sessions missing this data)
             phase_key = f"phase_{existing.current_phase}"
@@ -64,7 +67,7 @@ async def init_session(req: InitRequest):
                 current_phase_start = datetime.now(timezone.utc)
                 existing.phase_start_times[phase_key] = current_phase_start
                 update_session(existing)
-                print(f"  ⏱️ Initialized missing phase start time for {phase_key}")
+                logger.debug(f"  ⏱️ Initialized missing phase start time for {phase_key} in session {existing.session_id}")
             
             return InitResponse(
                 session_id=existing.session_id,
@@ -91,7 +94,7 @@ async def init_session(req: InitRequest):
                 current_server_time=datetime.now(timezone.utc)
             )
         else:
-            print(f"🔄 Team '{req.team_id}' selected different usecase (existing: {existing_usecase_id}, requested: {req.usecase_id}). Creating new session.")
+            logger.info(f"🔄 Team '{req.team_id}' switched mission. Requested: {req.usecase_id}, Existing: {existing_usecase_id}. Initializing fresh session.")
 
     # 2. Get usecase and theme (from request or assign randomly)
     if req.usecase_id:
@@ -136,7 +139,7 @@ async def init_session(req: InitRequest):
     session.phase_start_times["phase_1"] = start_time
     update_session(session)
     
-    print(f"✨ Created new session for team '{req.team_id}': {session.session_id}")
+    logger.info(f"✨ Created new session for team '{req.team_id}': ID={session.session_id}, Mission={usecase.get('title')}")
     
     return InitResponse(
         session_id=session.session_id,
@@ -240,9 +243,7 @@ async def start_phase(req: StartPhaseRequest):
                     
                     if status != "passed":
                         # Update existing entry if not passed (don't overwrite passed data with drafts)
-                        print(f"📝 Saving leaving phase responses for '{l_name}':")
-                        for r in req.leaving_phase_responses:
-                            print(f"   - Q: {r.question_id}, hint_used: {r.hint_used}")
+                        logger.debug(f"📝 Saving draft responses for '{l_name}' (Session: {session.session_id[:8]})")
                         
                         if isinstance(leaving_pdata, dict):
                             leaving_pdata['responses'] = req.leaving_phase_responses
@@ -250,7 +251,7 @@ async def start_phase(req: StartPhaseRequest):
                             leaving_pdata.responses = req.leaving_phase_responses
                         session.phases[l_name] = leaving_pdata
                     else:
-                        print(f"⏭️ Skipping response save for '{l_name}' - phase already passed")
+                        logger.debug(f"⏭️ Skipping draft save for '{l_name}' - phase already passed")
     
     # STEP 2: Get or initialize the target phase's data
     key = f"phase_{req.phase_number}"
@@ -278,6 +279,7 @@ async def start_phase(req: StartPhaseRequest):
         
     session.current_phase = req.phase_number
     update_session(session)
+    logger.info(f"🏁 Phase transition: Session={session.session_id[:8]}, Entering Phase {req.phase_number} ('{phase_name}')")
     
     # Prepare questions
     questions = []
@@ -304,13 +306,9 @@ async def start_phase(req: StartPhaseRequest):
     
     # Debug logging for hint persistence
     if previous_responses:
-        print(f"📤 Returning previous responses for '{phase_name}':")
-        for r in previous_responses:
-            hint = getattr(r, 'hint_used', r.get('hint_used') if isinstance(r, dict) else False)
-            qid = getattr(r, 'question_id', r.get('question_id') if isinstance(r, dict) else '?')
-            print(f"   - Q: {qid}, hint_used: {hint}")
+        logger.debug(f"📤 Hydrating {len(previous_responses)} previous responses for '{phase_name}'")
     else:
-        print(f"📤 No previous responses for '{phase_name}'")
+        logger.debug(f"📤 No previous responses to hydrate for '{phase_name}'")
 
     return StartPhaseResponse(
         phase_id=phase_def.get("id", f"phase_{req.phase_number}"),
@@ -381,7 +379,7 @@ async def save_hint(req: dict):
     session.phases[phase_name] = phase_data
     update_session(session)
     
-    print(f"💡 Hint saved for session {session_id[:8]}, phase '{phase_name}', question '{question_id}'")
+    logger.info(f"💡 Hint marked as used: Session={session_id[:8]}, Phase='{phase_name}', Question='{question_id}'")
     
     return {"success": True, "message": "Hint saved"}
 
@@ -587,7 +585,7 @@ async def submit_phase(req: SubmitPhaseRequest):
             raise HTTPException(status_code=504, detail=str(e))
         except Exception as e:
             # Catch any other unexpected AI errors
-            print(f"❌ AI Evaluation error: {type(e).__name__}: {e}")
+            logger.error(f"❌ AI Evaluation Pipeline Error in {req.phase_name}: {type(e).__name__}: {e}")
             raise HTTPException(status_code=500, detail=f"AI evaluation failed: {str(e)}")
 
     # Calculate Hint Penalty
@@ -666,9 +664,9 @@ async def submit_phase(req: SubmitPhaseRequest):
                 f.write(img_bytes)
             
             evidence_url = f"/generated/{filename}"
-            print(f"📸 Saved phase evidence to {evidence_url}")
+            logger.info(f"📸 Persisted phase evidence: {evidence_url}")
         except Exception as e:
-            print(f"⚠️ Failed to persist phase evidence image: {e}")
+            logger.warning(f"⚠️ Failed to persist phase evidence image: {e}")
             # Fallback to keeping it in memory/DB if saving fails (not ideal but safe)
 
     # Update phase data
@@ -761,7 +759,7 @@ def _get_retry_info(session: SessionState, phase_name: str) -> tuple[int, str | 
             retries = completed_trials
                 
         except Exception as e:
-            print(f"Retry detection error: {e}")
+            logger.error(f"Retry detection error for session {session.session_id[:8]}: {e}")
             # Fallback to current increment logic if history parsing fails
             if hasattr(prev_phase_data, 'metrics'):
                 retries = prev_phase_data.metrics.retries + 1
@@ -790,7 +788,7 @@ async def get_session_report(team_id: str):
     
     # 2. Generate PDF
     try:
-        print(f"📄 Generating report for team: {team_id}")
+        logger.info(f"📄 Generating PDF report: Team={team_id}, Session={session.session_id[:8]}")
         pdf_path = generate_report(session)
         
         # 3. Stream file back
