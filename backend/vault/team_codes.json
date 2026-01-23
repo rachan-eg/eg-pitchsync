@@ -1,74 +1,74 @@
 {
     "team_codes": {
-        "ORION26": {
-            "team_name": "Team Orion",
+        "NEBULA26": {
+            "team_name": "Nebula Protocol",
             "usecase_id": "construction_ai_deviation",
-            "description": "Construction AI Deviation Detection team"
+            "description": "Deep space observation and deviation detection protocol."
         },
-        "PREDICT24": {
-            "team_name": "Predictive Ops",
+        "PULSAR26": {
+            "team_name": "Pulsar Dynamics",
             "usecase_id": "facility_management_predictive_maintenance",
-            "description": "AI Predictive Maintenance team"
+            "description": "Rhythmic optimization and predictive state analysis."
         },
-        "ENERGY24": {
-            "team_name": "Grid Watchers",
+        "QUASAR26": {
+            "team_name": "Quasar Systems",
             "usecase_id": "energy_management_intelligence_assistant",
-            "description": "AI Energy Intelligence team"
+            "description": "High-energy intelligence and flow assistance."
         },
-        "WORKPLACE24": {
-            "team_name": "Zen Space",
+        "ZENITH26": {
+            "team_name": "Zenith Station",
             "usecase_id": "facility_management_workplace_advisor",
-            "description": "AI Workplace Balance team"
+            "description": "Equilibrium control and environment advisory."
         },
-        "SMB24": {
-            "team_name": "Scale Up",
+        "COMET26": {
+            "team_name": "Comet Force",
             "usecase_id": "construction_interface_simplification",
-            "description": "Construction SMB Retention team"
+            "description": "Rapid trajectory scaling and interface optimization."
         },
-        "ROUTE24": {
-            "team_name": "Pathfinders",
+        "VORTEX26": {
+            "team_name": "Vortex Network",
             "usecase_id": "construction_route_optimization",
-            "description": "Construction Route Optimization team"
+            "description": "Multidimensional pathfinding and route navigation."
         },
-        "VOICE24": {
-            "team_name": "Voice First",
+        "ECLIPSE26": {
+            "team_name": "Eclipse Signal",
             "usecase_id": "construction_voice_interface",
-            "description": "Construction Voice Interface team"
+            "description": "Hidden communication and voice-activated interface."
         },
-        "RETAIL24": {
-            "team_name": "Secure Cart",
+        "NOVA26": {
+            "team_name": "Nova Core",
             "usecase_id": "retail_checkout_fraud_prevention",
-            "description": "Retail Fraud Prevention team"
+            "description": "Secure luminosity and anomaly prevention."
         },
-        "CIVIC24": {
-            "team_name": "Civic Flow",
+        "GALAXY26": {
+            "team_name": "Galaxy Prime",
             "usecase_id": "municipalities_workflow_generation",
-            "description": "Municipal Workflow Generation team"
+            "description": "Collective flow management and workflow synthesis."
         },
-        "HOSPITAL24": {
-            "team_name": "Care Sync",
+        "AURORA26": {
+            "team_name": "Aurora Helix",
             "usecase_id": "hospital_ai_resource_planning",
-            "description": "Hospital AI Resource Planning team"
+            "description": "Vitality synchronization and resource layering."
         },
-        "HOUSING24": {
-            "team_name": "Community Connect",
+        "COSMOS26": {
+            "team_name": "Cosmos United",
             "usecase_id": "housing_maintenance_vendor_matching",
-            "description": "Housing Maintenance Vendor Matching team"
+            "description": "Orbital habitat synchronization and vendor mapping."
         },
-        "PROSERV24": {
-            "team_name": "Growth Ops",
+        "STELLAR26": {
+            "team_name": "Stellar Forge",
             "usecase_id": "professional_services_onboarding_optimizer",
-            "description": "Professional Services Onboarding team"
+            "description": "Growth expansion and onboarding acceleration."
         },
-        "SASHA26": {
-            "team_name": "Sasha AI",
+        "ANDROMEDA26": {
+            "team_name": "Andromeda Node",
             "usecase_id": "ai_support_bot",
-            "description": "AI Support Bot team"
+            "description": "Distant support intelligence and automated response."
         },
         "TRIAL26": {
             "team_name": "Trial Runners",
             "usecase_id": "trial_run_test",
-            "description": "Trial Run Test team"
+            "description": "The initial entry point into the void."
         }
     }
 }
