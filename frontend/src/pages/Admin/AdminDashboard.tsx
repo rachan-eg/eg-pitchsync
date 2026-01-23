@@ -462,58 +462,10 @@ export const AdminDashboard: React.FC = () => {
                                                     </div>
                                                     <div className="submission-meta">
                                                         <span className="sub-index">#{idx + 1}</span>
-                                                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                                            <span className={`sub-alignment-mini ${(sub.visual_alignment || 'N/A').toLowerCase().replace(' ', '-')}`}>
-                                                                {sub.visual_alignment || 'N/A'}
-                                                            </span>
-                                                            <span className="sub-score">{Math.round((sub.visual_score || 0) * 100)}%</span>
-                                                        </div>
+                                                        <span className="sub-score">{Math.round((sub.visual_score || 0) * 100)}%</span>
                                                     </div>
                                                 </div>
                                             ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="submissions-section" style={{ marginTop: '2rem' }}>
-                                    <h3>PHASE EVIDENCE ({Object.values(selectedSession.phases).filter(p => p.image_data).length} captured)</h3>
-                                    {Object.values(selectedSession.phases).filter(p => p.image_data).length === 0 ? (
-                                        <div className="empty-state" style={{ padding: '2rem' }}>
-                                            <p>NO PHASE EVIDENCE UPLOADED</p>
-                                        </div>
-                                    ) : (
-                                        <div className="submissions-grid">
-                                            {Object.entries(selectedSession.phases)
-                                                .filter(([_, data]) => data.image_data)
-                                                .map(([name, data], idx) => (
-                                                    <div key={idx} className="submission-card" onClick={() => {
-                                                        const mockSub: PitchSubmission = {
-                                                            image_url: data.image_data!,
-                                                            prompt: `Source: ${name}`,
-                                                            visual_score: data.metrics.visual_score || 0,
-                                                            visual_feedback: data.metrics.visual_feedback || "Vision analytics for phase evidence.",
-                                                            visual_alignment: data.metrics.visual_alignment || "N/A",
-                                                            created_at: data.metrics.end_time || new Date().toISOString()
-                                                        };
-                                                        setInspectedSubmission(mockSub);
-                                                    }}>
-                                                        <div className="submission-thumb">
-                                                            <img src={getFullUrl(data.image_data!)} alt={`Phase ${name}`} />
-                                                            <div className="thumb-overlay">
-                                                                <span>INSPECT</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="submission-meta">
-                                                            <span className="sub-index">{name.toUpperCase()}</span>
-                                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                                                <span className={`sub-alignment-mini ${(data.metrics.visual_alignment || 'N/A').toLowerCase().replace(' ', '-')}`}>
-                                                                    {data.metrics.visual_alignment || 'N/A'}
-                                                                </span>
-                                                                <span className="sub-score">{Math.round((data.metrics.visual_score || 0) * 100)}%</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
                                         </div>
                                     )}
                                 </div>

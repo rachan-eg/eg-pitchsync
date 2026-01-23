@@ -89,7 +89,6 @@ export interface PhaseData {
     strengths: string[];
     improvements: string[];
     history?: PhaseMetrics[];
-    image_data?: string; // URL to phase evidence image
 }
 
 export interface PitchSubmission {
