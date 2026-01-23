@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../AppContext';
-import { getApiUrl } from '../../utils/api';
+import { getApiUrl, getFullUrl } from '../../utils/api';
 import type { SessionState, PitchSubmission } from '../../types';
 import './FinalReveal.css';
 
@@ -44,6 +44,14 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
     const [isDownloading, setIsDownloading] = useState(false);
     const [dragStart, setDragStart] = useState<number | null>(null);
     const [dragOffset, setDragOffset] = useState(0);
+    const [localActiveSub, setLocalActiveSub] = useState<PitchSubmission | null>(null);
+
+    // Synchronize localActiveSub with prop if it changes
+    useEffect(() => {
+        if (selectedSubmission) {
+            setLocalActiveSub(selectedSubmission);
+        }
+    }, [selectedSubmission]);
 
     const handleDownloadReport = async () => {
         if (isDownloading) return;
@@ -128,7 +136,18 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
         return { label: 'D', name: 'D-TIER', class: 'final-reveal__tier-seal--default' };
     };
 
-    const tier = getScoreTier(session.total_score);
+    // Calculate effective score for current selection
+    // Visual score adds a boost of +/- 10% (100 pts) based on alignment
+    const submissions = session.uploadedImages || (session as any).uploaded_images || [];
+    const currentSub = localActiveSub || selectedSubmission || (submissions.length > 0 ? submissions[submissions.length - 1] : null);
+
+    // Total score is sum of phases + potential visual boost
+    const baseScore = Math.round(session.total_score);
+    const visualScoreVal = currentSub ? (currentSub.visual_score || 0) : (session.final_output.visual_score || 0);
+    const visualBoost = Math.round((visualScoreVal - 0.5) * 200); // Scale -100 to +100
+    const displayScore = Math.max(0, Math.min(1000, baseScore + visualBoost));
+
+    const tier = getScoreTier(displayScore);
 
     // Calculate penalties (clamp negative time penalty to 0 for old speed bonus data)
     const timePenalty = Math.max(0, Math.round(Object.values(session.phases).reduce((acc, p) => acc + (p.metrics?.time_penalty || 0), 0)));
@@ -162,7 +181,7 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                         ) : (
                             <>
                                 <span className="final-reveal__subtitle">Mission Complete</span>
-                                <h1 className="final-reveal__title">{tier.name}</h1>
+                                <h1 className="final-reveal__title">{currentSub ? `SUBMISSION #${submissions.indexOf(currentSub) + 1}` : tier.name}</h1>
                             </>
                         )}
                     </div>
@@ -182,11 +201,41 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                             <div className="final-reveal__image-container">
                                 {imageUrl ? (
                                     <img src={imageUrl} alt="Pitch Vision" className="final-reveal__image" />
+                                ) : currentSub?.image_url ? (
+                                    <img src={getFullUrl(currentSub.image_url)} alt="Pitch Vision" className="final-reveal__image" />
                                 ) : (
                                     <div className="final-reveal__image-placeholder">IMAGE NOT AVAILABLE</div>
                                 )}
                                 <div className="final-reveal__image-overlay" />
                             </div>
+
+                            {/* Submission Selector (Only if not in single inspection mode or if multiples exist) */}
+                            {submissions.length > 1 && (
+                                <div className="final-reveal__submission-selector">
+                                    {submissions.map((sub: any, idx: number) => {
+                                        const alignment = sub.visual_alignment || 'N/A';
+                                        const score = Math.round((sub.visual_score || 0) * 100);
+                                        return (
+                                            <button
+                                                key={idx}
+                                                className={`final-reveal__sub-thumb ${currentSub === sub ? 'active' : ''}`}
+                                                onClick={() => {
+                                                    setLocalActiveSub(sub);
+                                                    if (!readOnly && appCtx?.setActiveRevealSubmission) {
+                                                        appCtx.setActiveRevealSubmission(sub);
+                                                    }
+                                                }}
+                                            >
+                                                <img src={getFullUrl(sub.image_url)} alt={`Sub ${idx + 1}`} />
+                                                <div className="sub-tag">#{idx + 1}</div>
+                                                <div className={`sub-score-badge ${alignment.toLowerCase().replace(' ', '-')}`}>
+                                                    {score}%
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         <div className="final-reveal__action-bar">
@@ -221,7 +270,7 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                         {/* Score Card */}
                         <div className="final-reveal__grade-card reactive-border reactive-border--intense">
                             <div className="final-reveal__score-big">
-                                <span className="final-reveal__score-val">{Math.round(session.total_score)}</span>
+                                <span className="final-reveal__score-val">{displayScore}</span>
                                 <span className="final-reveal__score-label">Performance Score</span>
                             </div>
                             <div className={`final-reveal__tier-seal ${tier.class}`}>
@@ -318,25 +367,25 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                                 <div className="final-reveal__slide">
                                     <div className="final-reveal__panel final-reveal__panel--full final-reveal__panel--vision reactive-border reactive-border--accent">
                                         <div className="final-reveal__slide-header">
-                                            <h3 className="final-reveal__panel-title" style={{ color: 'var(--accent)' }}>Visual Intelligence</h3>
-                                            <span className="final-reveal__slide-tag" style={{ background: 'rgba(var(--accent-rgb), 0.2)', color: 'var(--accent)' }}>AI Analysis</span>
+                                            <h3 className="final-reveal__panel-title" style={{ color: 'var(--accent)' }}>Visual Strategic Analysis</h3>
+                                            <span className="final-reveal__slide-tag" style={{ background: 'rgba(var(--accent-rgb), 0.2)', color: 'var(--accent)' }}>Business Prospect</span>
                                         </div>
 
                                         <div className="final-reveal__metrics-grid">
                                             <div className="final-reveal__metric-card">
-                                                <span className="final-reveal__metric-label">ALIGNMENT</span>
+                                                <span className="final-reveal__metric-label">STRATEGIC ALIGNMENT</span>
                                                 <span className="final-reveal__metric-value" style={{
-                                                    color: (selectedSubmission?.visual_alignment || session.final_output.visual_alignment) === 'High' ? 'var(--success)' :
-                                                        (selectedSubmission?.visual_alignment || session.final_output.visual_alignment) === 'Critical Mismatch' ? 'var(--danger)' : 'var(--warning)'
+                                                    color: (currentSub?.visual_alignment || session.final_output.visual_alignment) === 'High' ? 'var(--success)' :
+                                                        (currentSub?.visual_alignment || session.final_output.visual_alignment) === 'Critical Mismatch' ? 'var(--danger)' : 'var(--warning)'
                                                 }}>
-                                                    {selectedSubmission?.visual_alignment || session.final_output.visual_alignment || 'N/A'}
+                                                    {currentSub?.visual_alignment || session.final_output.visual_alignment || 'N/A'}
                                                 </span>
                                             </div>
                                             <div className="final-reveal__metric-card">
-                                                <span className="final-reveal__metric-label">MATCH SCORE</span>
+                                                <span className="final-reveal__metric-label">RESONANCE SCORE</span>
                                                 <span className="final-reveal__metric-value">
-                                                    {selectedSubmission
-                                                        ? Math.round((selectedSubmission.visual_score || 0) * 100)
+                                                    {currentSub
+                                                        ? Math.round((currentSub.visual_score || 0) * 100)
                                                         : (typeof session.final_output.visual_score === 'number'
                                                             ? Math.round(session.final_output.visual_score * 100)
                                                             : '0')}%
@@ -345,10 +394,10 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                                         </div>
 
                                         <div className="final-reveal__ai-report">
-                                            <h4 className="final-reveal__sub-title">Analysis Highlights</h4>
+                                            <h4 className="final-reveal__sub-title">Strategic Insights</h4>
                                             <div className="final-reveal__feedback-container">
-                                                {(selectedSubmission?.visual_feedback || session.final_output.visual_feedback) ? (
-                                                    (selectedSubmission?.visual_feedback || session.final_output.visual_feedback || '').split(/[.!?]\s+/).filter(p => p.trim()).map((point, idx) => (
+                                                {(currentSub?.visual_feedback || session.final_output.visual_feedback) ? (
+                                                    (currentSub?.visual_feedback || session.final_output.visual_feedback || '').split(/[.!?]\s+/).filter(p => p.trim()).map((point: string, idx: number) => (
                                                         <div key={idx} className="final-reveal__feedback-point">
                                                             <div className="final-reveal__point-bullet" />
                                                             <p>{point.trim()}{point.trim().match(/[.!?]$/) ? '' : '.'}</p>
@@ -357,6 +406,13 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                                                 ) : (
                                                     <div className="final-reveal__feedback-placeholder">No visual feedback available</div>
                                                 )}
+                                            </div>
+                                        </div>
+
+                                        <div className="final-reveal__sub-section" style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                                            <h4 className="final-reveal__sub-title">Image Manifest (Prompt Used)</h4>
+                                            <div className="final-reveal__prompt-box">
+                                                {currentSub?.prompt || session.final_output.image_prompt || 'N/A'}
                                             </div>
                                         </div>
                                     </div>

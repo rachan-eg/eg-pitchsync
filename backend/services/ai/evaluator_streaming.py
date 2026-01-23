@@ -23,7 +23,7 @@ class EvaluationProgress:
         {"id": "init", "label": "Initializing AI Agents", "weight": 5},
         {"id": "red_team", "label": "Red Team Analysis", "weight": 35},
         {"id": "lead_partner", "label": "Lead Partner Review", "weight": 40},
-        {"id": "visual", "label": "Visual Intelligence", "weight": 15},
+        {"id": "visual", "label": "Visual Strategic Analysis", "weight": 15},
         {"id": "scoring", "label": "Calculating Score", "weight": 5}
     ]
     
@@ -145,7 +145,7 @@ async def evaluate_phase_streaming(
         
         # ===== STAGE 4: VISUAL ANALYSIS (if applicable) =====
         if image_data:
-            yield emit_progress("visual", 0, "Visual Analyst scanning...")
+            yield emit_progress("visual", 0, "Analyzing Strategic Alignment...")
             await asyncio.sleep(0.1)
             
             visual_result_data = await loop.run_in_executor(
