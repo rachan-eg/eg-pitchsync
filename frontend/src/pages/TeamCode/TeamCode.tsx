@@ -16,10 +16,13 @@ export const TeamCode: React.FC = () => {
         user,
         logout,
         validateTeamCode,
+        loginAdmin,
         teamCodeInfo
     } = useAuth();
 
     const [code, setCode] = useState('');
+    const [adminPassword, setAdminPassword] = useState('');
+    const [showAdminLogin, setShowAdminLogin] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -31,9 +34,37 @@ export const TeamCode: React.FC = () => {
         setError(null);
     };
 
+    // Handle admin password change
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setAdminPassword(e.target.value);
+        setError(null);
+    };
+
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (showAdminLogin) {
+            if (!adminPassword.trim()) {
+                setError('PASSWORD_REQUIRED');
+                return;
+            }
+
+            setIsValidating(true);
+            setError(null);
+
+            const result = await loginAdmin(adminPassword);
+            if (result.success) {
+                setShowSuccess(true);
+                setTimeout(() => {
+                    navigate('/admin', { replace: true });
+                }, 1200);
+            } else {
+                setError(result.message || 'INVALID_PASSWORD');
+                setIsValidating(false);
+            }
+            return;
+        }
 
         if (!code.trim()) {
             setError('ACCESS_CODE_REQUIRED');
@@ -44,6 +75,13 @@ export const TeamCode: React.FC = () => {
         setError(null);
 
         const result = await validateTeamCode(code.trim());
+
+        if (result.isAdminTrigger) {
+            setShowAdminLogin(true);
+            setIsValidating(false);
+            setCode('');
+            return;
+        }
 
         if (result.valid) {
             setShowSuccess(true);
@@ -119,24 +157,40 @@ export const TeamCode: React.FC = () => {
                                         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </div>
-                            <h1 className="teamcode-title">Mission Access</h1>
+                            <h1 className="teamcode-title">
+                                {showAdminLogin ? 'Admin Authorization' : 'Mission Access'}
+                            </h1>
                             <p className="teamcode-subtitle">
-                                Enter your designated squad authorization code to proceed to the briefings.
+                                {showAdminLogin 
+                                    ? 'Enter the administrative override password to access the command dashboard.' 
+                                    : 'Enter your designated squad authorization code to proceed to the briefings.'}
                             </p>
                         </div>
 
                         <form className="teamcode-form" onSubmit={handleSubmit}>
                             <div className="input-group reactive-border reactive-border--subtle">
-                                <input
-                                    type="text"
-                                    className={`teamcode-input ${error ? 'error' : ''}`}
-                                    placeholder="ALPHA-SYNC"
-                                    value={code}
-                                    onChange={handleCodeChange}
-                                    maxLength={20}
-                                    autoFocus
-                                    disabled={isValidating}
-                                />
+                                {showAdminLogin ? (
+                                    <input
+                                        type="password"
+                                        className={`teamcode-input ${error ? 'error' : ''}`}
+                                        placeholder="••••••••"
+                                        value={adminPassword}
+                                        onChange={handlePasswordChange}
+                                        autoFocus
+                                        disabled={isValidating}
+                                    />
+                                ) : (
+                                    <input
+                                        type="text"
+                                        className={`teamcode-input ${error ? 'error' : ''}`}
+                                        placeholder="ALPHA-SYNC"
+                                        value={code}
+                                        onChange={handleCodeChange}
+                                        maxLength={20}
+                                        autoFocus
+                                        disabled={isValidating}
+                                    />
+                                )}
                                 {error && (
                                     <p className="input-error font-mono uppercase tracking-tighter">{error}</p>
                                 )}
@@ -145,16 +199,16 @@ export const TeamCode: React.FC = () => {
                             <button
                                 type="submit"
                                 className="btn-primary teamcode-submit"
-                                disabled={isValidating || !code.trim()}
+                                disabled={isValidating || (!showAdminLogin && !code.trim()) || (showAdminLogin && !adminPassword.trim())}
                             >
                                 {isValidating ? (
                                     <>
                                         <div className="button-spinner"></div>
-                                        <span>Decrypting...</span>
+                                        <span>{showAdminLogin ? 'Verifying...' : 'Decrypting...'}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span>Authorize Access</span>
+                                        <span>{showAdminLogin ? 'Admin Login' : 'Authorize Access'}</span>
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M13 7l5 5m0 0l-5 5m5-5H6"
                                                 stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -162,6 +216,20 @@ export const TeamCode: React.FC = () => {
                                     </>
                                 )}
                             </button>
+
+                            {showAdminLogin && (
+                                <button 
+                                    type="button" 
+                                    className="btn-link" 
+                                    style={{ marginTop: '1rem', width: '100%', opacity: 0.7 }}
+                                    onClick={() => {
+                                        setShowAdminLogin(false);
+                                        setError(null);
+                                    }}
+                                >
+                                    Back to Team Code
+                                </button>
+                            )}
                         </form>
 
                         <div className="teamcode-help">

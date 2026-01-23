@@ -95,6 +95,11 @@ class Settings:
     KEYCLOAK_CLIENT_ID = os.environ.get("KEYCLOAK_CLIENT_ID") or os.environ.get("VITE_KEYCLOAK_CLIENT_ID", "")
     KEYCLOAK_CLIENT_SECRET = os.environ.get("KEYCLOAK_CLIENT_SECRET") or os.environ.get("VITE_KEYCLOAK_CLIENT_SECRET", "")
 
+    # Admin Dashboard Security
+    ADMIN_PASSWORD_SALT = os.environ.get("ADMIN_PASSWORD_SALT", "")
+    ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
+    ADMIN_TOKEN_SECRET = os.environ.get("ADMIN_TOKEN_SECRET", "default_secret_for_dev_only")
+
 
 settings = Settings()
 

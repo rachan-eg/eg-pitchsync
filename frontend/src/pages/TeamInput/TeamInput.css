@@ -3,8 +3,7 @@
    ============================================================================= */
 
 .team-input {
-    min-height: 112vh;
-    /* Compensate for global zoom: 0.9 */
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;

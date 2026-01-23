@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../../AppContext';
+import { AppContext } from '../../AppContext';
 import { getApiUrl } from '../../utils/api';
 import type { SessionState, PitchSubmission } from '../../types';
 import './FinalReveal.css';
@@ -9,6 +9,8 @@ interface FinalRevealProps {
     session: SessionState;
     imageUrl: string;
     selectedSubmission?: PitchSubmission | null;
+    readOnly?: boolean;
+    onBack?: () => void;
 }
 
 const Icons = {
@@ -26,9 +28,14 @@ const Icons = {
 const SLIDE_INTERVAL = 5000; // 5 seconds
 const TOTAL_SLIDES = 3;
 
-export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, selectedSubmission }) => {
+export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, selectedSubmission, readOnly = false, onBack }) => {
     const navigate = useNavigate();
-    const { totalTokens, phaseConfig } = useApp();
+
+    // Safely access app context with fallbacks for Admin/Read-Only modes
+    const appCtx = React.useContext(AppContext);
+    const phaseConfig = appCtx?.phaseConfig || {};
+    const totalTokens = appCtx?.totalTokens || { payload: 0, ai: 0, total: session.total_tokens || 0 };
+
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
@@ -127,19 +134,34 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
     const retryCount = Object.values(session.phases).reduce((acc, p) => acc + (p.metrics?.retries || 0), 0);
 
     return (
-        <div className="final-reveal page-transition">
+        <div className={`final-reveal page-transition ${!readOnly ? 'final-reveal--player' : ''}`}>
             <div className="final-reveal__container">
 
                 {/* Header */}
                 <header className="final-reveal__header animate-slideUp">
                     <div className="final-reveal__header-left">
-                        <button className="final-reveal__back-btn btn-secondary" onClick={() => navigate('/curate')}>
-                            <Icons.ChevronLeft /> BACK TO CURATION
-                        </button>
+                        {onBack ? (
+                            <button className="final-reveal__back-btn btn-secondary" onClick={onBack}>
+                                <Icons.ChevronLeft /> {readOnly ? 'BACK TO SUBMISSIONS' : 'BACK TO CURATION'}
+                            </button>
+                        ) : !readOnly ? (
+                            <button className="final-reveal__back-btn btn-secondary" onClick={() => navigate('/curate')}>
+                                <Icons.ChevronLeft /> BACK TO CURATION
+                            </button>
+                        ) : null}
                     </div>
                     <div className="final-reveal__title-group">
-                        <span className="final-reveal__subtitle">Mission Complete</span>
-                        <h1 className="final-reveal__title">{tier.name}</h1>
+                        {readOnly ? (
+                            <>
+                                <span className="final-reveal__subtitle">TEAM INSPECTION</span>
+                                <h1 className="final-reveal__title">{session?.team_id || 'UNKNOWN UNIT'}</h1>
+                            </>
+                        ) : (
+                            <>
+                                <span className="final-reveal__subtitle">Mission Complete</span>
+                                <h1 className="final-reveal__title">{tier.name}</h1>
+                            </>
+                        )}
                     </div>
                     <div className="final-reveal__header-right" />
                 </header>
@@ -165,15 +187,17 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                         </div>
 
                         <div className="final-reveal__action-bar">
+                            {!readOnly && (
+                                <button
+                                    className="final-reveal__present-btn btn-primary animate-flicker"
+                                    onClick={() => navigate('/present')}
+                                    disabled={!imageUrl}
+                                >
+                                    <Icons.Mic /> PRESENT PITCH
+                                </button>
+                            )}
                             <button
-                                className="final-reveal__present-btn btn-primary animate-flicker"
-                                onClick={() => navigate('/present')}
-                                disabled={!imageUrl}
-                            >
-                                <Icons.Mic /> PRESENT PITCH
-                            </button>
-                            <button
-                                className={`final-reveal__present-btn btn-secondary ${isDownloading ? 'is-loading' : ''}`}
+                                className={`final-reveal__present-btn btn-secondary ${isDownloading ? 'is-loading' : ''} ${readOnly ? 'admin-download-btn' : ''}`}
                                 onClick={handleDownloadReport}
                                 disabled={isDownloading}
                             >
