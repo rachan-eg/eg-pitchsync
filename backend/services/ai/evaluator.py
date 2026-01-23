@@ -215,7 +215,7 @@ Return PURE JSON.
         prompt=prompt,
         system_prompt=system_prompt,
         temperature=0.7, # Higher temperature for creative critique
-        max_tokens=1000
+        max_tokens=2000
     )
     
     # Parse using Pydantic model for type safety

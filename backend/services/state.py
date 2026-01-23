@@ -212,6 +212,21 @@ def update_session(session: SessionState) -> SessionState:
     with Session(engine) as db:
         existing = db.get(SessionData, session.session_id)
         if existing:
+            # Check for meaningful content changes to avoid invalidating PDF cache on navigation
+            # (ignoring transient fields like current_phase, start_times, elapsed_seconds)
+            content_changed = (
+                existing.phases_json != db_row.phases_json or
+                existing.total_score != db_row.total_score or
+                existing.total_tokens != db_row.total_tokens or
+                existing.extra_ai_tokens != db_row.extra_ai_tokens or
+                existing.final_output_json != db_row.final_output_json or
+                existing.uploaded_images_json != db_row.uploaded_images_json or
+                existing.usecase_json != db_row.usecase_json or
+                existing.theme_json != db_row.theme_json or
+                existing.phase_scores_json != db_row.phase_scores_json or
+                existing.is_complete != db_row.is_complete
+            )
+            
             existing.current_phase = db_row.current_phase
             existing.total_score = db_row.total_score
             existing.total_tokens = db_row.total_tokens
@@ -226,7 +241,9 @@ def update_session(session: SessionState) -> SessionState:
             existing.phase_elapsed_seconds_json = db_row.phase_elapsed_seconds_json
             existing.uploaded_images_json = db_row.uploaded_images_json
             existing.is_complete = db_row.is_complete
-            existing.updated_at = datetime.now(timezone.utc)
+            
+            if content_changed:
+                existing.updated_at = datetime.now(timezone.utc)
             
             db.add(existing)
             db.commit()

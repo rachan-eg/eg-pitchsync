@@ -1,0 +1,9 @@
+{
+    "id": "trial_run_test",
+    "title": "Trial Run Test",
+    "domain": "Construction Tech",
+    "complexity": "Very High",
+    "target_market": "Construction Firms, Developers",
+    "theme_id": "cyberpunk",
+    "description": "An AI-powered SaaS platform that detects architectural deviations in real-time using BIM data and site scans."
+}

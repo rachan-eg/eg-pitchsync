@@ -7,7 +7,8 @@ import logging
 import random
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 
 logger = logging.getLogger("pitchsync.api")
@@ -20,6 +21,7 @@ from backend.models import (
     SubmitPhaseRequest, SubmitPhaseResponse,
     THEME_REPO, USECASE_REPO, PHASE_DEFINITIONS, get_phases_for_usecase
 )
+from backend.services.auth import authenticate_user, UserInfo
 from backend.services import (
     create_session, get_session, update_session,
     set_phase_start_time, get_phase_start_time,
@@ -35,7 +37,7 @@ router = APIRouter(prefix="/api", tags=["session"])
 
 
 @router.post("/init", response_model=InitResponse)
-async def init_session(req: InitRequest):
+def init_session(req: InitRequest):
     """Initialize or resume a game session."""
     
     # 1. Check if team already has an existing session
@@ -164,7 +166,7 @@ async def init_session(req: InitRequest):
 
 
 @router.get("/check-session/{team_id}")
-async def check_existing_session(team_id: str):
+def check_existing_session(team_id: str):
     """Check if a team has an existing incomplete session.
     
     Useful for the frontend to warn users before they start a new game
@@ -197,7 +199,7 @@ async def check_existing_session(team_id: str):
 
 
 @router.post("/start-phase", response_model=StartPhaseResponse)
-async def start_phase(req: StartPhaseRequest):
+def start_phase(req: StartPhaseRequest):
     """Start a phase and record timing. Supports pause/resume when switching phases."""
     
     session = get_session(req.session_id)
@@ -324,7 +326,7 @@ async def start_phase(req: StartPhaseRequest):
 
 
 @router.post("/save-hint")
-async def save_hint(req: dict):
+def save_hint(req: dict):
     """
     Immediately save hint usage for a question.
     Called when user unlocks a hint - persists before phase submission.
@@ -391,7 +393,8 @@ async def submit_phase_stream(req: SubmitPhaseRequest):
     Submit answers for AI evaluation with real-time progress streaming (SSE).
     Use this endpoint to get live updates as Red Team and Lead Partner agents run.
     """
-    session = get_session(req.session_id)
+    # Use run_in_threadpool for blocking DB call in async route
+    session = await run_in_threadpool(get_session, req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
@@ -574,12 +577,13 @@ async def submit_phase(req: SubmitPhaseRequest):
     else:
         # Normal AI Evaluation (async for multi-user concurrency)
         try:
+            # Async call for non-blocking AI evaluation
             eval_result = await evaluate_phase_async(
                 usecase=session.usecase,
                 phase_config=phase_def,
                 responses=[r.model_dump() for r in req.responses],
                 previous_feedback=prev_feedback,
-                image_data=req.image_data  # Pass visual evidence
+                image_data=req.image_data
             )
         except TimeoutError as e:
             # AI evaluation timed out - return a clean error to frontend
@@ -772,13 +776,14 @@ def _get_retry_info(session: SessionState, phase_name: str) -> tuple[int, str | 
 
 
 @router.get("/session/{team_id}/report")
-async def get_session_report(team_id: str):
+def get_session_report(team_id: str):
     """
     Generate and download a PDF report for the team's latest session.
     """
     from backend.services.pdf_generator import generate_report
     from fastapi.responses import FileResponse
     import logging
+    import asyncio
     
     logger = logging.getLogger("pitchsync.api")
     
@@ -787,10 +792,15 @@ async def get_session_report(team_id: str):
     if not session:
         raise HTTPException(status_code=404, detail="No session found for this team.")
     
-    # 2. Generate PDF
+    # 2. Generate PDF (non-blocking - runs in thread pool to avoid blocking event loop)
     try:
         logger.info(f"📄 Generating PDF report: Team={team_id}, Session={session.session_id[:8]}")
-        pdf_path = generate_report(session)
+        
+        from backend.services.pdf_generator import generate_report
+        from backend.utils.concurrency import limit_pdf_concurrency
+        
+        with limit_pdf_concurrency():
+             pdf_path = generate_report(session)
         
         # 3. Stream file back
         return FileResponse(

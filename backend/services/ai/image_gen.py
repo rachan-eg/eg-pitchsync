@@ -178,69 +178,8 @@ def overlay_logos(image_path: str, logos: list, padding: int = 30, logo_height: 
             
             new_image.paste(logo, (x_pos, y_offset), logo)
         
-        # Add team name text in the center of the header if provided
-        if team_name:
-            draw = ImageDraw.Draw(new_image)
-            
-            # Convert team name to uppercase
-            team_name_display = team_name.upper()
-            
-            # Try to load a bold/heavy font, fallback to default
-            font_size = int(header_height * 0.35)
-            try:
-                # Try Windows bold fonts first, then regular
-                font_paths = [
-                    "C:/Windows/Fonts/segoeuib.ttf",  # Segoe UI Bold
-                    "C:/Windows/Fonts/arialbd.ttf",   # Arial Bold
-                    "C:/Windows/Fonts/segoeui.ttf",
-                    "C:/Windows/Fonts/arial.ttf",
-                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                    "/System/Library/Fonts/Helvetica.ttc"
-                ]
-                font = None
-                for font_path in font_paths:
-                    if Path(font_path).exists():
-                        font = ImageFont.truetype(font_path, font_size)
-                        break
-                if font is None:
-                    font = ImageFont.load_default()
-            except Exception:
-                font = ImageFont.load_default()
-            
-            # Get text bounding box for centering
-            bbox = draw.textbbox((0, 0), team_name_display, font=font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            
-            # Center text horizontally and vertically in header
-            x_text = (base_width - text_width) // 2
-            y_text = (header_height - text_height) // 2
-            
-            # Determine text color based on header background brightness
-            # Sample the TOP border area of the header (first 1% of header height)
-            sample_top_height = max(5, int(header_height * 0.01))
-            sample_region = header_bg.crop((0, 0, base_width, sample_top_height))
-            avg_color = sample_region.resize((1, 1), Image.Resampling.LANCZOS).getpixel((0, 0))
-            
-            # Calculate luminance (perceived brightness)
-            if isinstance(avg_color, int):
-                luminance = avg_color
-            else:
-                r, g, b = avg_color[:3]
-                luminance = 0.299 * r + 0.587 * g + 0.114 * b
-            
-            # Use dark text on bright backgrounds, light text on dark backgrounds
-            if luminance > 128:
-                text_color = (40, 40, 40, 255)  # Dark gray-black
-            else:
-                text_color = (255, 255, 255, 255)  # White
-            
-            # Draw text without shadow
-            draw.text((x_text, y_text), team_name_display, font=font, fill=text_color)
-            
         new_image.save(image_path, "PNG", optimize=False)
-        print(f"DEBUG: Added blurred mirror header (top) with logos" + (f" and team name '{team_name}'" if team_name else ""))
+        print(f"DEBUG: Added blurred mirror header (top) with logos")
         
     except Exception as e:
         print(f"WARNING: Failed to overlay logos: {e}")

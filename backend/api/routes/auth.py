@@ -60,7 +60,7 @@ def verify_admin_password(password: str) -> bool:
     if not settings.ADMIN_PASSWORD_SALT or not settings.ADMIN_PASSWORD_HASH:
         # Fallback for dev if not set (not recommended for production)
         return password == "egrocks26"
-        
+
     dk = hashlib.pbkdf2_hmac(
         'sha256', 
         password.encode(), 

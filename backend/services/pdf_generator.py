@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any, Tuple
 import base64
 from io import BytesIO
+from PIL import Image as PILImage
 
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
@@ -129,7 +130,8 @@ def register_custom_fonts():
         logging.warning(f"Failed to register custom fonts: {e}")
 
 # Register fonts on module load
-register_custom_fonts()
+if "Poppins" not in pdfmetrics.getRegisteredFontNames():
+    register_custom_fonts()
 
 
 def clean_text(text: Optional[str]) -> str:
@@ -174,12 +176,35 @@ class DarkThemeReportGenerator:
         # Dynamic Logo Discovery
         self.logo_path = self._discover_logo()
         
-        register_custom_fonts()
         self.styles = self._create_styles()
         self.section_counter = 0
         self.subsection_counter = 0
         self.figure_counter = 0
         self.table_counter = 0
+        self._cached_svg_drawing = None
+
+    def _get_compressed_image(self, img_path: Path, max_dim: int = 800) -> Optional[BytesIO]:
+        """Downscale and compress image for PDF to save space and time."""
+        try:
+            with PILImage.open(img_path) as img:
+                # Convert to RGB (removes alpha channel, saves space)
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
+                
+                # Resize if too large
+                w, h = img.size
+                if max(w, h) > max_dim:
+                    scale = max_dim / float(max(w, h))
+                    img = img.resize((int(w * scale), int(h * scale)), PILImage.LANCZOS)
+                
+                output = BytesIO()
+                # Use low quality (good enough for report reading)
+                img.save(output, format="JPEG", quality=60, optimize=True)
+                output.seek(0)
+                return output
+        except Exception as e:
+            logging.warning(f"Failed to compress image {img_path}: {e}")
+            return None
 
     def _discover_logo(self) -> Optional[Path]:
         """Find the best logo for this usecase."""
@@ -422,11 +447,14 @@ class DarkThemeReportGenerator:
         b_font = BODY_FONT if "Poppins" in BODY_FONT else "Helvetica"
         
         try:
-            # Draw SVG Logo
-            drawing = svg2rlg(io.BytesIO(PITCH_SYNC_LOGO_SVG.encode('utf-8')))
-            sx = sy = logo_size / max(drawing.width, drawing.height)
-            drawing.scale(sx, sy)
-            renderPDF.draw(drawing, canvas, logo_cursor_x, logo_y)
+            # OPTIMIZATION: Cache the SVG drawing
+            if not self._cached_svg_drawing:
+                drawing = svg2rlg(io.BytesIO(PITCH_SYNC_LOGO_SVG.encode('utf-8')))
+                sx = sy = logo_size / max(drawing.width, drawing.height)
+                drawing.scale(sx, sy)
+                self._cached_svg_drawing = drawing
+            
+            renderPDF.draw(self._cached_svg_drawing, canvas, logo_cursor_x, logo_y)
             
             text_x = logo_cursor_x + logo_size + 0.35*cm
             text_y_main = header_y + header_height/2 + 0.05*cm
@@ -569,7 +597,8 @@ class DarkThemeReportGenerator:
             str(output_path),
             pagesize=A4,
             title=f"Mission Report — {self.team_id}",
-            author="EG Pitch-Sync | AI COE"
+            author="EG Pitch-Sync | AI COE",
+            pageCompression=1 # Enable PDF stream compression
         )
         
         title_frame = Frame(
@@ -734,7 +763,9 @@ class DarkThemeReportGenerator:
                 story.append(PageBreak())
             
             # Phase Hero Heading - Centered Sub-header
-            p_title = f"PHASE {i+1}: {phase_name}"
+            # Clean phase name to remove existing "Phase X:" prefix if present
+            clean_phase_name = re.sub(r'^PHASE\s+\d+[:\s-]+', '', phase_name, flags=re.IGNORECASE).strip()
+            p_title = f"PHASE {i+1}: {clean_phase_name}"
             story.append(Paragraph(p_title, self.styles["PhaseHeading"]))
             story.append(HRFlowable(width="100%", thickness=3, color=BORDER_LIGHT, spaceBefore=5, spaceAfter=20))
 
@@ -868,19 +899,24 @@ class DarkThemeReportGenerator:
                 story.extend(self._create_section_header(self._next_section("Visual Synthesis")))
                 
                 try:
-                    with open(img_path, "rb") as f:
-                        img_bytes = f.read()
-                    img_io = BytesIO(img_bytes)
-                    img_reader = ImageReader(img_io)
-                    iw, ih = img_reader.getSize()
-                    aspect = ih / float(iw)
-                    target_w = min(TEXT_WIDTH * 0.9, 14*cm)
-                    target_h = target_w * aspect
-                    if target_h > 10*cm:
-                        target_h = 10*cm
-                        target_w = target_h / aspect
-                    img_io.seek(0)
-                    img_flowable = Image(img_io, width=target_w, height=target_h)
+                    # OPTIMIZATION: Compress image before embedding
+                    compressed_io = self._get_compressed_image(img_path)
+                    
+                    if compressed_io:
+                        img_reader = ImageReader(compressed_io)
+                        iw, ih = img_reader.getSize()
+                        aspect = ih / float(iw)
+                        target_w = min(TEXT_WIDTH * 0.9, 14*cm)
+                        target_h = target_w * aspect
+                        if target_h > 10*cm:
+                            target_h = 10*cm
+                            target_w = target_h / aspect
+                        
+                        compressed_io.seek(0)
+                        img_flowable = Image(compressed_io, width=target_w, height=target_h)
+                    else:
+                        # Fallback to original if compression fails
+                        img_flowable = Image(str(img_path), width=TEXT_WIDTH*0.5, height=TEXT_WIDTH*0.5)
                     
                     visual_block = []
                     img_container = Table([[img_flowable]], colWidths=[TEXT_WIDTH])

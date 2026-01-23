@@ -178,23 +178,29 @@ class Models:
     # Creative model for synthesis/image prompts (more creative)
     CLAUDE_CREATIVE = "eu.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
-# Singleton instances
+# Singleton instances with thread-safe initialization
+import threading
 _client = None
 _creative_client = None
+_client_lock = threading.Lock()
 
 def get_client() -> ClaudeClient:
     """Get the default Claude client (Sonnet 4 for evaluation)."""
     global _client
     if _client is None:
-        _client = ClaudeClient()
+        with _client_lock:
+            if _client is None:  # Double-check locking pattern
+                _client = ClaudeClient()
     return _client
 
 def get_creative_client() -> ClaudeClient:
     """Get the creative Claude client (Sonnet 4.5 for synthesis/image prompts)."""
     global _creative_client
     if _creative_client is None:
-        _creative_client = ClaudeClient()
-        _creative_client.model_id = Models.CLAUDE_CREATIVE
+        with _client_lock:
+            if _creative_client is None:  # Double-check locking pattern
+                _creative_client = ClaudeClient()
+                _creative_client.model_id = Models.CLAUDE_CREATIVE
     return _creative_client
 
 # Keep get_ai_client for compatibility during transition

@@ -16,9 +16,9 @@ services:
       # Database persisted via volume for production reliability (EC2)
       - DATABASE_URL=sqlite:////app/data/gum_app.db
       - PYTHONPATH=/app
-      - WORKERS=${WORKERS:-4}
+      - WORKERS=${WORKERS:-3}
       # Higher timeout for long AI calls (Red Team eval can take 30s+)
-      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-120}
+      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-180}
       # Mode flags
       - DEBUG=${DEBUG:-false}
       - TEST_MODE=${TEST_MODE:-false}

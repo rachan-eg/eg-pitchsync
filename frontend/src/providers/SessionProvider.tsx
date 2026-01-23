@@ -248,6 +248,44 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }, [session, phaseConfig, scoringInfo]);
 
+    // Cross-tab Synchronization
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'pitch_sync_session' && e.newValue) {
+                console.log('🔄 Session sync: Detected update from another tab');
+                try {
+                    const newSession = JSON.parse(e.newValue);
+                    // Check timestamp or ID to ensure we're not overwriting with stale data if needed
+                    // For now, accept the latest event
+                    setSession(newSession);
+
+                    // Also attempt to sync active config if available
+                    const newConfig = localStorage.getItem('pitch_sync_config');
+                    if (newConfig) setPhaseConfig(JSON.parse(newConfig));
+
+                    // Update selection state derived from session
+                    if (newSession.usecase) setSelectedUsecase(newSession.usecase);
+                    if (newSession.theme_palette) setSelectedTheme(newSession.theme_palette);
+
+                    // Re-calculate unlocked phase
+                    if (newSession.phase_scores) {
+                        const unlocked = calculateHighestUnlockedPhase(
+                            newSession.phase_scores,
+                            JSON.parse(localStorage.getItem('pitch_sync_config') || '{}'),
+                            newSession.is_complete
+                        );
+                        setHighestUnlockedPhase(unlocked);
+                    }
+                } catch (err) {
+                    console.error('Failed to sync session from storage event', err);
+                }
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
     // Tactical Timer Management: Only pause when specifically LEAVING the war-room
     const lastPathname = useRef(location.pathname);
     useEffect(() => {

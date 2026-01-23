@@ -20,7 +20,7 @@ async def get_usecases():
 
 
 @router.get("/leaderboard", response_model=LeaderboardResponse)
-async def get_leaderboard():
+def get_leaderboard():
     """
     Get real-time leaderboard rankings (One entry per team).
     OPTIMIZED: Uses SQL-level ordering and deduplication.
@@ -81,7 +81,7 @@ async def get_leaderboard():
 
 
 @router.get("/session/{session_id}")
-async def get_session_details(session_id: str):
+def get_session_details(session_id: str):
     """Get detailed session state."""
     from fastapi import HTTPException
     

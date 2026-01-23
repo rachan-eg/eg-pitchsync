@@ -64,6 +64,11 @@
             "team_name": "Sasha AI",
             "usecase_id": "ai_support_bot",
             "description": "AI Support Bot team"
+        },
+        "TRIAL26": {
+            "team_name": "Trial Runners",
+            "usecase_id": "trial_run_test",
+            "description": "Trial Run Test team"
         }
     }
 }

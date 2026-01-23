@@ -22,6 +22,9 @@ ENV PYTHONPATH=/app
 # Copy the requirements file into the container
 COPY backend/requirements.txt .
 
+# Copy Gunicorn config for production tuning
+COPY backend/gunicorn.conf.py .
+
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -39,9 +42,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 ENV WORKERS=4
 ENV GUNICORN_TIMEOUT=180
 
-# Command to run the application using Gunicorn for robust process management
-# -w: Number of worker processes
-# -k: Use the Uvicorn worker class for FastAPI/ASGI
-# --bind: Network interface and port
-# --timeout: Increased timeout for long AI evaluations
-CMD ["sh", "-c", "gunicorn -w ${WORKERS} -k uvicorn.workers.UvicornWorker backend.main:app --bind 0.0.0.0:8000 --timeout ${GUNICORN_TIMEOUT}"]
+# Command to run the application using Gunicorn (configured via gunicorn.conf.py)
+CMD ["gunicorn", "backend.main:app"]

@@ -8,23 +8,28 @@ import logging
 import json
 import hashlib
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Depends
+from fastapi.concurrency import run_in_threadpool
 
 from backend.models import (
     FinalSynthesisRequest, FinalSynthesisResponse, 
     PrepareSynthesisRequest, PrepareSynthesisResponse
 )
+from backend.services.auth import authenticate_user, optional_authenticate_user, UserInfo
 from backend.services import (
     get_session, update_session,
     calculate_total_tokens
 )
 from backend.services.ai import (
-    auto_generate_pitch_async,
-    prepare_master_prompt_draft_async,
-    generate_customer_image_prompt_async,
-    evaluate_visual_asset_async,
+    auto_generate_pitch,
+    prepare_master_prompt_draft,
+    generate_customer_image_prompt,
+    evaluate_visual_asset_async, # Still need async for image eval? No, we check if sync exists.
     get_client
 )
+# Check evaluate_visual_asset availability. __init__.py didn't explicitly list it but evaluator.py has it.
+# evaluator.py defines evaluate_visual_asset (sync).
+from backend.services.ai.evaluator import evaluate_visual_asset
 
 logger = logging.getLogger("pitchsync.api")
 
@@ -32,14 +37,14 @@ router = APIRouter(prefix="/api", tags=["synthesis"])
 
 
 @router.post("/prepare-synthesis", response_model=PrepareSynthesisResponse)
-async def prepare_synthesis(req: PrepareSynthesisRequest):
-    """Generate a draft master prompt from Q&A (async for multi-user)."""
+def prepare_synthesis(req: PrepareSynthesisRequest):
+    """Generate a draft master prompt from Q&A."""
     session = get_session(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
     try:
-        draft = await prepare_master_prompt_draft_async(
+        draft = prepare_master_prompt_draft(
             usecase=session.usecase,
             all_phases_data=session.phases
         )
@@ -57,7 +62,7 @@ async def prepare_synthesis(req: PrepareSynthesisRequest):
 
 
 @router.post("/final-synthesis", response_model=FinalSynthesisResponse)
-async def final_synthesis(req: FinalSynthesisRequest):
+def final_synthesis(req: FinalSynthesisRequest):
     """Generate final pitch with visionary hook and image (async for multi-user)."""
     
     session = get_session(req.session_id)
@@ -65,8 +70,8 @@ async def final_synthesis(req: FinalSynthesisRequest):
         raise HTTPException(status_code=404, detail="Session not found")
     
     try:
-        # Synthesize pitch using automated flow (QnA -> Curator -> Image) - ASYNC
-        result = await auto_generate_pitch_async(
+        # Synthesize pitch using automated flow (QnA -> Curator -> Image)
+        result = auto_generate_pitch(
             usecase=session.usecase,
             all_phases_data=session.phases,
             theme=session.theme_palette
@@ -106,7 +111,7 @@ async def final_synthesis(req: FinalSynthesisRequest):
 
 
 @router.post("/curate-prompt")
-async def curate_prompt(req: PrepareSynthesisRequest):
+def curate_prompt(req: PrepareSynthesisRequest):
     """Generate customer-focused image prompt from all phases (without generating image yet)."""
     from backend.services.ai.synthesizer import generate_customer_image_prompt
     
@@ -159,7 +164,7 @@ async def curate_prompt(req: PrepareSynthesisRequest):
     additional_notes = getattr(req, 'additional_notes', None)
     
     try:
-        curated_prompt_struct, usage = await generate_customer_image_prompt_async(
+        curated_prompt_struct, usage = generate_customer_image_prompt(
             usecase=session.usecase,
             all_phases_data=session.phases,
             theme=session.theme_palette,
@@ -215,9 +220,10 @@ async def submit_pitch_image(
     import os
     import base64
     from backend.config import GENERATED_DIR
-    from backend.services.ai.image_gen import overlay_logos, get_logos_for_usecase, upscale_image
+    from backend.services.ai.image_gen import overlay_logos, get_logos_for_usecase
     
-    session = get_session(session_id)
+    # Use run_in_threadpool for blocking DB call in async route
+    session = await run_in_threadpool(get_session, session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
@@ -238,7 +244,20 @@ async def submit_pitch_image(
         if session.final_output.customer_pitch:
             context_text += f"\n\nContextual Pitch: {session.final_output.customer_pitch}"
             
-        # ASYNC visual evaluation for multi-user concurrency
+        # Use run_in_threadpool for synchronous DB/logic if sticking with async,
+        # but here we mixed async file read with blocking logic.
+        # Since submit_pitch_image is IO bound (file upload + AI), passing to a thread is good,
+        # but UploadFile.read() is async.
+        # Ideally, we read async, then offload the rest.
+        
+        # We must keep this route async because of `file.read()` which is async in FastAPI for UploadFile.
+        # So manual run_in_threadpool is needed for the blocking parts (get_session, overlay, eval).
+
+        # OR we rely on evaluate_visual_asset_async like before, but we must fix get_session blocking.
+        # get_session was called at top. Let's wrap it there?
+        # Actually, let's just make the route async and use run_in_threadpool for get_session.
+
+        # ASYNC visual evaluation is fine.
         visual_eval = await evaluate_visual_asset_async(client, context_text, image_b64)
         v_result = visual_eval["result"]
         v_usage = visual_eval["usage"]
@@ -263,10 +282,7 @@ async def submit_pitch_image(
         team_name = session.team_id  # This is already the display name
         logger.debug(f"🖌️ Overlaying logos for team '{team_name}' on session {session_id[:8]}")
         
-        overlay_logos(str(filepath), logos_to_overlay, team_name=team_name)
-        
-        # 5. Upscale image (fast CPU-based, low latency) - logos scale with image
-        upscale_image(str(filepath), target_min_dimension=2048, max_scale=2.5)
+        overlay_logos(str(filepath), logos_to_overlay)
         
         image_url = f"/generated/{filename}"
         
