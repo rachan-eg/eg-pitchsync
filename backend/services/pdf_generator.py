@@ -392,6 +392,37 @@ class DarkThemeReportGenerator:
             bulletIndent=8
         )
         
+        # Style for long Q&A answers that need to split across pages
+        styles["AnswerBox"] = ParagraphStyle(
+            name="AnswerBox",
+            fontName=BODY_FONT,
+            fontSize=9,
+            leading=12,
+            textColor=TEXT_PRIMARY,
+            backColor=colors.HexColor("#0f0f1a"),
+            borderColor=BORDER_LIGHT,
+            borderWidth=1,
+            borderPadding=10,
+            borderRadius=2,
+            spaceBefore=0,
+            spaceAfter=0
+        )
+
+        styles["CodeBox"] = ParagraphStyle(
+            name="CodeBox",
+            fontName=BODY_FONT,
+            fontSize=8,
+            leading=10,
+            textColor=TEXT_SECONDARY,
+            backColor=colors.HexColor("#0f0f1a"),
+            borderColor=BORDER_LIGHT,
+            borderWidth=1,
+            borderPadding=10,
+            borderRadius=2,
+            spaceBefore=0,
+            spaceAfter=0
+        )
+        
         return styles
 
     def _next_section(self, title: str) -> str:
@@ -733,18 +764,15 @@ class DarkThemeReportGenerator:
         # Columns widths: [Name, Time, Retries, Hints, Score] totaling ~17cm
         perf_summary_table = self._create_dark_table(summary_table_data, [6.5*cm, 3*cm, 2.5*cm, 2.5*cm, 2.5*cm])
         
-        summary_block = [
-            Spacer(1, 0.5*cm),
-            metrics_row,
-            Spacer(1, 0.8*cm),
-            Paragraph(overview_text, self.styles["Body"]),
-            Spacer(1, 0.6*cm),
-            Paragraph("Performance Summary", self.styles["H3"]),
-            Spacer(1, 0.2*cm),
-            perf_summary_table,
-            Spacer(1, 0.5*cm)
-        ]
-        story.append(KeepTogether(summary_block))
+        story.append(Spacer(1, 0.5*cm))
+        story.append(metrics_row)
+        story.append(Spacer(1, 0.8*cm))
+        story.append(Paragraph(overview_text, self.styles["Body"]))
+        story.append(Spacer(1, 0.6*cm))
+        story.append(Paragraph("Performance Summary", self.styles["H3"]))
+        story.append(Spacer(1, 0.2*cm))
+        story.append(perf_summary_table)
+        story.append(Spacer(1, 0.5*cm))
         
         # PHASE ANALYSIS - Start on new page
         story.append(PageBreak())
@@ -820,11 +848,9 @@ class DarkThemeReportGenerator:
             story.append(KeepTogether(table_block))
             
             if phase_data.rationale or phase_data.feedback:
-                feedback_block = []
-                feedback_block.append(Paragraph("AI Feedback", self.styles["H3"]))
-                feedback_block.append(Paragraph(clean_text(phase_data.rationale or phase_data.feedback), self.styles["Body"]))
-                feedback_block.append(Spacer(1, 0.2*cm))
-                story.append(KeepTogether(feedback_block))
+                story.append(Paragraph("AI Feedback", self.styles["H3"]))
+                story.append(Paragraph(clean_text(phase_data.rationale or phase_data.feedback), self.styles["Body"]))
+                story.append(Spacer(1, 0.2*cm))
             
             if phase_data.strengths:
                 strength_block = []
@@ -843,32 +869,20 @@ class DarkThemeReportGenerator:
             # --- NEW: SUBMISSION LOG (Q&A) ---
             if phase_data.responses:
                 for idx, resp in enumerate(phase_data.responses):
-                    qa_block = []
                     if idx == 0:
-                        qa_block.append(Spacer(1, 0.4*cm))
-                        qa_block.append(Paragraph("Submission Log", self.styles["H3"]))
+                        story.append(Spacer(1, 0.4*cm))
+                        story.append(Paragraph("Submission Log", self.styles["H3"]))
                     
                     # Question
                     q_text = clean_text(resp.q)
-                    qa_block.append(Paragraph(f"<b>Q: {q_text}</b>", self.styles["BodySmall"]))
-                    qa_block.append(Spacer(1, 0.15*cm))
+                    story.append(Paragraph(f"<b>Q: {q_text}</b>", self.styles["BodySmall"]))
+                    story.append(Spacer(1, 0.15*cm))
                     
-                    # Answer in a BOX
+                    # Answer in a BOX (Using styled Paragraph for splitting support)
                     a_text = clean_text(resp.a)
-                    a_para = Paragraph(f'<font color="{TEXT_PRIMARY.hexval()}">{a_text}</font>', self.styles["BodySmall"])
-                    
-                    a_table = Table([[a_para]], colWidths=[TEXT_WIDTH])
-                    a_table.setStyle(TableStyle([
-                        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#0f0f1a")),
-                        ('BOX', (0,0), (-1,-1), 1, BORDER_LIGHT),
-                        ('TOPPADDING', (0,0), (-1,-1), 8),
-                        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-                        ('LEFTPADDING', (0,0), (-1,-1), 10),
-                        ('RIGHTPADDING', (0,0), (-1,-1), 10),
-                    ]))
-                    qa_block.append(a_table)
-                    qa_block.append(Spacer(1, 0.5*cm))
-                    story.append(KeepTogether(qa_block))
+                    a_para = Paragraph(f'<font color="{TEXT_PRIMARY.hexval()}">{a_text}</font>', self.styles["AnswerBox"])
+                    story.append(a_para)
+                    story.append(Spacer(1, 0.5*cm))
 
             story.append(Spacer(1, 0.8*cm))
         
@@ -886,7 +900,7 @@ class DarkThemeReportGenerator:
                 sn_block.append(Paragraph(self._next_subsection("Customer Pitch"), self.styles["H2"]))
                 sn_block.append(Paragraph(clean_text(self.session.final_output.customer_pitch), self.styles["Body"]))
             
-            story.append(KeepTogether(sn_block))
+            story.extend(sn_block)
             story.append(Spacer(1, 0.5*cm))
         
         # VISUAL SYNTHESIS
@@ -956,29 +970,18 @@ class DarkThemeReportGenerator:
 
         # --- NEW: SYNTHESIS BLUEPRINT (Master Prompt) ---
         if self.session.final_output.image_prompt:
-            p_block = []
-            p_block.extend(self._create_section_header(self._next_section("Synthesis Blueprint")))
-            p_block.append(Paragraph(self._next_subsection("Master Image Prompt"), self.styles["H2"]))
-            p_block.append(Paragraph(
+            story.extend(self._create_section_header(self._next_section("Synthesis Blueprint")))
+            story.append(Paragraph(self._next_subsection("Master Image Prompt"), self.styles["H2"]))
+            story.append(Paragraph(
                 "The following semantic blueprint was synthesized from the team's combined phase outputs to generate the final strategic asset.",
                 self.styles["Body"]
             ))
-            p_block.append(Spacer(1, 0.3*cm))
+            story.append(Spacer(1, 0.3*cm))
             
-            # Draw the prompt in a dark code-like box
+            # Draw the prompt in a dark code-like box (Styled Paragraph for splitting)
             prompt_text = clean_text(self.session.final_output.image_prompt)
-            prompt_data = [[Paragraph(f'<font face="Courier" size="8" color="#cbd5e1">{prompt_text}</font>', self.styles["BodySmall"])]]
-            prompt_table = Table(prompt_data, colWidths=[TEXT_WIDTH])
-            prompt_table.setStyle(TableStyle([
-                ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#0f0f1a")),
-                ('BOX', (0,0), (-1,-1), 1, BORDER_LIGHT), # Matching the bolder border
-                ('TOPPADDING', (0,0), (-1,-1), 10),
-                ('BOTTOMPADDING', (0,0), (-1,-1), 10),
-                ('LEFTPADDING', (0,0), (-1,-1), 10),
-                ('RIGHTPADDING', (0,0), (-1,-1), 10),
-            ]))
-            p_block.append(prompt_table)
-            story.append(KeepTogether(p_block))
+            prompt_para = Paragraph(f'<font face="Courier">{prompt_text}</font>', self.styles["CodeBox"])
+            story.append(prompt_para)
             story.append(Spacer(1, 0.8*cm))
         
         # CONCLUSION
@@ -1005,7 +1008,7 @@ class DarkThemeReportGenerator:
             self.styles["Caption"]
         ))
         
-        story.append(KeepTogether(concl_block))
+        story.extend(concl_block)
         
         doc.build(story)
         return output_path

@@ -603,9 +603,9 @@ async def submit_phase(req: SubmitPhaseRequest):
             if i < len(phase_def["questions"]):
                 q_def = phase_def["questions"][i]
                 if isinstance(q_def, dict):
-                     total_hint_penalty += q_def.get("hint_penalty", 50.0)
+                     total_hint_penalty += q_def.get("hint_penalty", 25.0)
                 else:
-                     total_hint_penalty += 50.0 # Default if simple string question (though hints usually imply dict structure)
+                     total_hint_penalty += 25.0 # Default if simple string question (though hints usually imply dict structure)
     
     # Extract real AI usage
     ai_usage = eval_result.get('usage', {})

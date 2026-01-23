@@ -193,6 +193,13 @@ Analyze the submission for:
 3. **Market Delusions**: "Everyone will use this", "No competitors".
 4. **Vague Hand-Waving**: "We use AI to optimize X" (without saying HOW).
 
+*** RULE: RESPECT THE PARTICIPANT'S TECHNICAL CHOICES ***
+- Do NOT suggest alternative technical architectures (e.g., "use webhooks instead of dashboard").
+- If they propose a "dashboard", "UI", "portal", or any user-facing solution, that is VALID.
+- If they propose "APIs", "webhooks", "microservices", that is also VALID.
+- Your job is to evaluate WHETHER their chosen approach makes sense, NOT to prescribe a different one.
+- Only flag a technical choice if it is IMPOSSIBLE or CONTRADICTORY, not just "different from what you'd choose".
+
 *** RULE: IGNORE TYPOS & GRAMMAR ***
 - Do NOT list spelling mistakes or grammar issues as "Minor Gaps".
 - Focus ONLY on the *substance*, *logic*, and *feasibility*.
@@ -276,6 +283,13 @@ The user is a HUMAN typing quickly under pressure.
 - If the core idea is brilliant but "misspelled", score it as BRILLIANT.
 - It doesnt matter how properly the idea is typed, but how the idea itself stands.
 - Substance >>> Style.
+
+*** RESPECT TECHNICAL CHOICES ***
+- Do NOT suggest alternative implementations in your feedback.
+- If they say "dashboard", do NOT say "consider webhooks/APIs instead".
+- If they say "API", do NOT say "consider a dashboard instead".
+- Evaluate the VALIDITY of their approach, not your preferred architecture.
+- Your improvements should focus on DEPTH and CLARITY, not ALTERNATIVE PATHS.
 
 OUTPUT FORMAT:
 Return PURE JSON.

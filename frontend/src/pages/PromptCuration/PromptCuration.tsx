@@ -486,7 +486,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
                             <button
                                 onClick={handleSubmitPitch}
-                                disabled={isLoading || isRegenerating}
+                                disabled={isLoading || isRegenerating || (!selectedFile && uploadedImages.length === 0)}
                                 className="curate-finalize reactive-border reactive-border--success"
                             >
                                 {isLoading ? (

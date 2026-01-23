@@ -179,43 +179,61 @@ class VisualAnalysisResult(BaseModel):
 
 def parse_ai_response(response_text: str, model_class: type) -> BaseModel:
     """
-    Safely parse AI response text into a Pydantic model.
-    
-    Falls back to default values if parsing fails, preventing crashes
-    while maintaining type safety.
-    
-    Args:
-        response_text: Raw LLM output (may contain markdown, extra text, etc.)
-        model_class: The Pydantic model class to parse into
-    
-    Returns:
-        Instance of model_class with extracted or default values
+    Safely parse AI response text into a Pydantic model with robust repair logic.
     """
     import json
     import re
+    import logging
+    logger = logging.getLogger("pitchsync.ai")
     
     # Clean up the response
     text = response_text.strip()
     
-    # Try to extract JSON from markdown code blocks
+    # 1. Extract JSON block
     json_match = re.search(r'```(?:json)?\s*(.*?)\s*```', text, re.DOTALL)
     if json_match:
         text = json_match.group(1).strip()
     else:
-        # Try to find raw JSON object
         json_match = re.search(r'(\{.*\})', text, re.DOTALL)
         if json_match:
             text = json_match.group(1).strip()
     
-    # Attempt to parse
+    # 2. Attempt First Pass (Standard)
     try:
         data = json.loads(text, strict=False)
         return model_class.model_validate(data)
     except (json.JSONDecodeError, Exception) as e:
-        # Log more context for debugging
-        import logging
-        logger = logging.getLogger("pitchsync.ai")
-        logger.error(f"❌ AI JSON Parse Failure: {e}")
-        logger.error(f"   Raw start: {response_text[:200]}...")
-        # Return model with defaults
-        return model_class()
+        # If standard parse fails, enter REPAIR MODE
+        logger.warning(f"⚠️ Initial JSON parse failed, attempting repair... Error: {e}")
+        
+        try:
+            # REPAIR STEP A: Fix trailing commas
+            repaired = re.sub(r',\s*([\]}])', r'\1', text)
+            
+            # REPAIR STEP B: Escape unescaped double quotes inside string values
+            # This heuristic finds "key": "value" and escapes quotes inside "value"
+            def escape_internal_quotes(match):
+                key = match.group(1)
+                value = match.group(2)
+                # Escape double quotes that are NOT already escaped
+                fixed_value = re.sub(r'(?<!\\)"', r'\"', value)
+                return f'"{key}": "{fixed_value}"'
+
+            # Matches "key": "value" followed by structural JSON markers
+            repaired = re.sub(r'"([^"]+)"\s*:\s*"(.*?)"(?=\s*[,}\]])', escape_internal_quotes, repaired, flags=re.DOTALL)
+            
+            # REPAIR STEP C: Handle truncated JSON (basic attempt)
+            if repaired.startswith('{') and not repaired.strip().endswith('}'):
+                # Check for open string
+                if repaired.count('"') % 2 != 0:
+                    repaired += '"'
+                repaired += '}'
+
+            data = json.loads(repaired, strict=False)
+            return model_class.model_validate(data)
+            
+        except Exception as repair_err:
+            logger.error(f"❌ AI JSON Parse Failure (even after repair): {repair_err}")
+            logger.error(f"   Raw start: {response_text[:300]}...")
+            # Return model with defaults to prevent total system failure
+            return model_class()
