@@ -11,7 +11,7 @@
  * @returns The complete URL to call
  */
 export const getApiUrl = (path: string): string => {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const baseUrl = import.meta.env.VITE_API_URL || '';
     const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
@@ -68,18 +68,23 @@ export const getFullUrl = (path: string): string => {
         normalizedPath = normalizedPath.substring(4);
     }
 
-    // 5. Special handling for static vs api
-    const isStaticAsset = normalizedPath.startsWith('/generated/') ||
-        normalizedPath.startsWith('/assets/') ||
-        normalizedPath.startsWith('/vault/');
+    // 5. Special handling for static vs backend assets
+    const isGeneratedAsset = normalizedPath.startsWith('/generated/');
+    const isVaultAsset = normalizedPath.startsWith('/vault/');
+    const isLocalStatic = normalizedPath.startsWith('/assets/');
 
-    if (isStaticAsset) {
-        // Static assets should be root-relative for Nginx to handle them correctly
+    if (isLocalStatic) {
+        // Local frontend assets (logos, UI icons) remain root-relative
+        return normalizedPath;
+    }
+
+    if (isGeneratedAsset || isVaultAsset) {
+        // Assets are handled via root-relative paths in both dev (Vite proxy) and prod (Nginx)
         return normalizedPath;
     }
 
     // 6. For API requests, use the base URL if configured
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const baseUrl = import.meta.env.VITE_API_URL || '';
     const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 
     // If base is /api and path already has /api, don't double it

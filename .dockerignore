@@ -15,4 +15,4 @@ frontend/dist
 
 # Logs
 *.log
-.env
+.envbackend/data/

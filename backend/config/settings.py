@@ -10,7 +10,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 BACKEND_DIR = BASE_DIR / "backend"
 FRONTEND_DIR = BASE_DIR / "frontend"
-GENERATED_DIR_PATH = os.environ.get("GENERATED_DIR", str(FRONTEND_DIR / "public" / "generated"))
+# Default to /backend/data/generated to keep frontend clean
+GENERATED_DIR_PATH = os.environ.get("GENERATED_DIR", str(BACKEND_DIR / "data" / "generated"))
 
 # =============================================================================
 # ENVIRONMENT LOADING

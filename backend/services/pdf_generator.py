@@ -524,14 +524,46 @@ class DarkThemeReportGenerator:
         elements.append(line)
         return elements
 
-    def generate(self) -> Path:
-        """Generate the dark-themed PDF report with context-aware chunking."""
-        reports_dir = settings.BACKEND_DIR / "vault" / "reports"
+    def generate(self, force: bool = False) -> Path:
+        """
+        Generate the dark-themed PDF report with caching and cleanup logic.
+        Uses session_id for a stable filename to prevent duplicate/orphan files.
+        """
+        reports_dir = GENERATED_DIR / "reports"
         reports_dir.mkdir(parents=True, exist_ok=True)
         
+        # 1. Define a stable, unique filename per session with team prefix for easy cleanup
         clean_team_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', self.team_id)
-        filename = f"Report_{clean_team_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        short_id = self.session.session_id[:8]
+        filename = f"Report_{clean_team_id}_{short_id}.pdf"
         output_path = reports_dir / filename
+        
+        # OPTIMIZATION 1: Check if we can reuse an existing report for THIS session
+        if not force and output_path.exists():
+            try:
+                # Compare file modification time with session updated_at
+                file_mtime = datetime.fromtimestamp(output_path.stat().st_mtime, tz=timezone.utc)
+                session_updated = self.session.updated_at
+                
+                # If session hasn't changed since the file was made, return existing
+                if session_updated < file_mtime:
+                    logging.info(f"♻️  Reusing existing report for session {short_id}")
+                    return output_path
+            except Exception as e:
+                logging.warning(f"⚠️  Report caching check failed: {e}")
+
+        # 3. HOUSEKEEPING: Cleanup OLD reports for this specific team from PREVIOUS sessions
+        try:
+            for old_report in reports_dir.glob(f"Report_{clean_team_id}_*.pdf"):
+                # Only delete if it's a different session (different short_id)
+                if old_report.name != filename:
+                    try:
+                        old_report.unlink()
+                        logging.info(f"🗑️  Auto-cleaned orphan report: {old_report.name}")
+                    except Exception: pass
+        except Exception: pass
+
+        logging.info(f"📝 Generating fresh report for session {short_id}")
         
         doc = BaseDocTemplate(
             str(output_path),
@@ -943,7 +975,7 @@ class DarkThemeReportGenerator:
         return output_path
 
 
-def generate_report(session: SessionState) -> Path:
+def generate_report(session: SessionState, force: bool = False) -> Path:
     """Main entry point."""
     generator = DarkThemeReportGenerator(session)
-    return generator.generate()
+    return generator.generate(force=force)

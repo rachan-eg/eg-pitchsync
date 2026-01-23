@@ -17,6 +17,7 @@ env/
 backend/__pycache__/
 backend/*.py[cod]
 backend/.pytest_cache/
+backend/data/
 gum_app.db
 gum_app.db-shm
 gum_app.db-wal
@@ -30,7 +31,6 @@ bin/
 frontend/node_modules/
 frontend/dist/
 frontend/build_log.txt
-frontend/public/generated/
 
 
 # Audit
