@@ -27,6 +27,7 @@ from backend.services import (
     determine_pass_threshold,
     get_or_assign_team_context, get_latest_session_for_team
 )
+from backend.utils.broadcast import get_broadcast_message
 from backend.services.ai import evaluate_phase_async
 from backend.services.ai.evaluator_streaming import evaluate_phase_streaming
 
@@ -802,3 +803,9 @@ async def get_session_report(team_id: str):
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+
+
+@router.get("/broadcast")
+def get_public_broadcast():
+    """Get the current system broadcast message (public)."""
+    return get_broadcast_message()

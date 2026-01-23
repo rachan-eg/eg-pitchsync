@@ -106,6 +106,7 @@ class SessionState(BaseModel):
     phase_start_times: Dict[str, datetime] = {}
     phase_elapsed_seconds: Dict[str, float] = {}  # Accumulated time per phase (for pause/resume)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
     is_complete: bool = False
     uploaded_images: List[PitchSubmission] = []  # NEW: For persisting multiple pitch visuals with metrics

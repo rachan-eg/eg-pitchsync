@@ -6,6 +6,9 @@ import './Leaderboard.css';
 interface LeaderboardProps {
     entries: LeaderboardEntry[];
     currentTeamId?: string;
+    hideTitle?: boolean;
+    hideBackButton?: boolean;
+    onBack?: () => void;
 }
 
 const Icons = {
@@ -30,7 +33,10 @@ type LeaderboardTrack = 'ELITE' | 'LEGENDS' | 'MINIMALIST' | 'BLITZ' | 'PHASES';
 
 export const Leaderboard: React.FC<LeaderboardProps> = ({
     entries,
-    currentTeamId
+    currentTeamId,
+    hideTitle,
+    hideBackButton,
+    onBack
 }) => {
     const navigate = useNavigate();
     const [track, setTrack] = React.useState<LeaderboardTrack>('ELITE');
@@ -110,7 +116,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     };
 
     const handleBack = () => {
-        navigate(-1);
+        if (onBack) {
+            onBack();
+        } else {
+            navigate(-1);
+        }
     };
 
     const formatDuration = (seconds: number) => {
@@ -124,21 +134,25 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             <div className="leaderboard__container page-transition">
                 {/* Header */}
                 <div className="leaderboard__header">
-                    <button onClick={handleBack} className="leaderboard__back-btn btn-secondary">
-                        <Icons.ChevronLeft />
-                        <span>Return to Ops</span>
-                    </button>
+                    {!hideBackButton && (
+                        <button onClick={handleBack} className="leaderboard__back-btn btn-secondary">
+                            <Icons.ChevronLeft />
+                            <span>Return to Ops</span>
+                        </button>
+                    )}
 
-                    <div className="leaderboard__title-section">
-                        <div className="leaderboard__title-row">
-                            <span className="leaderboard__title-icon"><Icons.Zap /></span>
-                            <h1 className="leaderboard__title">ELITE RANKS</h1>
-                            <span className="leaderboard__title-icon"><Icons.Zap /></span>
+                    {!hideTitle && (
+                        <div className="leaderboard__title-section">
+                            <div className="leaderboard__title-row">
+                                <span className="leaderboard__title-icon"><Icons.Zap /></span>
+                                <h1 className="leaderboard__title">ELITE RANKS</h1>
+                                <span className="leaderboard__title-icon"><Icons.Zap /></span>
+                            </div>
+                            <p className="leaderboard__subtitle">
+                                Global Tactical Assessment • {entries.length} Measured Missions
+                            </p>
                         </div>
-                        <p className="leaderboard__subtitle">
-                            Global Tactical Assessment • {entries.length} Measured Missions
-                        </p>
-                    </div>
+                    )}
                     <div className="leaderboard__spacer" />
                 </div>
 

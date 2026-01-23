@@ -71,7 +71,7 @@ export interface AppContextType {
     resumeTimer: () => void;
 }
 
-const AppContext = createContext<AppContextType | null>(null);
+export const AppContext = createContext<AppContextType | null>(null);
 
 // =============================================================================
 // BRIDGE PROVIDER

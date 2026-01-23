@@ -103,6 +103,7 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
         
         is_complete=db_session.is_complete,
         created_at=db_session.created_at,
+        updated_at=db_session.updated_at,
         completed_at=db_session.updated_at if db_session.is_complete else None
     )
 

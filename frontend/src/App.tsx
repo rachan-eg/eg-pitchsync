@@ -12,6 +12,7 @@ import { PromptCuration } from './pages/PromptCuration/PromptCuration';
 import { FinalReveal } from './pages/FinalReveal/FinalReveal';
 import { PresentationMode } from './pages/PresentationMode/PresentationMode';
 import { Leaderboard } from './pages/Leaderboard/Leaderboard';
+import { AdminDashboard } from './pages/Admin/AdminDashboard';
 
 // Components
 import { GlobalHeader } from './components/GlobalHeader/GlobalHeader';
@@ -21,6 +22,8 @@ import { PhaseInput } from './components/PhaseInput/PhaseInput';
 import { AuthLoading } from './components/AuthLoading/AuthLoading';
 import { TacticalLoader } from './components/TacticalLoader';
 import { MouseGlowEffect } from './components/MouseGlowEffect';
+import { BroadcastReceiver } from './components/BroadcastReceiver/BroadcastReceiver';
+
 
 
 // =============================================================================
@@ -49,6 +52,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
 
     if (requireTeamCode && !teamCodeValidated) {
+        return <Navigate to="/team-code" replace />;
+    }
+
+    return <>{children}</>;
+};
+
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { isAdmin, isLoading } = useAuth();
+
+    if (isLoading) {
+        return <AuthLoading message="Validating Command Access" />;
+    }
+
+    if (!isAdmin) {
         return <Navigate to="/team-code" replace />;
     }
 
@@ -325,6 +342,7 @@ const App: React.FC = () => {
         <>
             {/* Global mouse tracking for reactive borders */}
             <MouseGlowEffect />
+            <BroadcastReceiver />
 
             <Routes>
                 {/* Public Routes */}
@@ -342,6 +360,16 @@ const App: React.FC = () => {
                         <ProtectedRoute requireAuth={true}>
                             {teamCodeValidated ? <Navigate to="/mission" replace /> : <TeamCode />}
                         </ProtectedRoute>
+                    }
+                />
+
+                {/* Admin Route */}
+                <Route
+                    path="/admin"
+                    element={
+                        <AdminRoute>
+                            <AdminDashboard />
+                        </AdminRoute>
                     }
                 />
 

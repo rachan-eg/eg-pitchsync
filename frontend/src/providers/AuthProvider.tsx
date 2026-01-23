@@ -31,6 +31,12 @@ export interface AuthContextType {
     user: UserInfo | null;
     token: string | null;
 
+    // Admin State
+    isAdmin: boolean;
+    adminToken: string | null;
+    adminWelcomeShown: boolean;
+    setAdminWelcomeShown: (shown: boolean) => void;
+
     // Team Code State
     teamCodeInfo: TeamCodeInfo | null;
     teamCodeValidated: boolean;
@@ -38,7 +44,8 @@ export interface AuthContextType {
     // Actions
     login: (redirectPath?: string) => Promise<void>;
     logout: () => Promise<void>;
-    validateTeamCode: (code: string) => Promise<{ valid: boolean; message?: string }>;
+    validateTeamCode: (code: string) => Promise<{ valid: boolean; message?: string; isAdminTrigger?: boolean }>;
+    loginAdmin: (password: string) => Promise<{ success: boolean; message?: string }>;
     clearTeamCode: () => void;
 }
 
@@ -53,6 +60,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState<UserInfo | null>(null);
     const [token, setToken] = useState<string | null>(null);
+
+    // Admin State
+    const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+        return sessionStorage.getItem('pitch_sync_is_admin') === 'true';
+    });
+    const [adminToken, setAdminToken] = useState<string | null>(() => {
+        return sessionStorage.getItem('pitch_sync_admin_token');
+    });
+    const [adminWelcomeShown, setAdminWelcomeShown] = useState<boolean>(() => {
+        return sessionStorage.getItem('pitch_sync_admin_welcome_shown') === 'true';
+    });
+
     const [teamCodeInfo, setTeamCodeInfo] = useState<TeamCodeInfo | null>(() => {
         const saved = sessionStorage.getItem('pitch_sync_team_info');
         try { return saved ? JSON.parse(saved) : null; } catch { return null; }
@@ -60,6 +79,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [teamCodeValidated, setTeamCodeValidated] = useState<boolean>(() => {
         return sessionStorage.getItem('pitch_sync_team_validated') === 'true';
     });
+
+    // Helper to persist admin welcome state
+    const setAdminWelcomeShownPersistent = useCallback((shown: boolean) => {
+        setAdminWelcomeShown(shown);
+        sessionStorage.setItem('pitch_sync_admin_welcome_shown', shown ? 'true' : 'false');
+    }, []);
 
     // Check for existing session or handle redirect on mount
     useEffect(() => {
@@ -241,7 +266,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     // Validate team code
-    const validateTeamCode = useCallback(async (code: string): Promise<{ valid: boolean; message?: string }> => {
+    const validateTeamCode = useCallback(async (code: string): Promise<{ valid: boolean; message?: string; isAdminTrigger?: boolean }> => {
         try {
             const response = await fetch(getApiUrl('/api/auth/validate-code'), {
                 method: 'POST',
@@ -253,6 +278,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
 
             const data = await response.json();
+
+            // Check for admin trigger
+            if (data.status === "ADMIN_ACCESS_TRIGGER") {
+                return { valid: true, isAdminTrigger: true };
+            }
 
             if (data.valid) {
                 const info = {
@@ -277,6 +307,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [token]);
 
+    // Admin login function
+    const loginAdmin = useCallback(async (password: string): Promise<{ success: boolean; message?: string }> => {
+        try {
+            const response = await fetch(getApiUrl('/api/auth/admin/login'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setIsAdmin(true);
+                setAdminToken(data.token);
+                setAdminWelcomeShownPersistent(false); // Reset welcome shown on fresh login
+
+                // Persist
+                sessionStorage.setItem('pitch_sync_is_admin', 'true');
+                sessionStorage.setItem('pitch_sync_admin_token', data.token);
+                sessionStorage.setItem('pitch_sync_admin_welcome_shown', 'false');
+
+                return { success: true };
+            } else {
+                return { success: false, message: data.message || 'Invalid admin password' };
+            }
+        } catch (error) {
+            console.error('Admin login error:', error);
+            return { success: false, message: 'Connection error during admin login' };
+        }
+    }, [setAdminWelcomeShownPersistent]);
+
     // Clear team code (for reset/restart)
     const clearTeamCode = useCallback(() => {
         setTeamCodeInfo(null);
@@ -290,22 +353,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         user,
         token,
+        isAdmin,
+        adminToken,
+        adminWelcomeShown,
+        setAdminWelcomeShown: setAdminWelcomeShownPersistent,
         teamCodeInfo,
         teamCodeValidated,
         login,
         logout,
         validateTeamCode,
+        loginAdmin,
         clearTeamCode
     }), [
         isAuthenticated,
         isLoading,
         user,
         token,
+        isAdmin,
+        adminToken,
+        adminWelcomeShown,
+        setAdminWelcomeShownPersistent,
         teamCodeInfo,
         teamCodeValidated,
         login,
         logout,
         validateTeamCode,
+        loginAdmin,
         clearTeamCode
     ]);
 
