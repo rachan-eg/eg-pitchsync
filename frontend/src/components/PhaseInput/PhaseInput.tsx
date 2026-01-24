@@ -48,7 +48,8 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 }) => {
     const {
         submitPhase, elapsedSeconds, scoringInfo, session, phaseConfig,
-        setCurrentPhaseResponses, resumeTimer, phaseResult, setPhaseResult
+        setCurrentPhaseResponses, resumeTimer, phaseResult, setPhaseResult,
+        error, setError
     } = useApp();
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -57,8 +58,9 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const [originalAnswers, setOriginalAnswers] = useState<string[]>([]);
     const [hintsUsed, setHintsUsed] = useState<boolean[]>([]);
     const [originalHintsUsed, setOriginalHintsUsed] = useState<boolean[]>([]);
-    const [isEditing, setIsEditing] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
     const [hintModalOpen, setHintModalOpen] = useState(false);
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     // Voice Input State
     const [interimTranscript, setInterimTranscript] = useState('');
@@ -66,6 +68,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const lastPhaseIdRef = useRef<string | null>(null);
     const hintsUsedRef = useRef<boolean[]>([]);
     const currentQuestionIndexRef = useRef<number>(0);
+    const isVoiceStartRef = useRef(true);
 
     // Keep refs in sync
     useEffect(() => {
@@ -116,6 +119,23 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
         return () => clearTimeout(handler);
     }, [answers, hintsUsed, anyChanges, syncToProvider]);
 
+    // Validation Error Timeout
+    useEffect(() => {
+        if (validationError) {
+            const timer = setTimeout(() => setValidationError(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [validationError]);
+
+    // Intercept Global "Max Retries" Error to show subtle prompt instead
+    useEffect(() => {
+        if (error && (error.toLowerCase().includes('retries') || error.toLowerCase().includes('exceeded'))) {
+            setValidationError("Maximum strategic retries exhausted. Strategic lockdown active.");
+            // Clear the global error so it doesn't show the system popup
+            setError(null);
+        }
+    }, [error, setError]);
+
     // --- NEW VOICE INPUT ---
     const {
         state: voiceState,
@@ -130,16 +150,49 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
             setAnswers(prevAnswers => {
                 const idx = currentQuestionIndexRef.current;
                 const currentVal = prevAnswers[idx] || '';
-                const updated = appendTranscript(currentVal, text, pauseDuration);
+
+                let source = currentVal;
+                if (isVoiceStartRef.current && source.trim().length > 0) {
+                    // Logic: If starting a new session and text exists, 
+                    // ensure we start on a new paragraph (double newline)
+                    if (!source.endsWith('\n\n')) {
+                        source = source.trimEnd() + '\n\n';
+                    }
+                }
+                isVoiceStartRef.current = false;
+
+                const updated = appendTranscript(source, text, pauseDuration);
                 const nextAnswers = prevAnswers.map((a, i) => i === idx ? updated : a);
                 return nextAnswers;
             });
             setInterimTranscript('');
             resumeTimer();
+
+            // Force auto-scroll to bottom after update
+            setTimeout(() => {
+                if (textareaRef.current) {
+                    textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+                }
+            }, 50);
         }
     });
 
     const isListening = voiceState === 'listening' || voiceState === 'requesting';
+
+    // Reset voice session flag when not listening
+    useEffect(() => {
+        if (!isListening) {
+            isVoiceStartRef.current = true;
+        }
+    }, [isListening]);
+
+    // Focus and scroll to bottom when listening begins
+    useEffect(() => {
+        if (isListening && textareaRef.current) {
+            const el = textareaRef.current;
+            el.scrollTop = el.scrollHeight;
+        }
+    }, [isListening]);
 
     // Initialize answers when Phase changes OR when returning to a phase with new server data
     // (e.g., when returning to a passed phase after navigating away)
@@ -202,6 +255,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     const handleMicClick = () => {
         if (voiceState === 'idle' || voiceState === 'error') {
             resumeTimer();
+            setIsEditing(true); // Switch to editor mode so user can see live transcript
         }
         toggleVoice();
     };
@@ -247,6 +301,36 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
 
 
     const handleSubmit = async () => {
+        // --- VALIDATION: Ensure 100 characters per response ---
+        const incompleteIndices = answers
+            .map((a, i) => (a || '').trim().length < 100 ? i : -1)
+            .filter(i => i !== -1);
+
+        if (incompleteIndices.length > 0) {
+            const firstIndex = incompleteIndices[0];
+            // Navigate to the first incomplete question
+            handleGoToQuestion(firstIndex);
+
+            // Inform the user with a summary
+            if (incompleteIndices.length === 1) {
+                const currentLen = (answers[firstIndex] || '').trim().length;
+                setValidationError(
+                    `Question ${firstIndex + 1} needs more detail (${currentLen}/100 chars).`
+                );
+            } else {
+                setValidationError(
+                    `${incompleteIndices.length} questions are below the 100-character strategic threshold.`
+                );
+            }
+            return;
+        }
+
+        // --- VALIDATION: Check if locked due to retries ---
+        if (isLocked && anyChanges) {
+            setValidationError("Strategy Locked: Maximum retries achieved. No further modifications allowed.");
+            return;
+        }
+
         const existingPhase = session?.phases[phaseConfig[phaseNumber]?.name];
         const isPassed = existingPhase?.status === 'passed';
 
@@ -543,7 +627,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 <span>Maximum Retries Exhausted - Response Locked</span>
                             </div>
                         )}
-                        {isEditing && !isLocked ? (
+                        {(isEditing || isListening) && !isLocked ? (
                             <textarea
                                 ref={textareaRef}
                                 className={`pi-textarea custom-scrollbar ${isListening ? 'pi-textarea--listening' : ''}`}
@@ -637,6 +721,12 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                     </div>
 
                     <div className="pi-footer__right">
+                        {validationError && (
+                            <div className="pi-validation-prompt animate-slide-up">
+                                <span className="pi-validation-icon">⚠️</span>
+                                <span className="pi-validation-text">{validationError}</span>
+                            </div>
+                        )}
                         {(() => {
                             const pName = phaseConfig[phaseNumber]?.name;
                             const existing = session?.phases[pName];
@@ -655,7 +745,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                     className={`pi-btn reactive-border ${allAnswered ? (showReview ? 'pi-btn--primary pi-btn--done reactive-border--success' : 'pi-btn--primary reactive-border--intense') : 'pi-btn--secondary reactive-border--subtle'}`}
                                     style={{ position: 'relative' }}
                                     onClick={handleSubmit}
-                                    disabled={!allAnswered || isSubmitting}
+                                    disabled={isSubmitting}
                                 >
                                     {isSubmitting ? 'Processing...' : (showReview ? 'Review Evaluation' : 'Finalize Phase')}
                                     {showReview ? <Icons.Check /> : <Icons.Send />}

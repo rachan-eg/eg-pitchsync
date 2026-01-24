@@ -108,7 +108,18 @@ export const useVoiceInput = ({ onFinalSegment, onInterimSegment, lang = 'en-IN'
             } catch (e) { }
         }
         setState('idle');
+        setError(null); // Clear error when stopping
     }, []);
+
+    // Auto-clear error after a few seconds
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => {
+                setError(null);
+            }, 8000); // 8 seconds visibility
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
 
     const start = useCallback(() => {
         if (stateRef.current === 'listening' || stateRef.current === 'requesting') return;

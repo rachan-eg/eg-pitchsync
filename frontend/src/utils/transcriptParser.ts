@@ -73,14 +73,22 @@ export const normalizeTranscript = (text: string): string => {
 export const appendTranscript = (original: string, addition: string, pauseDuration?: number): string => {
     if (!addition.trim()) return original;
 
-    const cleanedOriginal = original.trim();
+    const hasTrailingNewline = original.endsWith('\n');
+    const cleanedOriginal = hasTrailingNewline ? original : original.trim();
     let cleanedAddition = addition.trim();
 
     // Apply brand corrections to the new addition
     cleanedAddition = applyBrandCorrections(cleanedAddition);
 
-    if (!cleanedOriginal) {
+    if (!cleanedOriginal.trim()) {
         return addSmartPunctuation(cleanedAddition);
+    }
+
+    // If it already ends with a newline, we don't want to prepend a space
+    if (hasTrailingNewline) {
+        // Ensure the addition starts with a capital letter if it's following a newline (new paragraph)
+        cleanedAddition = cleanedAddition.charAt(0).toUpperCase() + cleanedAddition.slice(1);
+        return `${cleanedOriginal}${cleanedAddition}`;
     }
 
     // Determine separator based on context
@@ -88,14 +96,14 @@ export const appendTranscript = (original: string, addition: string, pauseDurati
 
     // If pause was long (>1.5s), treat as new sentence
     if (pauseDuration && pauseDuration > 1500) {
-        if (!/[.!?]$/.test(cleanedOriginal)) {
+        if (!/[.!?]$/.test(cleanedOriginal.trim())) {
             separator = '. ';
         } else {
             separator = ' ';
         }
         // Capitalize first letter of new sentence
         cleanedAddition = cleanedAddition.charAt(0).toUpperCase() + cleanedAddition.slice(1);
-    } else if (/[.!?]$/.test(cleanedOriginal)) {
+    } else if (/[.!?]$/.test(cleanedOriginal.trim())) {
         // Previous sentence ended with punctuation
         separator = ' ';
         cleanedAddition = cleanedAddition.charAt(0).toUpperCase() + cleanedAddition.slice(1);

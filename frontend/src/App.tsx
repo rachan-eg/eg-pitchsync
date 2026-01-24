@@ -1,20 +1,9 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AppProvider, useApp } from './AppContext';
 import { useAuth } from './providers';
 
-// Pages
-import { Login } from './pages/Login/Login';
-import { TeamCode } from './pages/TeamCode/TeamCode';
-import { MissionBrief } from './pages/MissionBrief/MissionBrief';
-import { WarRoom } from './pages/WarRoom/WarRoom';
-import { PromptCuration } from './pages/PromptCuration/PromptCuration';
-import { FinalReveal } from './pages/FinalReveal/FinalReveal';
-import { PresentationMode } from './pages/PresentationMode/PresentationMode';
-import { Leaderboard } from './pages/Leaderboard/Leaderboard';
-import { AdminDashboard } from './pages/Admin/AdminDashboard';
-
-// Components
+// Components (loaded immediately - used across the app)
 import { GlobalHeader } from './components/GlobalHeader/GlobalHeader';
 import { ErrorModal } from './components/ErrorModal/ErrorModal';
 import { PhaseFeedback } from './components/PhaseFeedback/PhaseFeedback';
@@ -23,6 +12,27 @@ import { AuthLoading } from './components/AuthLoading/AuthLoading';
 import { TacticalLoader } from './components/TacticalLoader';
 import { MouseGlowEffect } from './components/MouseGlowEffect';
 import { BroadcastReceiver } from './components/BroadcastReceiver/BroadcastReceiver';
+
+// =============================================================================
+// LAZY LOADED PAGES (Code Splitting for Performance)
+// =============================================================================
+// Critical path pages - loaded immediately
+import { Login } from './pages/Login/Login';
+import { TeamCode } from './pages/TeamCode/TeamCode';
+
+// Game pages - lazy loaded on demand
+const MissionBrief = lazy(() => import('./pages/MissionBrief/MissionBrief').then(m => ({ default: m.MissionBrief })));
+const WarRoom = lazy(() => import('./pages/WarRoom/WarRoom').then(m => ({ default: m.WarRoom })));
+const PromptCuration = lazy(() => import('./pages/PromptCuration/PromptCuration').then(m => ({ default: m.PromptCuration })));
+const FinalReveal = lazy(() => import('./pages/FinalReveal/FinalReveal').then(m => ({ default: m.FinalReveal })));
+const PresentationMode = lazy(() => import('./pages/PresentationMode/PresentationMode').then(m => ({ default: m.PresentationMode })));
+const Leaderboard = lazy(() => import('./pages/Leaderboard/Leaderboard').then(m => ({ default: m.Leaderboard })));
+
+// Admin page - lazy loaded (only needed by admins)
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+
+// Lazy loading fallback component
+const LazyFallback = () => <TacticalLoader message="Loading Module" subMessage="Preparing interface..." />;
 
 
 
@@ -296,19 +306,21 @@ const GameLayout: React.FC = () => {
                 session={session}
             />
 
-            {/* Main Content Area */}
+            {/* Main Content Area - wrapped in Suspense for lazy loading */}
             <main
                 className={`flex-1 min-h-0 flex flex-col ${isWarRoom ? 'overflow-hidden' : 'overflow-y-auto custom-scrollbar'}`}
             >
-                <Routes>
-                    <Route path="/mission" element={<MissionBriefPage />} />
-                    <Route path="/war-room" element={<WarRoomPage />} />
-                    <Route path="/curate" element={<PromptCurationPage />} />
-                    <Route path="/reveal" element={<FinalRevealPage />} />
-                    <Route path="/present" element={<PresentationModePage />} />
-                    <Route path="/leaderboard" element={<LeaderboardPage />} />
-                    <Route path="*" element={<Navigate to="/mission" replace />} />
-                </Routes>
+                <Suspense fallback={<LazyFallback />}>
+                    <Routes>
+                        <Route path="/mission" element={<MissionBriefPage />} />
+                        <Route path="/war-room" element={<WarRoomPage />} />
+                        <Route path="/curate" element={<PromptCurationPage />} />
+                        <Route path="/reveal" element={<FinalRevealPage />} />
+                        <Route path="/present" element={<PresentationModePage />} />
+                        <Route path="/leaderboard" element={<LeaderboardPage />} />
+                        <Route path="*" element={<Navigate to="/mission" replace />} />
+                    </Routes>
+                </Suspense>
             </main>
 
             {/* Phase Feedback Modal */}
@@ -363,12 +375,14 @@ const App: React.FC = () => {
                     }
                 />
 
-                {/* Admin Route */}
+                {/* Admin Route - lazy loaded with Suspense */}
                 <Route
                     path="/admin"
                     element={
                         <AdminRoute>
-                            <AdminDashboard />
+                            <Suspense fallback={<LazyFallback />}>
+                                <AdminDashboard />
+                            </Suspense>
                         </AdminRoute>
                     }
                 />

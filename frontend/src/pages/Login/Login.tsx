@@ -123,20 +123,7 @@ export const Login: React.FC = () => {
                 </div>
             </div>
 
-            <div className="login-features">
-                <div className="feature-item stagger-1 reactive-border reactive-border--subtle">
-                    <span className="feature-icon">⚡</span>
-                    <span>Real-time Synthesis</span>
-                </div>
-                <div className="feature-item stagger-2 reactive-border reactive-border--subtle">
-                    <span className="feature-icon">🛡️</span>
-                    <span>Secure Protocols</span>
-                </div>
-                <div className="feature-item stagger-3 reactive-border reactive-border--subtle">
-                    <span className="feature-icon">🧠</span>
-                    <span>AI-Core Analysis</span>
-                </div>
-            </div>
+
 
             <Branding className="branding-bottom-left" />
             <Branding useBackLogo={true} />
