@@ -142,7 +142,7 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
                                     </div>
                                     <div className="mission-brief__directive">
                                         <div className="mission-brief__directive-dot" />
-                                        <span><strong>Specifics &gt; Generics:</strong> "We use BERT-large" scores higher than "We use AI". Explain <em>how</em>.</span>
+                                        <span><strong>Specifics &gt; Generics:</strong> "Direct integration with CRM workflows" scores higher than "We use automation". Explain <em>how</em>.</span>
                                     </div>
                                     <div className="mission-brief__directive">
                                         <div className="mission-brief__directive-dot" />

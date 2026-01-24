@@ -13,12 +13,12 @@ interface ConversationMessage {
 }
 
 const LOADING_STATUSES = [
-    "Compiling Strategic Inputs...",
-    "Initializing Semantic Synthesis...",
-    "Calibrating Creative Vectors...",
-    "Generating Narrative Matrix...",
-    "Refining Aesthetic Parameters...",
-    "Finalizing Image Manifest..."
+    "Analyzing Phase Performance...",
+    "Synthesizing Market Insights...",
+    "Aligning Strategic Objectives...",
+    "Constructing Value Proposition...",
+    "Refining Pitch Resonance...",
+    "Finalizing Strategic Asset..."
 ];
 
 interface PromptCurationProps {
@@ -93,6 +93,7 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
     const [statusIndex, setStatusIndex] = useState(0);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [isEvaluating, setIsEvaluating] = useState(false);
 
     // Cycle loading statuses
     useEffect(() => {
@@ -246,8 +247,10 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
 
     const handleSubmitPitch = async () => {
         if (selectedFile) {
-            // Upload new version
+            // Upload new version - set evaluating state
+            setIsEvaluating(true);
             await submitPitchImage(editedPrompt, selectedFile);
+            setIsEvaluating(false);
         } else if (uploadedImages.length > 0) {
             // Use last successful submission as active
             setActiveRevealSubmission(uploadedImages[uploadedImages.length - 1]);
@@ -289,8 +292,12 @@ export const PromptCuration: React.FC<PromptCurationProps> = ({
                             <Icons.Sparkles />
                         </div>
                         <div>
-                            <h2 className="curate-overlay__title">Synthesizing Vision</h2>
-                            <div className="curate-overlay__subtitle">Neural Engine V3 // ACTIVE</div>
+                            <h2 className="curate-overlay__title">
+                                {isEvaluating ? 'Evaluating Visual Slide' : 'Synthesizing Image Prompt'}
+                            </h2>
+                            <div className="curate-overlay__subtitle">
+                                {isEvaluating ? 'Strategic Analyst Module // ACTIVE' : 'Prompt Synthesis Engine // ACTIVE'}
+                            </div>
                         </div>
                         <div className="curate-overlay__bar">
                             <div className="curate-overlay__bar-fill" />

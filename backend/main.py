@@ -6,6 +6,7 @@ Optimized for multi-user concurrency.
 
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from typing import Dict, Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -92,7 +93,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 @app.get("/")
-def health_check():
+def health_check() -> Dict[str, Any]:
     """System health check endpoint."""
     return {
         "status": "online",
@@ -103,7 +104,7 @@ def health_check():
 
 
 @app.get("/health")
-def detailed_health():
+def detailed_health() -> Dict[str, Any]:
     """Detailed health check for monitoring with service status."""
     from backend.utils.resilience import _circuit_breakers, CircuitState
     

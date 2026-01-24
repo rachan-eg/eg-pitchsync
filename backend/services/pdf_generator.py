@@ -8,7 +8,7 @@ import logging
 import re
 import io
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any, Tuple
 import base64
 from io import BytesIO
@@ -16,6 +16,9 @@ from PIL import Image as PILImage
 
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
+
+# Suppress noisy svglib debug logs (internal parsing warnings)
+logging.getLogger("svglib.svglib").setLevel(logging.WARNING)
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -88,10 +91,10 @@ FONTS_DIR = settings.BACKEND_DIR / "assets" / "fonts"
 # Pitch-Sync "Flipping" Logo SVG Data (Back side from Branding.tsx)
 PITCH_SYNC_LOGO_SVG = """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-    <path transform="translate(80.969 37.867)" d="m0 0c1.2104-0.0012891 2.4209-0.0025781 3.668-0.0039062 1.2749 0.0038672 2.5498 0.0077344 3.8633 0.011719 1.9123-0.0058008 1.9123-0.0058008 3.8633-0.011719 1.8156 0.0019336 1.8156 0.0019336 3.668 0.0039062 1.1196 0.0011279 2.2391 0.0022559 3.3926 0.003418 2.5762 0.12939 2.5762 0.12939 3.5762 1.1294 0.094137 2.0556 0.11743 4.1144 0.11353 6.1721 1.4603e-4 0.64388 2.9205e-4 1.2878 4.4251e-4 1.9512-6.9905e-4 2.1373-0.008491 4.2746-0.016312 6.4119-0.0018642 1.4783-0.0032881 2.9566-0.0042877 4.4349-0.0038249 3.8979-0.013655 7.7958-0.024704 11.694-0.010215 3.9747-0.014794 7.9494-0.019836 11.924-0.010737 7.8041-0.027813 15.608-0.048828 23.412-3.9693 0.024659-7.9386 0.04284-11.908 0.054932-1.3512 0.0050389-2.7025 0.01187-4.0537 0.020508-1.9385 0.012085-3.8771 0.017259-5.8157 0.022217-1.7517 0.0078552-1.7517 0.0078552-3.5388 0.015869-2.6838-0.11353-2.6838-0.11353-3.6838-1.1135-0.099351-2.0195-0.128-4.0425-0.12939-6.0645-0.0031522-1.298-0.0063043-2.5961-0.009552-3.9335 0.0017898-1.4278 0.0038407-2.8556 0.006134-4.2833-6.7308e-4 -1.4535-0.0016431-2.907-0.0028992-4.3605-0.0014768-3.0499 6.7697e-4 -6.0998 0.0053406-9.1498 0.0056973-3.9178 0.0024182-7.8355-0.0035725-11.753-0.0036061-3.0025-0.0024668-6.0049 1.2779e-4 -9.0074 6.6913e-4 -1.445-1.5865e-4 -2.8899-0.0024796-4.3349-0.0025273-2.0161 0.0020048-4.0323 0.0069008-6.0484 7.9559e-4 -1.1495 0.0015912-2.299 0.0024109-3.4833 0.23758-4.8293 2.8528-3.7097 7.0957-3.714z" fill="#EF0203" />
-    <path transform="translate(7.4062 73.867)" d="m0 0c1.3007-0.0012891 2.6013-0.0025781 3.9414-0.0039062 1.0212 0.0031421 1.0212 0.0031421 2.063 0.0063477 2.0806 0.0053487 4.1611 5.429e-5 6.2417-0.0063477 1.951 0.0019336 1.951 0.0019336 3.9414 0.0039062 1.2033 0.0011279 2.4067 0.0022559 3.6465 0.003418 2.7598 0.12939 2.7598 0.12939 3.7598 1.1294 0.10003 2.1335 0.13081 4.2704 0.13281 6.4062 0.0012891 1.3007 0.0025781 2.6013 0.0039062 3.9414-0.0031421 1.0212-0.0031421 1.0212-0.0063477 2.063-0.0053487 2.0806-5.429e-5 4.1611 0.0063477 6.2417-0.0012891 1.3007-0.0025781 2.6013-0.0039062 3.9414-0.0011279 1.2033-0.0022559 2.4067-0.003418 3.6465-0.12939 2.7598-0.12939 2.7598-1.1294 3.7598-2.2186 0.087835-4.4399 0.10695-6.6602 0.097656-0.9967-0.0021224-0.9967-0.0021224-2.0135-0.0042877-2.1296-0.0056134-4.2592-0.018168-6.3888-0.030869-1.4408-0.0050133-2.8815-0.0095765-4.3223-0.013672-3.5384-0.011047-7.0768-0.02832-10.615-0.048828-0.024656-4.2541-0.042839-8.5083-0.054932-12.762-0.0050394-1.4482-0.011871-2.8965-0.020508-4.3447-0.012083-2.0776-0.017793-4.1551-0.022217-6.2327-0.0052368-1.2516-0.010474-2.5032-0.015869-3.7927 0.20749-5.2409 2.8801-3.9959 7.5198-4.0002z" fill="#EF0203" />
-    <path transform="translate(36,38)" d="m0 0c3.9693-0.024659 7.9386-0.04284 11.908-0.054932 1.3512-0.0050389 2.7025-0.01187 4.0537-0.020508 1.9385-0.012085 3.8771-0.017259 5.8157-0.022217 1.7517-0.0078552 1.7517-0.0078552 3.5388-0.015869 2.6838 0.11353 2.6838 0.11353 3.6838 1.1135 0.099831 1.9876 0.13081 3.9787 0.13281 5.9688 0.0019336 1.8156 0.0019336 1.8156 0.0039062 3.668-0.0038672 1.2749-0.0077344 2.5498-0.011719 3.8633 0.0058008 1.9123 0.0058008 1.9123 0.011719 3.8633-0.0012891 1.2104-0.0025781 2.4209-0.0039062 3.668-0.0011279 1.1196-0.0022559 2.2391-0.003418 3.3926-0.12939 2.5762-0.12939 2.5762-1.1294 3.5762-2.0726 0.087671-4.1482 0.10696-6.2227 0.097656-1.2601-0.0032227-2.5201-0.0064453-3.8184-0.0097656-1.3405-0.0083566-2.681-0.016822-4.0215-0.025391-1.3444-0.0050134-2.6888-0.0095766-4.0332-0.013672-3.3015-0.011833-6.6029-0.028318-9.9043-0.048828-1.32-2.64-1.1296-4.6408-1.1328-7.5938-0.0019336-1.6687-0.0019336-1.6687-0.0039062-3.3711 0.0038672-1.1666 0.0077344-2.3332 0.011719-3.5352-0.0038672-1.1666-0.0077344-2.3332-0.011719-3.5352 0.0012891-1.1125 0.0025781-2.2249 0.0039062-3.3711 0.0016919-1.5362 0.0016919-1.5362 0.003418-3.1035 0.12939-2.4902 0.12939-2.4902 1.1294-4.4902z" fill="#EE0303" />
-    <path transform="translate(77.684 -.11353)" d="m0 0c1.1678 0.0052368 2.3356 0.010474 3.5388 0.015869 1.2601 0.0032227 2.5201 0.0064453 3.8184 0.0097656 1.3405 0.0083566 2.681 0.016822 4.0215 0.025391 1.3444 0.0050134 2.6888 0.0095766 4.0332 0.013672 3.3015 0.011833 6.6029 0.028318 9.9043 0.048828 0.024659 3.9693 0.04284 7.9386 0.054932 11.908 0.0050389 1.3512 0.01187 2.7025 0.020508 4.0537 0.012085 1.9385 0.017259 3.8771 0.022217 5.8157 0.0078552 1.7517 0.0078552 1.7517 0.015869 3.5388-0.11353 2.6838-0.11353 2.6838-1.1135 3.6838-1.9876 0.099831-3.9787 0.13081-5.9688 0.13281-1.2104 0.0012891-2.4209 0.0025781-3.668 0.0039062-1.2749-0.0038672-2.5498-0.0077344-3.8633-0.011719-1.2749 0.0038672-2.5498 0.0077344-3.8633 0.011719-1.8156-0.0019336-1.8156-0.0019336-3.668-0.0039062-1.1196-0.0011279-2.2391-0.0022559-3.3926-0.003418-2.5762-0.12939-2.5762-0.12939-3.5762-1.1294-0.099831-1.9876-0.13081-3.9787-0.13281-5.9688-0.0012891-1.2104-0.0025781-2.4209-0.0039062-3.668 0.0038672-1.2749 0.0077344-2.3332 0.011719-3.8633-0.0038672-1.2749-0.0077344-2.5498-0.011719-3.8633 0.0012891-1.2104 0.0025781-2.4209 0.0039062-3.668 0.0011279-1.1196 0.0022559-2.2391 0.003418-3.3926 0.17741-3.5322 0.26778-3.5397 3.8132-3.6897z" fill="#EF0303" />
+    <g transform="translate(80.969, 37.867)"><path d="m0 0c1.2104-0.0012891 2.4209-0.0025781 3.668-0.0039062 1.2749 0.0038672 2.5498 0.0077344 3.8633 0.011719 1.9123-0.0058008 1.9123-0.0058008 3.8633-0.011719 1.8156 0.0019336 1.8156 0.0019336 3.668 0.0039062 1.1196 0.0011279 2.2391 0.0022559 3.3926 0.003418 2.5762 0.12939 2.5762 0.12939 3.5762 1.1294 0.094137 2.0556 0.11743 4.1144 0.11353 6.1721 1.4603e-4 0.64388 2.9205e-4 1.2878 4.4251e-4 1.9512-6.9905e-4 2.1373-0.008491 4.2746-0.016312 6.4119-0.0018642 1.4783-0.0032881 2.9566-0.0042877 4.4349-0.0038249 3.8979-0.013655 7.7958-0.024704 11.694-0.010215 3.9747-0.014794 7.9494-0.019836 11.924-0.010737 7.8041-0.027813 15.608-0.048828 23.412-3.9693 0.024659-7.9386 0.04284-11.908 0.054932-1.3512 0.0050389-2.7025 0.01187-4.0537 0.020508-1.9385 0.012085-3.8771 0.017259-5.8157 0.022217-1.7517 0.0078552-1.7517 0.0078552-3.5388 0.015869-2.6838-0.11353-2.6838-0.11353-3.6838-1.1135-0.099351-2.0195-0.128-4.0425-0.12939-6.0645-0.0031522-1.298-0.0063043-2.5961-0.009552-3.9335 0.0017898-1.4278 0.0038407-2.8556 0.006134-4.2833-6.7308e-4 -1.4535-0.0016431-2.907-0.0028992-4.3605-0.0014768-3.0499 6.7697e-4 -6.0998 0.0053406-9.1498 0.0056973-3.9178 0.0024182-7.8355-0.0035725-11.753-0.0036061-3.0025-0.0024668-6.0049 1.2779e-4 -9.0074 6.6913e-4 -1.445-1.5865e-4 -2.8899-0.0024796-4.3349-0.0025273-2.0161 0.0020048-4.0323 0.0069008-6.0484 7.9559e-4 -1.1495 0.0015912-2.299 0.0024109-3.4833 0.23758-4.8293 2.8528-3.7097 7.0957-3.714z" fill="#EF0203" /></g>
+    <g transform="translate(7.4062, 73.867)"><path d="m0 0c1.3007-0.0012891 2.6013-0.0025781 3.9414-0.0039062 1.0212 0.0031421 1.0212 0.0031421 2.063 0.0063477 2.0806 0.0053487 4.1611 5.429e-5 6.2417-0.0063477 1.951 0.0019336 1.951 0.0019336 3.9414 0.0039062 1.2033 0.0011279 2.4067 0.0022559 3.6465 0.003418 2.7598 0.12939 2.7598 0.12939 3.7598 1.1294 0.10003 2.1335 0.13081 4.2704 0.13281 6.4062 0.0012891 1.3007 0.0025781 2.6013 0.0039062 3.9414-0.0031421 1.0212-0.0031421 1.0212-0.0063477 2.063-0.0053487 2.0806-5.429e-5 4.1611 0.0063477 6.2417-0.0012891 1.3007-0.0025781 2.6013-0.0039062 3.9414-0.0011279 1.2033-0.0022559 2.4067-0.003418 3.6465-0.12939 2.7598-0.12939 2.7598-1.1294 3.7598-2.2186 0.087835-4.4399 0.10695-6.6602 0.097656-0.9967-0.0021224-0.9967-0.0021224-2.0135-0.0042877-2.1296-0.0056134-4.2592-0.018168-6.3888-0.030869-1.4408-0.0050133-2.8815-0.0095765-4.3223-0.013672-3.5384-0.011047-7.0768-0.02832-10.615-0.048828-0.024656-4.2541-0.042839-8.5083-0.054932-12.762-0.0050394-1.4482-0.011871-2.8965-0.020508-4.3447-0.012083-2.0776-0.017793-4.1551-0.022217-6.2327-0.0052368-1.2516-0.010474-2.5032-0.015869-3.7927 0.20749-5.2409 2.8801-3.9959 7.5198-4.0002z" fill="#EF0203" /></g>
+    <g transform="translate(36, 38)"><path d="m0 0c3.9693-0.024659 7.9386-0.04284 11.908-0.054932 1.3512-0.0050389 2.7025-0.01187 4.0537-0.020508 1.9385-0.012085 3.8771-0.017259 5.8157-0.022217 1.7517-0.0078552 1.7517-0.0078552 3.5388-0.015869 2.6838 0.11353 2.6838 0.11353 3.6838 1.1135 0.099831 1.9876 0.13081 3.9787 0.13281 5.9688 0.0019336 1.8156 0.0019336 1.8156 0.0039062 3.668-0.0038672 1.2749-0.0077344 2.5498-0.011719 3.8633 0.0058008 1.9123 0.0058008 1.9123 0.011719 3.8633-0.0012891 1.2104-0.0025781 2.4209-0.0039062 3.668-0.0011279 1.1196-0.0022559 2.2391-0.003418 3.3926-0.12939 2.5762-0.12939 2.5762-1.1294 3.5762-2.0726 0.087671-4.1482 0.10696-6.2227 0.097656-1.2601-0.0032227-2.5201-0.0064453-3.8184-0.0097656-1.3405-0.0083566-2.681-0.016822-4.0215-0.025391-1.3444-0.0050134-2.6888-0.0095766-4.0332-0.013672-3.3015-0.011833-6.6029-0.028318-9.9043-0.048828-1.32-2.64-1.1296-4.6408-1.1328-7.5938-0.0019336-1.6687-0.0019336-1.6687-0.0039062-3.3711 0.0038672-1.1666 0.0077344-2.3332 0.011719-3.5352-0.0038672-1.1666-0.0077344-2.3332-0.011719-3.5352 0.0012891-1.1125 0.0025781-2.2249 0.0039062-3.3711 0.0016919-1.5362 0.0016919-1.5362 0.003418-3.1035 0.12939-2.4902 0.12939-2.4902 1.1294-4.4902z" fill="#EE0303" /></g>
+    <g transform="translate(77.684, -0.11353)"><path d="m0 0c1.1678 0.0052368 2.3356 0.010474 3.5388 0.015869 1.2601 0.0032227 2.5201 0.0064453 3.8184 0.0097656 1.3405 0.0083566 2.681 0.016822 4.0215 0.025391 1.3444 0.0050134 2.6888 0.0095766 4.0332 0.013672 3.3015 0.011833 6.6029 0.028318 9.9043 0.048828 0.024659 3.9693 0.04284 7.9386 0.054932 11.908 0.0050389 1.3512 0.01187 2.7025 0.020508 4.0537 0.012085 1.9385 0.017259 3.8771 0.022217 5.8157 0.0078552 1.7517 0.0078552 1.7517 0.015869 3.5388-0.11353 2.6838-0.11353 2.6838-1.1135 3.6838-1.9876 0.099831-3.9787 0.13081-5.9688 0.13281-1.2104 0.0012891-2.4209 0.0025781-3.668 0.0039062-1.2749-0.0038672-2.5498-0.0077344-3.8633-0.011719-1.2749 0.0038672-2.5498 0.0077344-3.8633 0.011719-1.8156-0.0019336-1.8156-0.0019336-3.668-0.0039062-1.1196-0.0011279-2.2391-0.0022559-3.3926-0.003418-2.5762-0.12939-2.5762-0.12939-3.5762-1.1294-0.099831-1.9876-0.13081-3.9787-0.13281-5.9688-0.0012891-1.2104-0.0025781-2.4209-0.0039062-3.668 0.0038672-1.2749 0.0077344-2.3332 0.011719-3.8633-0.0038672-1.2749-0.0077344-2.5498-0.011719-3.8633 0.0012891-1.2104 0.0025781-2.4209 0.0039062-3.668 0.0011279-1.1196 0.0022559-2.2391 0.003418-3.3926 0.17741-3.5322 0.26778-3.5397 3.8132-3.6897z" fill="#EF0303" /></g>
 </svg>
 """
 
@@ -401,11 +404,8 @@ class DarkThemeReportGenerator:
             textColor=TEXT_PRIMARY,
             backColor=colors.HexColor("#0f0f1a"),
             borderColor=BORDER_LIGHT,
-            borderWidth=1,
-            borderPadding=10,
-            borderRadius=2,
-            spaceBefore=0,
-            spaceAfter=0
+            spaceBefore=25,
+            spaceAfter=20
         )
 
         styles["CodeBox"] = ParagraphStyle(
@@ -416,11 +416,8 @@ class DarkThemeReportGenerator:
             textColor=TEXT_SECONDARY,
             backColor=colors.HexColor("#0f0f1a"),
             borderColor=BORDER_LIGHT,
-            borderWidth=1,
-            borderPadding=10,
-            borderRadius=2,
-            spaceBefore=0,
-            spaceAfter=0
+            spaceBefore=25,
+            spaceAfter=20
         )
         
         return styles
@@ -604,6 +601,11 @@ class DarkThemeReportGenerator:
                 file_mtime = datetime.fromtimestamp(output_path.stat().st_mtime, tz=timezone.utc)
                 session_updated = self.session.updated_at
                 
+                # Defensive check: ensure both are offset-aware for comparison
+                if session_updated.tzinfo is None:
+                    # If DB timestamp is naive, assume it's UTC for comparison purposes
+                    session_updated = session_updated.replace(tzinfo=timezone.utc)
+                
                 # If session hasn't changed since the file was made, return existing
                 if session_updated < file_mtime:
                     logging.info(f"♻️  Reusing existing report for session {short_id}")
@@ -742,7 +744,13 @@ class DarkThemeReportGenerator:
         total_hints = 0
         phases_sorted = sorted(self.session.phases.items(), key=lambda x: x[0])
         for p_name, p_data in phases_sorted:
-            p_hints = sum(1 for r in p_data.responses if r.hint_used)
+            # Safe extraction of responses whether objects or dicts
+            p_hints = 0
+            if hasattr(p_data, 'responses') and p_data.responses:
+                for r in p_data.responses:
+                    is_used = getattr(r, 'hint_used', False) if not isinstance(r, dict) else r.get('hint_used', False)
+                    if is_used:
+                        p_hints += 1
             total_hints += p_hints
             
             summary_table_data.append([
@@ -774,8 +782,8 @@ class DarkThemeReportGenerator:
         story.append(perf_summary_table)
         story.append(Spacer(1, 0.5*cm))
         
-        # PHASE ANALYSIS - Start on new page
-        story.append(PageBreak())
+        # PHASE ANALYSIS - Start on new page (using CondPageBreak to avoid empty pages on spills)
+        story.append(CondPageBreak(20*cm))
         story.append(KeepTogether(self._create_section_header(self._next_section("Phase Analysis"))))
         
         # Use session's usecase ID to fetch the correct configuration for weights
@@ -788,7 +796,7 @@ class DarkThemeReportGenerator:
         
         for i, (phase_name, phase_data) in enumerate(phases_sorted):
             if i > 0:
-                story.append(PageBreak())
+                story.append(CondPageBreak(16*cm))
             
             # Phase Hero Heading - Centered Sub-header
             # Clean phase name to remove existing "Phase X:" prefix if present
@@ -807,15 +815,17 @@ class DarkThemeReportGenerator:
             
             metrics = phase_data.metrics
             final_score = int(metrics.weighted_score)
-            ai_pct = int(metrics.ai_score * 100)
             is_passed = phase_data.status == PhaseStatus.PASSED
             
             status_color = SUCCESS if is_passed else DANGER
-            status_text = "CLEARED" if is_passed else "INCOMPLETE"
+            status_text = "PASSED" if is_passed else "INCOMPLETE"
             
             status_line = (
-                f'<font color="{status_color.hexval()}"><b>[{status_text}]</b></font> '
-                f'Score: <b>{final_score}/{max_points}</b> pts | AI: <b>{ai_pct}%</b>'
+                f'<font color="{status_color.hexval()}" size="11"><b>{status_text}</b></font>'
+                f'<font color="{BORDER_LIGHT.hexval()}">  //  </font>'
+                f'<font color="{TEXT_SECONDARY.hexval()}" size="9">MISSION SCORE: </font>'
+                f'<font size="13"><b>{final_score}</b></font>'
+                f'<font size="9" color="{TEXT_MUTED.hexval()}"> / {max_points} PTS</font>'
             )
             phase_intro.append(Paragraph(status_line, self.styles["Body"]))
             phase_intro.append(Spacer(1, 0.3*cm))
@@ -825,23 +835,33 @@ class DarkThemeReportGenerator:
             table_block = []
             table_num = self._next_table()
             
-            # Calculations
-            w_base = round(metrics.ai_score * settings.AI_QUALITY_MAX_POINTS * weight)
+            # Calculations:
+            # Note: We use the raw values but label them clearly.
+            # We also ensure the rounded weighted parts sum to the final score to avoid "math is wrong" complaints.
+            raw_base = metrics.ai_score * settings.AI_QUALITY_MAX_POINTS
+            w_base = round(raw_base * weight)
             w_time = round(metrics.time_penalty * weight)
             w_retry = round(metrics.retry_penalty * weight)
             w_hint = round(metrics.hint_penalty * weight)
             w_bonus = round(metrics.efficiency_bonus * weight)
             
+            # Adjust the biggest component (base) to fix rounding drift if needed
+            # so that sum(components) == final_score exactly
+            sum_components = w_base - w_time - w_retry - w_hint + w_bonus
+            drift = final_score - sum_components
+            if drift != 0:
+                w_base += drift
+
             scoring_data = [
-                [Paragraph("Component", self.styles["TableHeader"]), Paragraph("Points", self.styles["TableHeader"])],
-                [Paragraph("Base Performance", self.styles["TableCell"]), Paragraph(f"{w_base}", self.styles["TableCellCenter"])],
-                [Paragraph("Time Adjustment", self.styles["TableCell"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_time}</font>', self.styles["TableCellCenter"])],
-                [Paragraph("Retry Adjustment", self.styles["TableCell"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_retry}</font>', self.styles["TableCellCenter"])],
-                [Paragraph("Hint Adjustment", self.styles["TableCell"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_hint}</font>', self.styles["TableCellCenter"])],
-                [Paragraph("Efficiency Bonus", self.styles["TableCell"]), Paragraph(f'<font color="{SUCCESS.hexval()}">+{w_bonus}</font>', self.styles["TableCellCenter"])],
-                [Paragraph("<b>Final Phase Score</b>", self.styles["TableCell"]), Paragraph(f"<b>{final_score}</b>", self.styles["TableCellCenter"])],
+                [Paragraph("Component", self.styles["TableHeader"]), Paragraph("Raw", self.styles["TableHeader"]), Paragraph("Weighted", self.styles["TableHeader"])],
+                [Paragraph("Base Performance", self.styles["TableCell"]), Paragraph(f"{int(raw_base)}", self.styles["TableCellCenter"]), Paragraph(f"{w_base}", self.styles["TableCellCenter"])],
+                [Paragraph("Time Adjustment", self.styles["TableCell"]), Paragraph(f"-{int(metrics.time_penalty)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_time}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("Retry Adjustment", self.styles["TableCell"]), Paragraph(f"-{int(metrics.retry_penalty)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_retry}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("Hint Adjustment", self.styles["TableCell"]), Paragraph(f"-{int(metrics.hint_penalty)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_hint}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("Efficiency Bonus", self.styles["TableCell"]), Paragraph(f"+{int(metrics.efficiency_bonus)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{SUCCESS.hexval()}">+{w_bonus}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("<b>Final Phase Score</b>", self.styles["TableCell"]), Paragraph("", self.styles["TableCell"]), Paragraph(f"<b>{final_score}</b>", self.styles["TableCellCenter"])],
             ]
-            score_table = self._create_dark_table(scoring_data, [5.5*cm, 3.5*cm])
+            score_table = self._create_dark_table(scoring_data, [4.5*cm, 2.5*cm, 2.5*cm])
             table_block.append(score_table)
             table_block.append(Paragraph(f"<i>Table {table_num}: {phase_name} breakdown</i>", self.styles["Caption"]))
             table_block.append(Spacer(1, 0.5*cm))
@@ -876,7 +896,7 @@ class DarkThemeReportGenerator:
                     # Question
                     q_text = clean_text(resp.q)
                     story.append(Paragraph(f"<b>Q: {q_text}</b>", self.styles["BodySmall"]))
-                    story.append(Spacer(1, 0.15*cm))
+                    story.append(Spacer(1, 0.6*cm))
                     
                     # Answer in a BOX (Using styled Paragraph for splitting support)
                     a_text = clean_text(resp.a)
@@ -888,6 +908,7 @@ class DarkThemeReportGenerator:
         
         # STRATEGIC NARRATIVE
         if self.session.final_output.visionary_hook or self.session.final_output.customer_pitch:
+            story.append(CondPageBreak(10*cm))
             sn_block = []
             sn_block.extend(self._create_section_header(self._next_section("Strategic Narrative")))
             
@@ -909,7 +930,7 @@ class DarkThemeReportGenerator:
             img_path = GENERATED_DIR / img_name
             
             if img_path.exists():
-                story.append(PageBreak())
+                story.append(CondPageBreak(18*cm))
                 story.extend(self._create_section_header(self._next_section("Visual Synthesis")))
                 
                 try:
@@ -985,6 +1006,7 @@ class DarkThemeReportGenerator:
             story.append(Spacer(1, 0.8*cm))
         
         # CONCLUSION
+        story.append(CondPageBreak(8*cm))
         concl_block = []
         concl_block.extend(self._create_section_header(self._next_section("Conclusion")))
         

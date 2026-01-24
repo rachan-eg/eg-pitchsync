@@ -6,7 +6,7 @@ Handles Keycloak SSO authentication and team code validation.
 import json
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from keycloak import KeycloakOpenID
@@ -42,7 +42,7 @@ class UserInfo(BaseModel):
 # TEAM CODES
 # =============================================================================
 
-def load_team_codes() -> dict:
+def load_team_codes() -> Dict[str, Dict[str, str]]:
     """Load team codes from vault JSON file."""
     team_codes_path = Path(settings.BACKEND_DIR) / "vault" / "team_codes.json"
     

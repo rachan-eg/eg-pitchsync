@@ -105,6 +105,14 @@ class SessionState(BaseModel):
     phase_scores: Dict[str, float] = {}
     phase_start_times: Dict[str, datetime] = {}
     phase_elapsed_seconds: Dict[str, float] = {}  # Accumulated time per phase (for pause/resume)
+    
+    # Summary Analysis (Persisted in DB)
+    grade: str = "N/A"
+    total_retries: int = 0
+    total_hints: int = 0
+    total_duration: float = 0.0
+    average_ai_score: float = 0.0
+    
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None

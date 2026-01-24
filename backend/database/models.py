@@ -49,6 +49,13 @@ class SessionData(SQLModel, table=True):
     phase_elapsed_seconds_json: str = Field(default="{}")  # Accumulated time per phase (pause/resume)
     uploaded_images_json: str = Field(default="[]")  # NEW: For persisting multiple pitch visuals
     
+    # Analytics / Summary fields (Added to match DB schema)
+    grade: str = Field(default="N/A")
+    total_retries: int = Field(default=0)
+    total_hints: int = Field(default=0)
+    total_duration: float = Field(default=0.0)
+    average_ai_score: float = Field(default=0.0)
+    
     is_complete: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)

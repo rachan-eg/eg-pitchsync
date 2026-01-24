@@ -132,7 +132,7 @@ async def evaluate_phase_streaming(
         yield emit_progress("lead_partner", 0, "Lead Partner reviewing...")
         await asyncio.sleep(0.1)
         
-        yield emit_progress("lead_partner", 40, "Synthesizing critique with potential...")
+        yield emit_progress("lead_partner", 40, "Evaluating Strategic Viability...")
         
         # Run lead partner (blocking call wrapped in thread)
         final_result = await loop.run_in_executor(
@@ -143,9 +143,8 @@ async def evaluate_phase_streaming(
         yield emit_progress("lead_partner", 100, "Verdict rendered")
         await asyncio.sleep(0.1)
         
-        # ===== STAGE 4: VISUAL ANALYSIS (if applicable) =====
         if image_data:
-            yield emit_progress("visual", 0, "Analyzing Strategic Alignment...")
+            yield emit_progress("visual", 0, "Validating Strategic Evidence...")
             await asyncio.sleep(0.1)
             
             visual_result_data = await loop.run_in_executor(

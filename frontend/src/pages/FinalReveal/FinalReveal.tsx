@@ -397,12 +397,7 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
                                             </div>
                                         </div>
 
-                                        <div className="final-reveal__sub-section" style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
-                                            <h4 className="final-reveal__sub-title">Image Manifest (Prompt Used)</h4>
-                                            <div className="final-reveal__prompt-box">
-                                                {currentSub?.prompt || session.final_output.image_prompt || 'N/A'}
-                                            </div>
-                                        </div>
+
                                     </div>
                                 </div>
 

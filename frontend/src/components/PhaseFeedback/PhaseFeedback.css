@@ -380,27 +380,12 @@
     flex-shrink: 0;
 }
 
-.phase-feedback__verdict-points {
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
+.phase-feedback__verdict-content {
+    display: block;
+    margin-top: 0.25rem;
 }
 
-.phase-feedback__verdict-item {
-    display: flex;
-    gap: 0.75rem;
-    align-items: flex-start;
-}
 
-.phase-feedback__verdict-bullet {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--primary);
-    margin-top: 0.5rem;
-    flex-shrink: 0;
-    box-shadow: 0 0 10px var(--primary);
-}
 
 .phase-feedback__verdict-text {
     font-size: 0.95rem;

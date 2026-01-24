@@ -5,7 +5,8 @@ Optimized for multi-user performance.
 """
 
 from datetime import datetime, timezone
-from fastapi import APIRouter
+from typing import Dict, Any, List
+from fastapi import APIRouter, HTTPException
 
 from backend.models import LeaderboardEntry, LeaderboardResponse, USECASE_REPO, THEME_REPO
 from backend.services import get_leaderboard_sessions, get_session, get_score_tier
@@ -14,7 +15,7 @@ router = APIRouter(prefix="/api", tags=["leaderboard"])
 
 
 @router.get("/usecases")
-async def get_usecases():
+async def get_usecases() -> Dict[str, List[Dict[str, Any]]]:
     """Return all available usecases for selection."""
     return {"usecases": USECASE_REPO, "themes": THEME_REPO}
 
@@ -81,10 +82,9 @@ def get_leaderboard():
 
 
 @router.get("/session/{session_id}")
-def get_session_details(session_id: str):
+def get_session_details(session_id: str) -> Dict[str, Any]:
     """Get detailed session state."""
-    from fastapi import HTTPException
-    
+
     session = get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")

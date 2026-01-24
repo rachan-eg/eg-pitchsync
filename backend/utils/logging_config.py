@@ -14,7 +14,7 @@ from datetime import datetime
 
 _initialized = False
 
-def setup_logging():
+def setup_logging() -> None:
     """Configure application logging with initialization guard."""
     global _initialized
     if _initialized:
@@ -54,7 +54,11 @@ def setup_logging():
     }
     
     for logger_name, level in loggers_config.items():
-        logging.getLogger(logger_name).setLevel(level)
+        lgr = logging.getLogger(logger_name)
+        lgr.setLevel(level)
+        # Disable propagation for app loggers to prevent duplicate messages
+        if logger_name.startswith("pitchsync") or logger_name == "backend":
+            lgr.propagate = False
     
     # Log startup
     startup_logger = logging.getLogger("pitchsync")

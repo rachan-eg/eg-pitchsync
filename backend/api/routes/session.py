@@ -37,7 +37,7 @@ router = APIRouter(prefix="/api", tags=["session"])
 
 
 @router.post("/init", response_model=InitResponse)
-def init_session(req: InitRequest):
+def init_session(req: InitRequest) -> InitResponse:
     """Initialize or resume a game session."""
     
     # 1. Check if team already has an existing session
@@ -166,7 +166,7 @@ def init_session(req: InitRequest):
 
 
 @router.get("/check-session/{team_id}")
-def check_existing_session(team_id: str):
+def check_existing_session(team_id: str) -> Dict[str, Any]:
     """Check if a team has an existing incomplete session.
     
     Useful for the frontend to warn users before they start a new game
@@ -199,7 +199,7 @@ def check_existing_session(team_id: str):
 
 
 @router.post("/start-phase", response_model=StartPhaseResponse)
-def start_phase(req: StartPhaseRequest):
+def start_phase(req: StartPhaseRequest) -> StartPhaseResponse:
     """Start a phase and record timing. Supports pause/resume when switching phases."""
     
     session = get_session(req.session_id)
@@ -326,7 +326,7 @@ def start_phase(req: StartPhaseRequest):
 
 
 @router.post("/save-hint")
-def save_hint(req: dict):
+def save_hint(req: dict) -> Dict[str, Any]:
     """
     Immediately save hint usage for a question.
     Called when user unlocks a hint - persists before phase submission.
@@ -597,15 +597,28 @@ async def submit_phase(req: SubmitPhaseRequest):
     total_hint_penalty = 0.0
     # Assuming responses are in the same order as phase_def["questions"]
     # We should verify this, but for now we trust the client preserves order or we map by ID
-    for i, response in enumerate(req.responses):
+    for response in req.responses:
         if response.hint_used:
-            # Get penalty from question def
-            if i < len(phase_def["questions"]):
-                q_def = phase_def["questions"][i]
-                if isinstance(q_def, dict):
-                     total_hint_penalty += q_def.get("hint_penalty", 25.0)
-                else:
-                     total_hint_penalty += 25.0 # Default if simple string question (though hints usually imply dict structure)
+            # Robust lookup by ID first, then fallback to index
+            q_def = None
+            if response.question_id:
+                q_def = next((q for q in phase_def.get("questions", []) if isinstance(q, dict) and q.get("id") == response.question_id), None)
+            
+            if q_def:
+                total_hint_penalty += q_def.get("hint_penalty", 25.0)
+            else:
+                # Fallback to index-based if ID not found is provided by the client's current loop index
+                # This ensures backward compatibility while adding ID-based robustness
+                try:
+                    # Find index by matching question text if possible
+                    idx = next((i for i, q in enumerate(phase_def.get("questions", [])) if (isinstance(q, dict) and q.get("text") == response.q) or q == response.q), -1)
+                    if idx != -1:
+                        target_q = phase_def["questions"][idx]
+                        total_hint_penalty += target_q.get("hint_penalty", 25.0) if isinstance(target_q, dict) else 25.0
+                    else:
+                        total_hint_penalty += 25.0
+                except (IndexError, KeyError, TypeError, StopIteration):
+                    total_hint_penalty += 25.0
     
     # Extract real AI usage
     ai_usage = eval_result.get('usage', {})
@@ -776,7 +789,7 @@ def _get_retry_info(session: SessionState, phase_name: str) -> tuple[int, str | 
 
 
 @router.get("/session/{team_id}/report")
-def get_session_report(team_id: str):
+def get_session_report(team_id: str) -> Any:
     """
     Generate and download a PDF report for the team's latest session.
     """
@@ -816,6 +829,6 @@ def get_session_report(team_id: str):
 
 
 @router.get("/broadcast")
-def get_public_broadcast():
+def get_public_broadcast() -> Dict[str, Any]:
     """Get the current system broadcast message (public)."""
     return get_broadcast_message()

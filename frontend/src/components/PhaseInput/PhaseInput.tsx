@@ -725,7 +725,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                                 const totalPenalty = hintsUsed.reduce((acc, used, idx) => {
                                     if (!used) return acc;
                                     const q = phase.questions[idx];
-                                    const val = typeof q !== 'string' ? (q.hint_penalty || 50) : 50;
+                                    const val = typeof q !== 'string' ? (q.hint_penalty || 25) : 25;
                                     return acc + val;
                                 }, 0);
                                 return (

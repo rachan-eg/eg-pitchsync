@@ -6,6 +6,7 @@ Used in synchronous routes (def) running in thread pools.
 """
 import threading
 from contextlib import contextmanager
+from typing import Generator
 
 # Global Semaphores (Thread-safe)
 # Limits PDF generation to 2 concurrent threads
@@ -16,13 +17,13 @@ _pdf_semaphore = threading.Semaphore(2)
 _image_semaphore = threading.Semaphore(2)
 
 @contextmanager
-def limit_pdf_concurrency():
+def limit_pdf_concurrency() -> Generator[None, None, None]:
     """Context manager to throttle PDF generation."""
     with _pdf_semaphore:
         yield
 
 @contextmanager
-def limit_image_concurrency():
+def limit_image_concurrency() -> Generator[None, None, None]:
     """Context manager to throttle Image processing."""
     with _image_semaphore:
         yield

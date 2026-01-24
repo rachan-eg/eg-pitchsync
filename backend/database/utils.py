@@ -8,7 +8,7 @@ from .engine import engine
 # Must import models here to ensure they are registered with metadata
 from .models import TeamContext, SessionData, User
 
-def create_db_and_tables():
+def create_db_and_tables() -> None:
     """Idempotently create tables and handle basic migrations."""
     SQLModel.metadata.create_all(engine)
     
@@ -46,7 +46,12 @@ def create_db_and_tables():
                 "final_output_json": "TEXT DEFAULT '{}'",
                 "phase_scores_json": "TEXT DEFAULT '{}'",
                 "phase_elapsed_seconds_json": "TEXT DEFAULT '{}'",  # For pause/resume timer
-                "uploaded_images_json": "TEXT DEFAULT '[]'"
+                "uploaded_images_json": "TEXT DEFAULT '[]'",
+                "grade": "TEXT DEFAULT 'N/A'",
+                "total_retries": "INTEGER DEFAULT 0",
+                "total_hints": "INTEGER DEFAULT 0",
+                "total_duration": "FLOAT DEFAULT 0.0",
+                "average_ai_score": "FLOAT DEFAULT 0.0"
             }
             
             for col_name, col_def in migrations.items():
@@ -69,6 +74,6 @@ def create_db_and_tables():
         except Exception as e:
             print(f"⚠️  Database self-healing warning: {e}")
 
-def get_db_session():
+def get_db_session() -> Session:
     """Dependency for getting a new session."""
     return Session(engine)

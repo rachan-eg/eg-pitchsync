@@ -101,6 +101,12 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
         phase_elapsed_seconds=phase_elapsed_seconds,
         uploaded_images=uploaded_images,
         
+        grade=getattr(db_session, 'grade', "N/A"),
+        total_retries=getattr(db_session, 'total_retries', 0),
+        total_hints=getattr(db_session, 'total_hints', 0),
+        total_duration=getattr(db_session, 'total_duration', 0.0),
+        average_ai_score=getattr(db_session, 'average_ai_score', 0.0),
+        
         is_complete=db_session.is_complete,
         created_at=db_session.created_at,
         updated_at=db_session.updated_at,
@@ -137,6 +143,11 @@ def _domain_to_db(session: SessionState) -> SessionData:
         phase_start_times_json=json.dumps(session.phase_start_times, default=_json_serial),
         phase_elapsed_seconds_json=json.dumps(session.phase_elapsed_seconds, default=_json_serial),
         uploaded_images_json=json.dumps(uploaded_images_list, default=_json_serial),
+        grade=session.grade,
+        total_retries=session.total_retries,
+        total_hints=session.total_hints,
+        total_duration=session.total_duration,
+        average_ai_score=session.average_ai_score,
         is_complete=session.is_complete,
         created_at=session.created_at,
         updated_at=datetime.now(timezone.utc)

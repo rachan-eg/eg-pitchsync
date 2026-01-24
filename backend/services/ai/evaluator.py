@@ -80,8 +80,8 @@ def evaluate_phase(
         logger.info(f"✅ Lead Partner Verdict complete. Score: {final_result.get('score', 0.0)}")
         
         
-        # STEP 3: THE VISUAL ANALYST (FORENSICS)
-        # Goal: Evaluate the uploaded evidence (if any) for alignment, depth, and fit.
+        # STEP 3: THE STRATEGIC INTEL ANALYST
+        # Goal: Evaluate the uploaded evidence (if any) for idea validation and strategic alignment.
         visual_result_data = None
         if image_data:
             visual_result_data = evaluate_visual_asset(client, prompt, image_data)
@@ -153,7 +153,7 @@ Phase Objective: {phase_config.get('description', '')}
 === EVALUATION PROTOCOL ===
 You are looking for "Signal", not "Noise".
 
-1. **Specifics > Generics**: "We use BERT-large fine-tuned on legal docs" >> "We use AI".
+1. **Specifics > Generics**: "Direct integration with regional logistics hubs" >> "We use smart logistics".
 2. **Mechanics > Magic**: Do they explain the loop? Or just the outcome?
 3. **Risks > Optimism**: Do they know what will kill them?
 
@@ -193,12 +193,10 @@ Analyze the submission for:
 3. **Market Delusions**: "Everyone will use this", "No competitors".
 4. **Vague Hand-Waving**: "We use AI to optimize X" (without saying HOW).
 
-*** RULE: RESPECT THE PARTICIPANT'S TECHNICAL CHOICES ***
-- Do NOT suggest alternative technical architectures (e.g., "use webhooks instead of dashboard").
-- If they propose a "dashboard", "UI", "portal", or any user-facing solution, that is VALID.
-- If they propose "APIs", "webhooks", "microservices", that is also VALID.
-- Your job is to evaluate WHETHER their chosen approach makes sense, NOT to prescribe a different one.
-- Only flag a technical choice if it is IMPOSSIBLE or CONTRADICTORY, not just "different from what you'd choose".
+*** RULE: AVOID TECHNICAL JARGON ***
+- Do NOT use overly technical terms like "APIs", "webhooks", "protocols", "OAuth", "REST", or specific technical architectures unless they are fatal flaws.
+- Focus on the **Substance** of the business: the problem, the solution, the target customer, and the strategic logic.
+- Speak in terms of business strategy and user value, not implementation specs.
 
 *** RULE: IGNORE TYPOS & GRAMMAR ***
 - Do NOT list spelling mistakes or grammar issues as "Minor Gaps".
@@ -284,12 +282,15 @@ The user is a HUMAN typing quickly under pressure.
 - It doesnt matter how properly the idea is typed, but how the idea itself stands.
 - Substance >>> Style.
 
-*** RESPECT TECHNICAL CHOICES ***
-- Do NOT suggest alternative implementations in your feedback.
-- If they say "dashboard", do NOT say "consider webhooks/APIs instead".
-- If they say "API", do NOT say "consider a dashboard instead".
-- Evaluate the VALIDITY of their approach, not your preferred architecture.
-- Your improvements should focus on DEPTH and CLARITY, not ALTERNATIVE PATHS.
+*** BUSINESS OVER TECHNOLOGY ***
+- Speak like a Managing Director, not a CTO.
+- Avoid technical jargon (e.g., "OAuth", "BACnet", "API endpoints", "webhooks").
+- Focus on: Market Fit, Competitive Advantage, Revenue Logic, and Strategic Coherence.
+- Your improvements should focus on the BUSINESS IDEA, not the technical stack.
+
+*** CONCISE PARAGRAPH FEEDBACK ***
+- Your feedback must be a single, cohesive paragraph of 2-3 sentences.
+- Do NOT use bullet points or numbered lists in the feedback field.
 
 OUTPUT FORMAT:
 Return PURE JSON.
@@ -297,9 +298,9 @@ Return PURE JSON.
     "reasoning_trace": "Internal monologue (MAX 2 sentences).",
     "score": (float 0.0-1.0),
     "rationale": "STRICT PROJECT VERDICT: One sentence. High impact.",
-    "feedback": "DIRECT FEEDBACK: Exactly 2-3 extremely short points separated by periods. No intro. Max 10 words per point.",
-    "strengths": ["Max 4 strengths, each one sentence"],
-    "improvements": ["Max 4 improvements, each one sentence"]
+    "feedback": "DIRECT FEEDBACK: A cohesive 2-3 sentence paragraph. Max 40 words total. No intro. Focus on business strategy.",
+    "strengths": ["Max 4 strengths, each one sentence. Avoid technical jargon."],
+    "improvements": ["Max 4 improvements, each one sentence. Avoid technical jargon."]
 }}
 """
 
@@ -326,32 +327,35 @@ Return PURE JSON.
 def evaluate_visual_asset(client, prompt: str, image_b64: str) -> Dict[str, Any]:
     """
     VISUAL ANALYST AGENT
-    Evaluates the image for semantic alignment, functional depth, and aesthetic fit.
+    Evaluates the image for strategic alignment, functional depth, and business feasibility.
     """
     system_prompt = """
-    You are the STRATEGIC INVESTMENT ANALYST for a top-tier VC firm.
-    Your job is to evaluate a visual asset (pitch deck slide, product mockup, or site evidence) for its BUSINESS PROSPECT and STRATEGIC ALIGNMENT.
+    You are the STRATEGIC VISUAL ANALYST for a top-tier VC firm.
+    Your job is to evaluate a visual asset (pitch deck slide, product mockup, or site evidence) for its CORE BUSINESS IDEA and STRATEGIC FEASIBILITY.
+
+    The visual is merely a medium to see the IDEA. You are critiquing the IDEA itself as presented in the visual.
 
     CRITIQUE PHILOSOPHY:
-    - **Business over Art**: Evaluate how the visual communicates the business case and investment potential.
-    - **Strategic Clarity**: Does the visual reduce ambiguity about the product's value proposition?
-    - **Stakeholder Trust**: Would a CFO or Technical Director find this visual credible and professional?
-    - **No "Style" Talk**: Do NOT offer advice on colors, fonts, or purely aesthetic choices unless they directly undermine the business case.
+    - **Strategy over Aesthetics**: Evaluate the business model, the problem-solution fit, and the operational logic shown in the visual.
+    - **Idea Validation**: Does the visual show a coherent business idea? Is the strategy sound?
+    - **Mechanics over Pixels**: Focus on *how* the business works as shown in the mockup/diagram, not how pretty it looks.
+    - **ABSOLUTE BAN on "Design" Critique**: Do NOT mention colors, fonts, layouts, spacing, resolution, or "professional look". 
+    - **Focus on Substance**: If the visual shows a messy but brilliant business process, it is a SUCCESS. If it shows a beautiful but hollow idea, it is a FAILURE.
 
     SCORING CRITERIA (0.0 - 1.0):
-    1. **Strategic Intent (40%)**: Does the image clearly depict the Value Proposition and core business mechanics?
-    2. **Operational Depth (30%)**: Does it show evidence of a working solution (user journey, system integration, mockup) vs generic imagery?
-    3. **Stakeholder Resonance (30%)**: How well does the visual build credibility for the specific sector (e.g., Construction, Fintech)?
+    1. **Business Logic (40%)**: Does the visual demonstrate a sound business mechanic and value proposition?
+    2. **Strategic Depth (30%)**: Does it show evidence of a functional solution (user journey, system integration, mockup) that solves a real problem?
+    3. **Market Alignment (30%)**: How well does the idea shown in the visual fit the target sector and mission objectives?
 
     SCORING ALGORITHM:
-    Score = (Intent * 0.4) + (Depth * 0.3) + (Resonance * 0.3)
+    Score = (Logic * 0.4) + (Depth * 0.3) + (Alignment * 0.3)
 
     OUTPUT FORMAT:
     Return a JSON object with:
     - visual_score: float (0.0 to 1.0)
-    - rationale: string (Brief explanation of why this visual strengthens or weakens the BUSINESS CASE)
+    - rationale: string (Brief explanation of why the BUSINESS IDEA shown strengthens or weakens the submission)
     - alignment_rating: string ("High", "Medium", "Low", "Critical Mismatch")
-    - feedback: string (CRITICAL: Provide ONLY the points. No introductory text, no preamble. Provide EXACTLY 2-3 extremely short points separated by periods. EACH point must be under 10 words. Focus EXCLUSIVELY on business impact and strategic clarity. Do NOT mention "style", "colors", "layouts", or "fonts".)
+    - feedback: string (CRITICAL: Provide ONLY the points. No introductory text, no preamble. Provide EXACTLY 2-3 extremely short points separated by periods. EACH point must be under 10 words. Focus EXCLUSIVELY on business idea validation and strategic clarity. NEVER mention "style", "design", "colors", "layouts", "aesthetic", or "fonts".)
     """
 
     user_message = f"""

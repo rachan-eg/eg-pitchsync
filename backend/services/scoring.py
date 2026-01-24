@@ -27,7 +27,7 @@ def calculate_phase_score(
 ) -> Dict[str, Any]:
     """
     Calculate comprehensive score for a phase.
-    Formula: (AI × 700) - Time Penalty - (Retries × 50) - Hint Penalty + Efficiency Bonus
+    Formula: (AI × 1000) - Time Penalty - Hint Penalty + Efficiency Bonus
     """
     phase_weight = phase_def.get("weight", 0.33)
     time_limit = phase_def.get("time_limit_seconds", 300)

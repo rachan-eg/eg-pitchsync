@@ -43,7 +43,7 @@ def get_vault_root() -> str:
     current_dir = os.path.dirname(os.path.abspath(__file__))
     return os.path.abspath(os.path.join(current_dir, "..", "..", "vault"))
 
-def save_usecase_localized(usecase: Dict[str, Any]):
+def save_usecase_localized(usecase: Dict[str, Any]) -> None:
     """Saves a single usecase into its localized vault folder."""
     uc_id = usecase.get("id")
     vault_root = get_vault_root()
@@ -63,7 +63,7 @@ def save_usecase_localized(usecase: Dict[str, Any]):
 # --- DASHBOARD STATS ---
 
 @router.get("/dashboard-stats")
-def get_dashboard_stats(token: str = Depends(verify_admin_access)):
+def get_dashboard_stats(token: str = Depends(verify_admin_access)) -> Dict[str, int]:
     """Returns counts for the admin dashboard."""
     return {
         "mission_count": len(USECASE_REPO),
@@ -74,7 +74,7 @@ def get_dashboard_stats(token: str = Depends(verify_admin_access)):
 # --- TEAMS / SESSIONS ---
 
 @router.get("/teams")
-def get_teams(token: str = Depends(verify_admin_access)):
+def get_teams(token: str = Depends(verify_admin_access)) -> Dict[str, List[Dict[str, Any]]]:
     """List all active team sessions and their progress."""
     sessions = get_all_sessions()
     
@@ -108,7 +108,7 @@ def get_teams(token: str = Depends(verify_admin_access)):
     return {"teams": formatted_teams}
 
 @router.get("/teams/{session_id}")
-def get_team_detail(session_id: str, token: str = Depends(verify_admin_access)):
+def get_team_detail(session_id: str, token: str = Depends(verify_admin_access)) -> Dict[str, Any]:
     """Get full details for a specific team session (Replay Mode)."""
     from backend.services.state import get_session
     session = get_session(session_id)
@@ -130,12 +130,12 @@ def get_team_detail(session_id: str, token: str = Depends(verify_admin_access)):
 # --- USECASES / MISSIONS ---
 
 @router.get("/usecases")
-def get_usecases(token: str = Depends(verify_admin_access)):
+def get_usecases(token: str = Depends(verify_admin_access)) -> Dict[str, List[Dict[str, Any]]]:
     """List all available missions (use cases)."""
     return {"usecases": USECASE_REPO}
 
 @router.post("/usecases")
-def add_usecase(usecase: Dict[str, Any] = Body(...), token: str = Depends(verify_admin_access)):
+def add_usecase(usecase: Dict[str, Any] = Body(...), token: str = Depends(verify_admin_access)) -> Dict[str, Any]:
     """Create a new mission."""
     if not usecase.get("id") or not usecase.get("title"):
         raise HTTPException(status_code=400, detail="ID and Title are required")
@@ -148,7 +148,7 @@ def add_usecase(usecase: Dict[str, Any] = Body(...), token: str = Depends(verify
     return usecase
 
 @router.put("/usecases/{usecase_id}")
-def update_usecase(usecase_id: str, usecase: Dict[str, Any] = Body(...), token: str = Depends(verify_admin_access)):
+def update_usecase(usecase_id: str, usecase: Dict[str, Any] = Body(...), token: str = Depends(verify_admin_access)) -> Dict[str, Any]:
     """Update an existing mission."""
     for i, u in enumerate(USECASE_REPO):
         if u['id'] == usecase_id:
@@ -157,11 +157,9 @@ def update_usecase(usecase_id: str, usecase: Dict[str, Any] = Body(...), token: 
             return usecase
     
     raise HTTPException(status_code=404, detail="Mission not found")
-    
-    raise HTTPException(status_code=404, detail="Mission not found")
 
 @router.delete("/usecases/{usecase_id}")
-def delete_usecase(usecase_id: str, token: str = Depends(verify_admin_access)):
+def delete_usecase(usecase_id: str, token: str = Depends(verify_admin_access)) -> Dict[str, str]:
     """Delete a mission."""
     found_idx = -1
     for i, u in enumerate(USECASE_REPO):
@@ -185,14 +183,14 @@ def delete_usecase(usecase_id: str, token: str = Depends(verify_admin_access)):
 # --- SESSIONS / ACTIVE OPS ---
 
 @router.get("/sessions")
-def get_sessions(token: str = Depends(verify_admin_access)):
+def get_sessions(token: str = Depends(verify_admin_access)) -> Dict[str, List[Dict[str, Any]]]:
     """List all active sessions (missions in progress)."""
     sessions = get_all_sessions()
     # Serialize for frontend
     return {"sessions": [s.dict() for s in sessions]}
 
 @router.delete("/sessions/{session_id}")
-def remove_session(session_id: str, token: str = Depends(verify_admin_access)):
+def remove_session(session_id: str, token: str = Depends(verify_admin_access)) -> Dict[str, str]:
     """Terminate an active session."""
     success = delete_session(session_id)
     if not success:
@@ -202,7 +200,7 @@ def remove_session(session_id: str, token: str = Depends(verify_admin_access)):
 # --- SYSTEM BROADCAST ---
 
 @router.post("/broadcast")
-def send_broadcast(data: Dict[str, Any] = Body(...), token: str = Depends(verify_admin_access)):
+def send_broadcast(data: Dict[str, Any] = Body(...), token: str = Depends(verify_admin_access)) -> Dict[str, Any]:
     """Set the system-wide broadcast message."""
     message = data.get("message", "")
     active = data.get("active", True)
@@ -211,6 +209,6 @@ def send_broadcast(data: Dict[str, Any] = Body(...), token: str = Depends(verify
     return result
 
 @router.get("/broadcast")
-def get_broadcast(token: str = Depends(verify_admin_access)):
+def get_broadcast(token: str = Depends(verify_admin_access)) -> Dict[str, Any]:
     """Get current broadcast status (for admin UI)."""
     return get_broadcast_message()
