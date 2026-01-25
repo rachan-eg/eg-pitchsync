@@ -214,6 +214,11 @@ export const AdminDashboard: React.FC = () => {
         );
     }, [teams, searchQuery]);
 
+    const selectedUsecase = useMemo(() => {
+        if (!selectedTeam || !usecases) return null;
+        return usecases.find(u => u.id === selectedTeam.usecase_id);
+    }, [selectedTeam, usecases]);
+
     const activeTeams = useMemo(() => filteredTeams.filter(t => !t.is_completed), [filteredTeams]);
     const completedTeams = useMemo(() => filteredTeams.filter(t => t.is_completed), [filteredTeams]);
 
@@ -409,60 +414,130 @@ export const AdminDashboard: React.FC = () => {
                         />
                     </div>
                 ) : selectedTeam ? (
-                    // Team Detail View
-                    <div className="team-detail">
-                        <div className="detail-header">
-                            <button className="back-btn" onClick={() => setSelectedTeam(null)}>
-                                ← BACK TO TEAMS
+                    // Team Detail View - Compact Design
+                    <div className="td-page">
+                        {/* Compact Header */}
+                        <div className="td-topbar">
+                            <button className="td-back" onClick={() => setSelectedTeam(null)}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                                </svg>
+                                BACK
                             </button>
-                            <div className="team-info">
-                                <h2>{selectedTeam.team_name}</h2>
-                                <span className="mission-tag">{selectedTeam.usecase_title}</span>
+                            <div className="td-title-group">
+                                <h1>{selectedTeam.team_name}</h1>
+                                <span className={`td-badge ${selectedTeam.is_completed ? 'complete' : 'active'}`}>
+                                    {selectedTeam.is_completed ? '✓ COMPLETE' : '◉ ACTIVE'}
+                                </span>
                             </div>
+                            <span className="td-id">#{selectedTeam.session_id.slice(0, 8).toUpperCase()}</span>
                         </div>
 
                         {isDetailLoading ? (
                             <TacticalLoader message="LOADING TEAM DATA" />
                         ) : selectedSession ? (
-                            <div className="detail-body">
+                            <div className="td-body">
+                                {/* Top Section: Score + Stats + Intel */}
+                                <div className="td-top-section">
+                                    {/* Score Card */}
+                                    <div className="td-score-card">
+                                        <svg className="td-ring" viewBox="0 0 100 100">
+                                            <circle className="td-ring-bg" cx="50" cy="50" r="42" />
+                                            <circle
+                                                className="td-ring-fill"
+                                                cx="50" cy="50" r="42"
+                                                style={{
+                                                    strokeDasharray: `${(Math.min(selectedSession.total_score, 200) / 200) * 264} 264`
+                                                }}
+                                            />
+                                        </svg>
+                                        <div className="td-score-text">
+                                            <span className="td-score-num">{Math.round(selectedSession.total_score)}</span>
+                                            <span className="td-score-pts">pts</span>
+                                        </div>
+                                    </div>
 
-                                <div className="stats-row">
-                                    <div className="stat-card">
-                                        <label>SCORE</label>
-                                        <span className="stat-value">{Math.round(selectedSession.total_score)}</span>
+                                    {/* Stats Grid */}
+                                    <div className="td-stats-grid">
+                                        <div className="td-stat">
+                                            <span className="td-stat-val">{selectedSession.is_complete ? 'DONE' : selectedSession.current_phase}</span>
+                                            <span className="td-stat-lbl">Phase</span>
+                                        </div>
+                                        <div className="td-stat">
+                                            <span className="td-stat-val">{(selectedSession.total_tokens || 0).toLocaleString()}</span>
+                                            <span className="td-stat-lbl">Tokens</span>
+                                        </div>
+                                        <div className="td-stat">
+                                            <span className="td-stat-val">{getSubmissions().length}/3</span>
+                                            <span className="td-stat-lbl">Uploads</span>
+                                        </div>
+                                        <div className="td-stat">
+                                            <span className="td-stat-val">{new Date(selectedTeam.last_active).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span className="td-stat-lbl">Last Seen</span>
+                                        </div>
                                     </div>
-                                    <div className="stat-card">
-                                        <label>PHASE</label>
-                                        <span className="stat-value">
-                                            {selectedSession.is_complete ? 'COMPLETE' : selectedSession.current_phase}
-                                        </span>
-                                    </div>
-                                    <div className="stat-card">
-                                        <label>TOKENS</label>
-                                        <span className="stat-value">{selectedSession.total_tokens?.toLocaleString() || 0}</span>
+
+                                    {/* Mission Info */}
+                                    <div className="td-mission-info">
+                                        <div className="td-mission-header">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                <path d="M14 2v6h6" />
+                                            </svg>
+                                            MISSION BRIEF
+                                        </div>
+                                        <div className="td-mission-body">
+                                            <div className="td-mission-row">
+                                                <div className="td-field">
+                                                    <label>Domain</label>
+                                                    <span>{selectedUsecase?.domain || 'General'}</span>
+                                                </div>
+                                                <div className="td-field">
+                                                    <label>Use Case</label>
+                                                    <span>{selectedUsecase?.title || selectedTeam.usecase_title}</span>
+                                                </div>
+                                            </div>
+                                            <div className="td-field td-desc">
+                                                <label>Objective</label>
+                                                <p>{selectedUsecase?.description || 'Mission details not specified.'}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="submissions-section">
-                                    <h3>PITCH SUBMISSIONS ({getSubmissions().length}/3)</h3>
+                                {/* Gallery Section */}
+                                <div className="td-gallery-section">
+                                    <div className="td-gallery-title">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <path d="M21 15l-5-5L5 21" />
+                                        </svg>
+                                        <span>PITCH VISUALS</span>
+                                        <span className="td-gallery-count">{getSubmissions().length}/3</span>
+                                    </div>
+
                                     {getSubmissions().length === 0 ? (
-                                        <div className="empty-state">
-                                            <span className="empty-icon">📂</span>
-                                            <p>NO ASSETS SUBMITTED YET</p>
+                                        <div className="td-no-assets">
+                                            <span>No visual assets uploaded yet</span>
                                         </div>
                                     ) : (
-                                        <div className="submissions-grid">
+                                        <div className="td-assets">
                                             {getSubmissions().map((sub, idx) => (
-                                                <div key={idx} className="submission-card" onClick={() => setInspectedSubmission(sub)}>
-                                                    <div className="submission-thumb">
-                                                        <img src={getFullUrl(sub.image_url)} alt={`Submission ${idx + 1}`} />
-                                                        <div className="thumb-overlay">
+                                                <div
+                                                    key={idx}
+                                                    className="td-asset"
+                                                    onClick={() => setInspectedSubmission(sub)}
+                                                >
+                                                    <div className="td-asset-img">
+                                                        <img src={getFullUrl(sub.image_url)} alt={`Asset ${idx + 1}`} />
+                                                        <div className="td-asset-hover">
                                                             <span>INSPECT</span>
                                                         </div>
                                                     </div>
-                                                    <div className="submission-meta">
-                                                        <span className="sub-index">#{idx + 1}</span>
-                                                        <span className="sub-score">{Math.round((sub.visual_score || 0) * 100)}%</span>
+                                                    <div className="td-asset-meta">
+                                                        <span className="td-asset-num">#{idx + 1}</span>
+                                                        <span className="td-asset-pct">{Math.round((sub.visual_score || 0) * 100)}%</span>
                                                     </div>
                                                 </div>
                                             ))}
@@ -471,7 +546,7 @@ export const AdminDashboard: React.FC = () => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="error-state">Failed to load session data</div>
+                            <div className="td-err">Failed to load session data</div>
                         )}
                     </div>
                 ) : activeTab === 'catalog' ? (
