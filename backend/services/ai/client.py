@@ -16,7 +16,8 @@ class ClaudeClient:
         from botocore.config import Config
         self.region = settings.AWS_REGION
 
-        self.model_id = Models.CLAUDE
+        # self.model_id = 'eu.anthropic.claude-sonnet-4-5-20250929-v1:0'
+        self.model_id = 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
         
         # Configure timeouts for production-grade reliability
         config = Config(
@@ -173,11 +174,9 @@ class ClaudeClient:
 class Models:
     """AI Model identifiers."""
     # Default for evaluation (balanced)
-    CLAUDE = "eu.anthropic.claude-3-5-sonnet-20240620-v1:0"
+    CLAUDE = "eu.anthropic.claude-sonnet-4-20250514-v1:0"
     # Creative model for synthesis/image prompts (more creative)
-    CLAUDE_CREATIVE = "eu.anthropic.claude-3-5-sonnet-20240620-v1:0"
-    # Fallback/Fast model
-    CLAUDE_HAIKU = "eu.anthropic.claude-3-haiku-20240307-v1:0"
+    CLAUDE_CREATIVE = "eu.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 # Singleton instances with thread-safe initialization
 import threading

@@ -129,16 +129,11 @@ export const FinalReveal: React.FC<FinalRevealProps> = ({ session, imageUrl, sel
     };
 
     // Calculate effective score for current selection
-    // Visual score adds a boost of +/- 10% (100 pts) based on alignment
     const submissions = session.uploadedImages || (session as any).uploaded_images || [];
     const currentSub = selectedSubmission || (submissions.length > 0 ? submissions[submissions.length - 1] : null);
 
-    // Total score is sum of phases + potential visual boost
-    const baseScore = Math.round(session.total_score);
-    const visualScoreVal = currentSub ? (currentSub.visual_score || 0) : (session.final_output.visual_score || 0);
-    const visualBoost = Math.round((visualScoreVal - 0.5) * 200); // Scale -100 to +100
-    const displayScore = Math.max(0, Math.min(1000, baseScore + visualBoost));
-
+    // Total score is the tactical sum from phases
+    const displayScore = Math.round(session.total_score);
     const tier = getScoreTier(displayScore);
 
     // Calculate penalties (clamp negative time penalty to 0 for old speed bonus data)

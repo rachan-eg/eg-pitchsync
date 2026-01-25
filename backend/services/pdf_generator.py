@@ -855,15 +855,15 @@ class DarkThemeReportGenerator:
             scoring_data = [
                 [Paragraph("Component", self.styles["TableHeader"]), Paragraph("Raw", self.styles["TableHeader"]), Paragraph("Weighted", self.styles["TableHeader"])],
                 [Paragraph("Base Performance", self.styles["TableCell"]), Paragraph(f"{int(raw_base)}", self.styles["TableCellCenter"]), Paragraph(f"{w_base}", self.styles["TableCellCenter"])],
-                [Paragraph("Time Adjustment", self.styles["TableCell"]), Paragraph(f"-{int(metrics.time_penalty)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_time}</font>', self.styles["TableCellCenter"])],
-                [Paragraph("Retry Adjustment", self.styles["TableCell"]), Paragraph(f"-{int(metrics.retry_penalty)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_retry}</font>', self.styles["TableCellCenter"])],
-                [Paragraph("Hint Adjustment", self.styles["TableCell"]), Paragraph(f"-{int(metrics.hint_penalty)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">−{w_hint}</font>', self.styles["TableCellCenter"])],
-                [Paragraph("Efficiency Bonus", self.styles["TableCell"]), Paragraph(f"+{int(metrics.efficiency_bonus)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{SUCCESS.hexval()}">+{w_bonus}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("Time Penalty", self.styles["TableCell"]), Paragraph(f"{int(metrics.time_penalty)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">{"−" if w_time > 0 else ""}{w_time}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("Retry Count", self.styles["TableCell"]), Paragraph(f"{int(metrics.retries)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">{"−" if w_retry > 0 else ""}{w_retry}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("Hint Penalty", self.styles["TableCell"]), Paragraph(f"{int(metrics.hint_penalty)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">{"−" if w_hint > 0 else ""}{w_hint}</font>', self.styles["TableCellCenter"])],
+                [Paragraph("Efficiency Bonus", self.styles["TableCell"]), Paragraph(f'{"+" if int(metrics.efficiency_bonus) > 0 else ""}{int(metrics.efficiency_bonus)}', self.styles["TableCellCenter"]), Paragraph(f'<font color="{SUCCESS.hexval()}">{"+" if w_bonus > 0 else ""}{w_bonus}</font>', self.styles["TableCellCenter"])],
                 [Paragraph("<b>Final Phase Score</b>", self.styles["TableCell"]), Paragraph("", self.styles["TableCell"]), Paragraph(f"<b>{final_score}</b>", self.styles["TableCellCenter"])],
             ]
             score_table = self._create_dark_table(scoring_data, [4.5*cm, 2.5*cm, 2.5*cm])
             table_block.append(score_table)
-            table_block.append(Paragraph(f"<i>Table {table_num}: {phase_name} breakdown</i>", self.styles["Caption"]))
+            table_block.append(Paragraph(f"<i>Table {table_num}: {clean_phase_name} breakdown</i>", self.styles["Caption"]))
             table_block.append(Spacer(1, 0.5*cm))
             story.append(KeepTogether(table_block))
             

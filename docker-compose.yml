@@ -1,6 +1,5 @@
 # Docker Compose for Pitch-Sync Engine
 # Note: 'version' key removed - deprecated in modern Docker Compose
-# Database is NOT persisted - fresh DB on each deployment
 
 services:
   backend:
