@@ -309,38 +309,94 @@
 .leaderboard-view .leaderboard__podium {
     margin-bottom: 0.5rem !important;
     gap: 0.75rem !important;
+    width: 100%;
 }
 
+/* Grid Layout for Podium Cards */
 .leaderboard-view .leaderboard__podium-card {
-    padding: 0.75rem 1rem !important;
+    padding: 0.75rem 1.25rem !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto auto !important;
+    grid-template-areas:
+        "header header"
+        "team score"
+        "usecase meta" !important;
+    gap: 0 1rem !important;
+    align-content: center;
+    text-align: left !important;
 }
 
+/* Header Area (Badge or Rank) */
+.leaderboard-view .leaderboard__podium-badge,
+.leaderboard-view .leaderboard__podium-rank {
+    grid-area: header;
+    justify-self: start;
+    margin-bottom: 0.35rem !important;
+    margin-left: -2px;
+}
+
+.leaderboard-view .leaderboard__podium-badge {
+    padding: 0.15rem 0.5rem !important;
+    font-size: 0.5rem !important;
+}
+
+/* Team Name (Left) */
+.leaderboard-view .leaderboard__podium-team {
+    grid-area: team;
+    text-align: left !important;
+    justify-self: start;
+    font-size: 1rem !important;
+    margin-bottom: 0.1rem !important;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.leaderboard-view .leaderboard__podium-team--1 {
+    font-size: 1.1rem !important;
+}
+
+/* Use Case (Left, below team) */
+.leaderboard-view .leaderboard__podium-usecase {
+    grid-area: usecase;
+    text-align: left !important;
+    justify-self: start;
+    font-size: 0.65rem !important;
+    margin-bottom: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    color: #94a3b8 !important;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Score (Right) */
 .leaderboard-view .leaderboard__podium-score {
+    grid-area: score;
+    text-align: right !important;
+    justify-self: end;
     font-size: 1.25rem !important;
+    line-height: 1;
+    align-self: end;
 }
 
 .leaderboard-view .leaderboard__podium-score--1 {
     font-size: 1.5rem !important;
 }
 
-.leaderboard-view .leaderboard__podium-team {
-    font-size: 0.9rem !important;
-    margin-bottom: 0 !important;
-}
-
-.leaderboard-view .leaderboard__podium-team--1 {
-    font-size: 1rem !important;
-}
-
-.leaderboard-view .leaderboard__podium-badge {
-    margin-bottom: 0.4rem !important;
-    padding: 0.15rem 0.5rem !important;
-    font-size: 0.5rem !important;
-}
-
-.leaderboard-view .leaderboard__podium-usecase {
-    margin-bottom: 0.25rem !important;
-    font-size: 0.5rem !important;
+/* Meta (Right, below score) */
+.leaderboard-view .leaderboard__podium-meta {
+    grid-area: meta;
+    text-align: right !important;
+    justify-self: end;
+    font-size: 0.6rem !important;
+    opacity: 0.7;
+    align-self: start;
+    margin-top: 0 !important;
 }
 
 .leaderboard-view .leaderboard__header {
@@ -349,6 +405,35 @@
 
 .leaderboard-view .leaderboard__tracks-section {
     margin-bottom: 0.5rem !important;
+}
+
+
+/* Phase/Tactical Breakdown Overrides for Admin */
+.leaderboard-view .leaderboard__phase-col-header {
+    font-size: 0.85rem !important;
+    padding: 0.75rem !important;
+    letter-spacing: 0.15em !important;
+}
+
+.leaderboard-view .leaderboard__phase-row {
+    padding: 0.75rem 1rem !important;
+}
+
+.leaderboard-view .leaderboard__phase-row-rank {
+    font-size: 0.85rem !important;
+}
+
+.leaderboard-view .leaderboard__phase-row-team {
+    font-size: 0.95rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.leaderboard-view .leaderboard__phase-row-score {
+    font-size: 1rem !important;
+}
+
+.leaderboard-view .leaderboard__phase-col-list {
+    gap: 0.25rem !important;
 }
 
 /* Teams View */
