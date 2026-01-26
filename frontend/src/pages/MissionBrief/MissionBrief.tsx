@@ -172,7 +172,7 @@ export const MissionBrief: React.FC<MissionBriefProps> = ({ usecase, phases }) =
                             <div className="mission-brief__summary">
                                 <div className="mission-brief__summary-row">
                                     <span className="label">Retries</span>
-                                    <span className="value">Max 3</span>
+                                    <span className="value">Max 3 per phase</span>
                                 </div>
                                 <div className="mission-brief__summary-row">
                                     <span className="label">Time Penalty</span>

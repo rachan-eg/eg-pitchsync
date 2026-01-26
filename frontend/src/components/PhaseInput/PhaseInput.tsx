@@ -130,7 +130,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
     // Intercept Global "Max Retries" Error to show subtle prompt instead
     useEffect(() => {
         if (error && (error.toLowerCase().includes('retries') || error.toLowerCase().includes('exceeded'))) {
-            setValidationError("Maximum strategic retries exhausted. Strategic lockdown active.");
+            setValidationError("Maximum strategic retries for this phase exhausted. Strategic lockdown active.");
             // Clear the global error so it doesn't show the system popup
             setError(null);
         }
@@ -624,7 +624,7 @@ export const PhaseInput: React.FC<PhaseInputProps> = ({
                         {isLocked && (
                             <div className="pi-locked-banner">
                                 <Icons.Shield />
-                                <span>Maximum Retries Exhausted - Response Locked</span>
+                                <span>Maximum Phase Retries Exhausted - Response Locked</span>
                             </div>
                         )}
                         {(isEditing || isListening) && !isLocked ? (

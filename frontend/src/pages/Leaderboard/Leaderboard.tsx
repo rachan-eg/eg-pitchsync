@@ -53,15 +53,20 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             result = result.filter(e => e.total_retries === 0);
             result.sort((a, b) => b.score - a.score || a.total_tokens - b.total_tokens);
         } else if (track === 'MINIMALIST') {
-            // Efficiency comparisons only valid for completed missions
-            result = result.filter(e => e.is_complete);
-            result.sort((a, b) => a.total_tokens - b.total_tokens || b.score - a.score);
+            // Efficiency Token Master: Highest scores achieved with the lowest total token expenditure
+            result = result.filter(e => e.is_complete && e.total_tokens > 0);
+            result.sort((a, b) => {
+                const ratioA = a.score / a.total_tokens;
+                const ratioB = b.score / b.total_tokens;
+                // Primary: Highest yield (ratio), Secondary: Highest score
+                return ratioB - ratioA || b.score - a.score;
+            });
         } else if (track === 'BLITZ') {
             // Speed comparisons only valid for completed missions
             result = result.filter(e => e.is_complete);
             result.sort((a, b) => a.total_duration_seconds - b.total_duration_seconds || b.score - a.score);
         } else {
-            // Elite: Pure score, partial progress allowed
+            // Elite: Pure score, partial progress allowed (Highest Score, then Lowest Tokens)
             result.sort((a, b) => b.score - a.score || a.total_tokens - b.total_tokens);
         }
 
@@ -92,7 +97,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         switch (track) {
             case 'ELITE': return "The highest overall mission efficacy scores.";
             case 'LEGENDS': return "Perfect records: Teams with zero tactical retries.";
-            case 'MINIMALIST': return "Payload efficiency: Lowest total token expenditure.";
+            case 'MINIMALIST': return "Token Master: Highest scores achieved with the lowest total token expenditure.";
             case 'PHASES': return "Inter-phase performance analysis: Top tactical execution per sector.";
             case 'BLITZ': return "Strategic pace: Fastest mission completion times.";
         }
@@ -203,7 +208,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                                 <div className="leaderboard__podium-rank">2nd Division</div>
                                 <div className="leaderboard__podium-team">{topThree[1].team_id}</div>
                                 <div className="leaderboard__podium-usecase">{topThree[1].usecase}</div>
-                                <div className="leaderboard__podium-score leaderboard__podium-score--2">{track === 'BLITZ' ? formatDuration(topThree[1].total_duration_seconds) : topThree[1].score.toFixed(0)}</div>
+                                <div className="leaderboard__podium-score leaderboard__podium-score--2">
+                                    {track === 'BLITZ' ? formatDuration(topThree[1].total_duration_seconds) :
+                                        track === 'MINIMALIST' ? (topThree[1].score / (topThree[1].total_tokens || 1) * 100).toFixed(2) :
+                                            topThree[1].score.toFixed(0)}
+                                    {track === 'MINIMALIST' && <span style={{ fontSize: '0.4em', marginLeft: '2px' }}>yld</span>}
+                                </div>
                                 <div className="leaderboard__podium-meta">{track === 'MINIMALIST' ? `${topThree[1].total_tokens} TOKENS` : `${topThree[1].total_retries} RETRIES`}</div>
                             </div>
                         )}
@@ -217,7 +227,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                                 </div>
                                 <div className="leaderboard__podium-team leaderboard__podium-team--1">{topThree[0].team_id}</div>
                                 <div className="leaderboard__podium-usecase leaderboard__podium-usecase--1">{topThree[0].usecase}</div>
-                                <div className="leaderboard__podium-score leaderboard__podium-score--1">{track === 'BLITZ' ? formatDuration(topThree[0].total_duration_seconds) : topThree[0].score.toFixed(0)}</div>
+                                <div className="leaderboard__podium-score leaderboard__podium-score--1">
+                                    {track === 'BLITZ' ? formatDuration(topThree[0].total_duration_seconds) :
+                                        track === 'MINIMALIST' ? (topThree[0].score / (topThree[0].total_tokens || 1) * 100).toFixed(2) :
+                                            topThree[0].score.toFixed(0)}
+                                    {track === 'MINIMALIST' && <span style={{ fontSize: '0.4em', marginLeft: '2px' }}>yld</span>}
+                                </div>
                                 <div className="leaderboard__podium-meta leaderboard__podium-meta--1">{track === 'MINIMALIST' ? `${topThree[0].total_tokens} TOKENS` : `${topThree[0].total_retries} RETRIES`}</div>
                             </div>
                         )}
@@ -229,7 +244,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                                 <div className="leaderboard__podium-rank">3rd Division</div>
                                 <div className="leaderboard__podium-team">{topThree[2].team_id}</div>
                                 <div className="leaderboard__podium-usecase">{topThree[2].usecase}</div>
-                                <div className="leaderboard__podium-score leaderboard__podium-score--3">{track === 'BLITZ' ? formatDuration(topThree[2].total_duration_seconds) : topThree[2].score.toFixed(0)}</div>
+                                <div className="leaderboard__podium-score leaderboard__podium-score--3">
+                                    {track === 'BLITZ' ? formatDuration(topThree[2].total_duration_seconds) :
+                                        track === 'MINIMALIST' ? (topThree[2].score / (topThree[2].total_tokens || 1) * 100).toFixed(2) :
+                                            topThree[2].score.toFixed(0)}
+                                    {track === 'MINIMALIST' && <span style={{ fontSize: '0.4em', marginLeft: '2px' }}>yld</span>}
+                                </div>
                                 <div className="leaderboard__podium-meta">{track === 'MINIMALIST' ? `${topThree[2].total_tokens} TOKENS` : `${topThree[2].total_retries} RETRIES`}</div>
                             </div>
                         )}
@@ -317,7 +337,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                                         </div>
 
                                         <div className={`leaderboard__row-score ${isTopThree ? 'leaderboard__row-score--top' : 'leaderboard__row-score--default'}`}>
-                                            {track === 'BLITZ' ? formatDuration(entry.total_duration_seconds) : entry.score.toFixed(0)}
+                                            {track === 'BLITZ' ? formatDuration(entry.total_duration_seconds) :
+                                                track === 'MINIMALIST' ? (entry.score / (entry.total_tokens || 1) * 100).toFixed(2) :
+                                                    entry.score.toFixed(0)}
+                                            {track === 'MINIMALIST' && <span className="leaderboard__row-tokens-unit" style={{ marginLeft: '2px', fontSize: '0.6em', opacity: 0.6 }}>yld</span>}
                                         </div>
 
                                         <div className="leaderboard__row-status">
