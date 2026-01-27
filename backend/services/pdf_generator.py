@@ -741,6 +741,12 @@ class DarkThemeReportGenerator:
             ]
         ]
         
+        # Use session's usecase ID to fetch the correct configuration for weights
+        usecase_id = self.session.usecase.get("id", "")
+        # Get phase config mapping: Name -> Config
+        phases_repo = get_phases_for_usecase(usecase_id)
+        phase_map = {d["name"]: d for d in phases_repo.values()}
+        
         total_hints = 0
         phases_sorted = sorted(self.session.phases.items(), key=lambda x: x[0])
         for p_name, p_data in phases_sorted:
@@ -753,8 +759,13 @@ class DarkThemeReportGenerator:
                         p_hints += 1
             total_hints += p_hints
             
+            # Find weight for the phase
+            config = phase_map.get(p_name, {})
+            p_weight = config.get("weight", 0)
+            p_weight_pct = f"({round(p_weight * 100)}%)" if p_weight > 0 else ""
+            
             summary_table_data.append([
-                Paragraph(p_name, self.styles["TableCell"]),
+                Paragraph(f"{p_name} <font size='7' color='{TEXT_DIM.hexval()}'>{p_weight_pct}</font>", self.styles["TableCell"]),
                 Paragraph(format_duration(p_data.metrics.duration_seconds), self.styles["TableCellCenter"]),
                 Paragraph(str(p_data.metrics.retries), self.styles["TableCellCenter"]),
                 Paragraph(str(p_hints), self.styles["TableCellCenter"]),
@@ -782,15 +793,9 @@ class DarkThemeReportGenerator:
         story.append(perf_summary_table)
         story.append(Spacer(1, 0.5*cm))
         
-        # PHASE ANALYSIS - Start on new page (using CondPageBreak to avoid empty pages on spills)
+        # Phase Analysis Header
         story.append(CondPageBreak(20*cm))
         story.append(KeepTogether(self._create_section_header(self._next_section("Phase Analysis"))))
-        
-        # Use session's usecase ID to fetch the correct configuration for weights
-        usecase_id = self.session.usecase.get("id", "")
-        # Get phase config mapping: Name -> Config
-        phases_repo = get_phases_for_usecase(usecase_id)
-        phase_map = {d["name"]: d for d in phases_repo.values()}
         
         phases_sorted = sorted(self.session.phases.items(), key=lambda x: x[0])
         
@@ -825,7 +830,7 @@ class DarkThemeReportGenerator:
                 f'<font color="{BORDER_LIGHT.hexval()}">  //  </font>'
                 f'<font color="{TEXT_SECONDARY.hexval()}" size="9">MISSION SCORE: </font>'
                 f'<font size="13"><b>{final_score}</b></font>'
-                f'<font size="9" color="{TEXT_MUTED.hexval()}"> / {max_points} PTS</font>'
+                f'<font size="9" color="{TEXT_MUTED.hexval()}"> / {max_points} PTS ({round(weight*100)}%)</font>'
             )
             phase_intro.append(Paragraph(status_line, self.styles["Body"]))
             phase_intro.append(Spacer(1, 0.3*cm))
@@ -853,7 +858,7 @@ class DarkThemeReportGenerator:
                 w_base += drift
 
             scoring_data = [
-                [Paragraph("Component", self.styles["TableHeader"]), Paragraph("Raw", self.styles["TableHeader"]), Paragraph("Weighted", self.styles["TableHeader"])],
+                [Paragraph("Component", self.styles["TableHeader"]), Paragraph("Raw", self.styles["TableHeader"]), Paragraph(f"Weighted ({round(weight*100)}%)", self.styles["TableHeader"])],
                 [Paragraph("Base Performance", self.styles["TableCell"]), Paragraph(f"{int(raw_base)}", self.styles["TableCellCenter"]), Paragraph(f"{w_base}", self.styles["TableCellCenter"])],
                 [Paragraph("Time Penalty", self.styles["TableCell"]), Paragraph(f"{int(metrics.time_penalty)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">{"−" if w_time > 0 else ""}{w_time}</font>', self.styles["TableCellCenter"])],
                 [Paragraph("Retry Count", self.styles["TableCell"]), Paragraph(f"{int(metrics.retries)}", self.styles["TableCellCenter"]), Paragraph(f'<font color="{DANGER.hexval()}">{"−" if w_retry > 0 else ""}{w_retry}</font>', self.styles["TableCellCenter"])],
