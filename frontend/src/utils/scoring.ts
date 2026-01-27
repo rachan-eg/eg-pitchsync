@@ -28,7 +28,7 @@ export const getScoreTier = (score: number): ScoreTier => {
     if (score >= 500) {
         return { label: 'C-TIER', className: 'tier-c' };
     }
-    return { label: 'NEEDS WORK', className: 'tier-default' };
+    return { label: 'D-TIER', className: 'tier-d' };
 };
 
 /**

@@ -207,7 +207,7 @@ class TestScoreTier:
         assert get_score_tier(600) == "C-TIER"
         assert get_score_tier(500) == "C-TIER"
 
-    def test_needs_work(self):
-        """Test NEEDS WORK classification."""
-        assert get_score_tier(400) == "NEEDS WORK"
-        assert get_score_tier(0) == "NEEDS WORK"
+    def test_d_tier(self):
+        """Test D-TIER classification."""
+        assert get_score_tier(400) == "D-TIER"
+        assert get_score_tier(0) == "D-TIER"

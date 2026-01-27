@@ -12,7 +12,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getApiUrl, getFullUrl } from '../utils';
-import { useAuth } from './AuthProvider';
+import { useAuth, type TeamCodeInfo } from './AuthProvider';
 import { useTimer } from './TimerProvider';
 import { useUI } from './UIProvider';
 import type {
@@ -165,6 +165,17 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 try {
                     const parsedSession = JSON.parse(savedSession);
                     const parsedConfig = JSON.parse(savedConfig);
+
+                    // CRITICAL: Validate that cached session matches current team code
+                    // This prevents loading an old usecase when the user enters a new team code
+                    const currentTeamInfo = JSON.parse(sessionStorage.getItem('pitch_sync_team_info') || 'null') as TeamCodeInfo | null;
+                    if (currentTeamInfo && parsedSession.team_id !== currentTeamInfo.teamName) {
+                        console.log(`🔄 Team mismatch detected: cached "${parsedSession.team_id}" vs current "${currentTeamInfo.teamName}". Clearing stale session.`);
+                        localStorage.removeItem('pitch_sync_session');
+                        localStorage.removeItem('pitch_sync_config');
+                        localStorage.removeItem('pitch_sync_scoring');
+                        return; // Don't hydrate, let MissionBriefPage call initSessionFromTeamCode
+                    }
 
                     // Validate session exists on backend
                     try {

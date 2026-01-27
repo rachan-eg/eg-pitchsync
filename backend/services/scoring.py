@@ -179,4 +179,4 @@ def get_score_tier(score: float) -> str:
     elif score >= 500:
         return "C-TIER"
     else:
-        return "NEEDS WORK"
+        return "D-TIER"

@@ -95,11 +95,19 @@ const MissionBriefPage: React.FC = () => {
     const initAttemptedRef = React.useRef(false);
 
     // Initialize session from team code info if we don't have a session yet
+    // OR if the current session is from a different team (e.g., stale data)
     React.useEffect(() => {
         const initFromTeamCode = async () => {
-            if (!session && teamCodeInfo && !isInitializing) {
+            // Check if we need to initialize: either no session, or session team mismatch
+            const needsInit = !session || (teamCodeInfo && session.team_id !== teamCodeInfo.teamName);
+
+            if (needsInit && teamCodeInfo && !isInitializing) {
                 if (initAttemptedRef.current) return;
                 initAttemptedRef.current = true;
+
+                if (session && session.team_id !== teamCodeInfo.teamName) {
+                    console.log(`🔄 Session team mismatch in MissionBriefPage: "${session.team_id}" vs "${teamCodeInfo.teamName}". Re-initializing...`);
+                }
 
                 setIsInitializing(true);
                 setInitError(null);
@@ -126,8 +134,9 @@ const MissionBriefPage: React.FC = () => {
         initFromTeamCode();
     }, [session, teamCodeInfo, isInitializing, initSessionFromTeamCode]);
 
-    // Show loading while initializing
-    if (isInitializing || (!session && teamCodeInfo)) {
+    // Show loading while initializing or if team mismatch detected
+    const isTeamMismatch = session && teamCodeInfo && session.team_id !== teamCodeInfo.teamName;
+    if (isInitializing || (!session && teamCodeInfo) || isTeamMismatch) {
         return <TacticalLoader message="Preparing Mission" subMessage="Establishing secure uplink with command center..." />;
     }
 
