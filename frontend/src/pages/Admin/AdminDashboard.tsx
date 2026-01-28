@@ -8,7 +8,6 @@ import { Leaderboard } from '../Leaderboard/Leaderboard';
 import { FinalReveal } from '../FinalReveal/FinalReveal';
 import { TacticalLoader } from '../../components/TacticalLoader';
 import { Branding } from '../../components/Branding/Branding';
-import { VirtualList } from '../../components/VirtualList/VirtualList';
 import { getApiUrl, getFullUrl } from '../../utils';
 import type { LeaderboardEntry, SessionState, PitchSubmission } from '../../types';
 import { useVoiceInput } from '../../hooks/useVoiceInput';
@@ -54,8 +53,12 @@ export const AdminDashboard: React.FC = () => {
     const [broadcastMsg, setBroadcastMsg] = useState('');
     const [isBroadcasting, setIsBroadcasting] = useState(false);
 
-    // Search
+    // Search and Sort
     const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState<'score' | 'recent' | 'progress'>('recent');
+
+    // Toast notification
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     // --- VOICE INPUT ---
     const {
@@ -172,10 +175,14 @@ export const AdminDashboard: React.FC = () => {
             if (isListening) stopVoice();
             setShowBroadcast(false);
             setBroadcastMsg('');
-            alert('Broadcast Sent Successfully');
+
+            // Show success toast
+            setToast({ message: 'Transmission sent successfully', type: 'success' });
+            setTimeout(() => setToast(null), 3000);
         } catch (err) {
             console.error('Broadcast failed:', err);
-            alert('Failed to send broadcast');
+            setToast({ message: 'Failed to send transmission', type: 'error' });
+            setTimeout(() => setToast(null), 3000);
         } finally {
             setIsBroadcasting(false);
         }
@@ -219,37 +226,65 @@ export const AdminDashboard: React.FC = () => {
         return usecases.find(u => u.id === selectedTeam.usecase_id);
     }, [selectedTeam, usecases]);
 
+    // Helper: Get score tier color
+    const getScoreTier = (score: number): { label: string; color: string } => {
+        if (score >= 900) return { label: 'S', color: '#FFD700' };
+        if (score >= 800) return { label: 'A', color: '#10B981' };
+        if (score >= 700) return { label: 'B', color: '#3B82F6' };
+        if (score >= 500) return { label: 'C', color: '#9f6ac2ff' };
+        return { label: 'D', color: '#b39f9fff' };
+    };
+
+    // Helper: Time ago formatting
+    const getTimeAgo = (dateStr: string): string => {
+        const now = new Date();
+        const then = new Date(dateStr);
+        const diffMs = now.getTime() - then.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return `${diffDays}d ago`;
+    };
+
+    // Base filtered lists
     const activeTeams = useMemo(() => filteredTeams.filter(t => !t.is_completed), [filteredTeams]);
     const completedTeams = useMemo(() => filteredTeams.filter(t => t.is_completed), [filteredTeams]);
 
-    // Chunk teams for VirtualGrid (3 per row)
-    const chunkedActiveTeams = useMemo(() => {
-        const chunks = [];
-        for (let i = 0; i < activeTeams.length; i += 3) {
-            chunks.push(activeTeams.slice(i, i + 3));
+    // Aggregate Stats
+    const aggregateStats = useMemo(() => {
+        if (teams.length === 0) return { avgScore: 0, completionRate: 0, totalTokens: 0 };
+        const avgScore = Math.round(teams.reduce((sum, t) => sum + t.score, 0) / teams.length);
+        const completionRate = Math.round((completedTeams.length / teams.length) * 100);
+        const totalTokens = teams.reduce((sum, t) => sum + (t.total_tokens || 0), 0);
+        return { avgScore, completionRate, totalTokens };
+    }, [teams, completedTeams]);
+
+    // Sorting function
+    const sortTeams = (teamsToSort: TeamData[]): TeamData[] => {
+        const sorted = [...teamsToSort];
+        switch (sortBy) {
+            case 'score':
+                return sorted.sort((a, b) => b.score - a.score);
+            case 'progress':
+                return sorted.sort((a, b) => b.progress - a.progress);
+            case 'recent':
+            default:
+                return sorted.sort((a, b) => new Date(b.last_active).getTime() - new Date(a.last_active).getTime());
         }
-        return chunks;
-    }, [activeTeams]);
+    };
+
+    // Sorted teams (derived from base lists)
+    const sortedActiveTeams = useMemo(() => sortTeams(activeTeams), [activeTeams, sortBy]);
+    const sortedCompletedTeams = useMemo(() => sortTeams(completedTeams), [completedTeams, sortBy]);
 
     const getSubmissions = (): PitchSubmission[] => {
         if (!selectedSession) return [];
         return selectedSession.uploadedImages || (selectedSession as any).uploaded_images || [];
     };
-
-    // Render Row for VirtualList
-    const renderTeamRow = (chunk: TeamData[], index: number, style: React.CSSProperties) => (
-        <div key={index} style={{ ...style, display: 'flex', gap: '1.25rem' }}>
-            {chunk.map(team => (
-                <div key={team.session_id} style={{ flex: 1, minWidth: 0 }}>
-                    <TeamCard team={team} onClick={() => setSelectedTeam(team)} />
-                </div>
-            ))}
-            {/* Spacer for incomplete rows */}
-            {[...Array(3 - chunk.length)].map((_, i) => (
-                <div key={`spacer-${i}`} style={{ flex: 1, minWidth: 0 }} />
-            ))}
-        </div>
-    );
 
     if (isLoading) {
         return (
@@ -261,6 +296,20 @@ export const AdminDashboard: React.FC = () => {
 
     return (
         <div className="admin-dashboard">
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`admin-toast admin-toast--${toast.type}`}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        {toast.type === 'success' ? (
+                            <><circle cx="12" cy="12" r="10" /><path d="M9 12l2 2 4-4" /></>
+                        ) : (
+                            <><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></>
+                        )}
+                    </svg>
+                    {toast.message}
+                </div>
+            )}
+
             {/* Broadcast Modal */}
             {showBroadcast && (
                 <div className="inspection-overlay" style={{ background: 'rgba(0,0,0,0.85)', alignItems: 'center', justifyContent: 'center' }}>
@@ -457,23 +506,38 @@ export const AdminDashboard: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Stats Grid */}
+                                    {/* Stats Grid - Premium Tactical Redesign */}
                                     <div className="td-stats-grid">
-                                        <div className="td-stat">
-                                            <span className="td-stat-val">{selectedSession.is_complete ? 'DONE' : selectedSession.current_phase}</span>
-                                            <span className="td-stat-lbl">Phase</span>
+                                        <div className="td-stat td-stat--tier">
+                                            <div className="td-tier-badge" style={{
+                                                color: getScoreTier(selectedSession.total_score).color,
+                                                borderColor: getScoreTier(selectedSession.total_score).color + '30',
+                                            }}>
+                                                {getScoreTier(selectedSession.total_score).label}
+                                            </div>
+                                            <span className="td-stat-lbl">TEAM RANK</span>
                                         </div>
+
+                                        <div className="td-stat">
+                                            <span className="td-stat-val">
+                                                {Object.values(selectedSession.phases || {}).reduce((acc, p) =>
+                                                    acc + (p.responses?.filter((r: any) => r.hint_used).length || 0), 0
+                                                )}
+                                            </span>
+                                            <span className="td-stat-lbl">HINTS USED</span>
+                                        </div>
+
                                         <div className="td-stat">
                                             <span className="td-stat-val">{(selectedSession.total_tokens || 0).toLocaleString()}</span>
-                                            <span className="td-stat-lbl">Tokens</span>
+                                            <span className="td-stat-lbl">TOTAL TOKENS</span>
                                         </div>
+
                                         <div className="td-stat">
-                                            <span className="td-stat-val">{getSubmissions().length}/3</span>
-                                            <span className="td-stat-lbl">Uploads</span>
-                                        </div>
-                                        <div className="td-stat">
-                                            <span className="td-stat-val">{new Date(selectedTeam.last_active).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                            <span className="td-stat-lbl">Last Seen</span>
+                                            <span className="td-stat-val">
+                                                {Object.values(selectedSession.phases || {}).filter(p => p.status === 'passed' || p.status === 'submitted').length}
+                                                /3
+                                            </span>
+                                            <span className="td-stat-lbl">PHASES DONE</span>
                                         </div>
                                     </div>
 
@@ -550,132 +614,254 @@ export const AdminDashboard: React.FC = () => {
                         )}
                     </div>
                 ) : activeTab === 'catalog' ? (
-                    // Usecase Catalog View
-                    <div className="teams-view">
-                        <div className="teams-toolbar">
-                            <div className="toolbar-left">
-                                <h2>MISSION ARCHIVES</h2>
-                                <span className="team-count">{usecases.length} missions available</span>
-                            </div>
-                        </div>
-
-                        <div className="teams-scroll">
-                            <div className="team-grid">
-                                {usecases.map((uc, i) => (
-                                    <div key={uc.id || i} className="team-card" style={{ height: 'auto', minHeight: '200px' }}>
-                                        <div className="card-header">
-                                            <span className="team-name" style={{ fontSize: '1.1rem' }}>{uc.title}</span>
-                                        </div>
-                                        <div className="card-mission" style={{ marginTop: '0.5rem', color: '#a78bfa' }}>{uc.domain || 'General Domain'}</div>
-                                        <div style={{
-                                            fontSize: '0.8rem',
-                                            color: '#94a3b8',
-                                            margin: '1rem 0',
-                                            lineHeight: '1.5',
-                                            display: '-webkit-box',
-                                            WebkitLineClamp: 4,
-                                            WebkitBoxOrient: 'vertical',
-                                            overflow: 'hidden'
-                                        }}>
-                                            {uc.description}
-                                        </div>
-                                        {/* Tag list */}
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: 'auto' }}>
-                                            {uc.simulated_role && (
-                                                <span className="mission-tag" style={{ fontSize: '0.6rem', padding: '0.2rem 0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
-                                                    ROLE: {uc.simulated_role}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {usecases.length === 0 && (
-                                <div className="empty-state">
-                                    <span className="empty-icon">📁</span>
-                                    <p>NO MISSIONS FOUND IN ARCHIVE</p>
+                    // Mission Catalog View - Simplified
+                    <div className="catalog-view">
+                        <div className="catalog-header">
+                            <div className="catalog-header-left">
+                                <div className="catalog-icon">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                                        <polyline points="10 6 13 9 10 12" />
+                                    </svg>
                                 </div>
-                            )}
+                                <div>
+                                    <h2>MISSION ARCHIVES</h2>
+                                    <span className="catalog-subtitle">Available scenarios</span>
+                                </div>
+                            </div>
+                            <div className="catalog-header-right">
+                                <div className="catalog-stat">
+                                    <span className="catalog-stat-value">{usecases.length}</span>
+                                    <span className="catalog-stat-label">Usecases</span>
+                                </div>
+                            </div>
                         </div>
+
+                        <div className="catalog-grid">
+                            {usecases.map((uc, i) => (
+                                <div key={uc.id || i} className="mission-card">
+                                    <div className="mission-card-header">
+                                        <div className="mission-domain">{uc.domain || 'General'}</div>
+                                    </div>
+
+                                    <h3 className="mission-title">{uc.title}</h3>
+
+                                    <div className="mission-description-wrap">
+                                        <p className="mission-description">{uc.description}</p>
+                                        <div className="mission-description-tooltip">{uc.description}</div>
+                                    </div>
+
+                                    {uc.simulated_role && (
+                                        <div className="mission-role">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                                <circle cx="12" cy="7" r="4" />
+                                            </svg>
+                                            {uc.simulated_role}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {usecases.length === 0 && (
+                            <div className="catalog-empty">
+                                <div className="empty-icon">
+                                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                                        <line x1="9" y1="10" x2="15" y2="10" />
+                                    </svg>
+                                </div>
+                                <p>NO MISSIONS IN ARCHIVE</p>
+                                <span className="empty-sub">Mission scenarios will appear here</span>
+                            </div>
+                        )}
                     </div>
                 ) : (
-                    // Teams List View
+                    // Teams List View - Redesigned Two-Panel Layout
                     <div className="teams-view">
+                        {/* Aggregate Stats Bar */}
+                        <div className="stats-bar">
+                            <div className="stats-bar-item">
+                                <span className="stats-bar-value">{aggregateStats.avgScore}</span>
+                                <span className="stats-bar-label">AVG SCORE</span>
+                            </div>
+                            <div className="stats-bar-divider" />
+                            <div className="stats-bar-item">
+                                <span className="stats-bar-value">{aggregateStats.completionRate}%</span>
+                                <span className="stats-bar-label">COMPLETION</span>
+                            </div>
+                            <div className="stats-bar-divider" />
+                            <div className="stats-bar-item">
+                                <span className="stats-bar-value">{(aggregateStats.totalTokens / 1000).toFixed(1)}K</span>
+                                <span className="stats-bar-label">TOKENS</span>
+                            </div>
+                        </div>
+
                         <div className="teams-toolbar">
                             <div className="toolbar-left">
                                 <h2>SQUAD TELEMETRY</h2>
                                 <span className="team-count">{teams.length} teams • Last sync: {lastSync.toLocaleTimeString()}</span>
                             </div>
-                            <input
-                                type="text"
-                                className="search-input"
-                                placeholder="Filter teams..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="teams-scroll" style={{ display: 'flex', flexDirection: 'column' }}>
-                            {activeTeams.length > 0 && (
-                                <section className="team-section" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                    <h3 className="section-label">ACTIVE ({activeTeams.length})</h3>
-                                    {/* Virtual Grid for Active Teams */}
-                                    {/* Dynamic height: Shrink to fit content, max 600px */}
-                                    <div style={{ flex: 'none' }}>
-                                        <VirtualList
-                                            items={chunkedActiveTeams}
-                                            height={Math.min(chunkedActiveTeams.length * 200, 600)}
-                                            itemHeight={200}
-                                            renderItem={renderTeamRow}
-                                        />
-                                    </div>
-                                </section>
-                            )}
-
-                            {completedTeams.length > 0 && (
-                                <section className="team-section">
-                                    <h3 className="section-label completed">COMPLETED ({completedTeams.length})</h3>
-                                    <div className="team-grid">
-                                        {completedTeams.map(team => (
-                                            <TeamCard key={team.session_id} team={team} onClick={() => setSelectedTeam(team)} />
-                                        ))}
-                                    </div>
-                                </section>
-                            )}
-
-                            {filteredTeams.length === 0 && (
-                                <div className="empty-state">
-                                    <span className="empty-icon">📡</span>
-                                    <p>NO ACTIVE SQUADRONS IN RANGE</p>
+                            <div className="toolbar-right">
+                                {/* Sort Controls */}
+                                <div className="sort-controls">
+                                    <span className="sort-label">Sort:</span>
+                                    <button
+                                        className={`sort-btn ${sortBy === 'recent' ? 'active' : ''}`}
+                                        onClick={() => setSortBy('recent')}
+                                    >
+                                        Recent
+                                    </button>
+                                    <button
+                                        className={`sort-btn ${sortBy === 'score' ? 'active' : ''}`}
+                                        onClick={() => setSortBy('score')}
+                                    >
+                                        Score
+                                    </button>
+                                    <button
+                                        className={`sort-btn ${sortBy === 'progress' ? 'active' : ''}`}
+                                        onClick={() => setSortBy('progress')}
+                                    >
+                                        Progress
+                                    </button>
                                 </div>
-                            )}
+                                <input
+                                    type="text"
+                                    className="search-input"
+                                    placeholder="Search teams..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
                         </div>
+
+                        <div className="teams-panels">
+                            {/* Active Teams Panel */}
+                            <div className="teams-panel teams-panel--active">
+                                <div className="panel-header">
+                                    <div className="panel-indicator active" />
+                                    <h3>IN PROGRESS</h3>
+                                    <span className="panel-count">{activeTeams.length}</span>
+                                </div>
+                                <div className="panel-content">
+                                    {sortedActiveTeams.length > 0 ? (
+                                        <div className="team-list">
+                                            {sortedActiveTeams.map(team => {
+                                                const tier = getScoreTier(team.score);
+                                                return (
+                                                    <div
+                                                        key={team.session_id}
+                                                        className="team-card"
+                                                        onClick={() => setSelectedTeam(team)}
+                                                    >
+                                                        <div className="card-header">
+                                                            <span className="team-name">{team.team_name}</span>
+                                                            <span className="team-score" style={{ color: tier.color, background: `${tier.color}20` }}>
+                                                                {Math.round(team.score)}
+                                                            </span>
+                                                        </div>
+                                                        <div className="card-mission">{team.usecase_title}</div>
+                                                        <div className="card-progress">
+                                                            <div className="progress-bar">
+                                                                <div className="progress-fill" style={{ width: `${team.progress}%` }} />
+                                                            </div>
+                                                            <span className="progress-label">{team.current_phase}</span>
+                                                        </div>
+                                                        <div className="card-meta">
+                                                            <span className="card-time">{getTimeAgo(team.last_active)}</span>
+                                                            <span className="card-tier" style={{ color: tier.color }}>{tier.label}</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="panel-empty">
+                                            <div className="empty-icon">
+                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <circle cx="12" cy="12" r="10" />
+                                                    <polyline points="12 6 12 12 16 14" />
+                                                </svg>
+                                            </div>
+                                            <p>No active sessions</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Completed Teams Panel */}
+                            <div className="teams-panel teams-panel--completed">
+                                <div className="panel-header">
+                                    <div className="panel-indicator completed" />
+                                    <h3>MISSION COMPLETE</h3>
+                                    <span className="panel-count">{completedTeams.length}</span>
+                                </div>
+                                <div className="panel-content">
+                                    {sortedCompletedTeams.length > 0 ? (
+                                        <div className="team-list">
+                                            {sortedCompletedTeams.map(team => {
+                                                const tier = getScoreTier(team.score);
+                                                return (
+                                                    <div
+                                                        key={team.session_id}
+                                                        className="team-card completed"
+                                                        onClick={() => setSelectedTeam(team)}
+                                                    >
+                                                        <div className="card-header">
+                                                            <span className="team-name">{team.team_name}</span>
+                                                            <span className="team-score" style={{ color: tier.color, background: `${tier.color}20` }}>
+                                                                {Math.round(team.score)}
+                                                            </span>
+                                                        </div>
+                                                        <div className="card-mission">{team.usecase_title}</div>
+                                                        <div className="card-progress">
+                                                            <div className="progress-bar">
+                                                                <div className="progress-fill" style={{ width: `${team.progress}%` }} />
+                                                            </div>
+                                                            <span className="progress-label">COMPLETE</span>
+                                                        </div>
+                                                        <div className="card-meta">
+                                                            <span className="card-time">{getTimeAgo(team.last_active)}</span>
+                                                            <span className="card-tier" style={{ color: tier.color }}>{tier.label}</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="panel-empty">
+                                            <div className="empty-icon">
+                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <circle cx="12" cy="12" r="10" />
+                                                    <path d="M9 12l2 2 4-4" />
+                                                </svg>
+                                            </div>
+                                            <p>No completions yet</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {filteredTeams.length === 0 && (
+                            <div className="teams-empty-overlay">
+                                <div className="empty-icon">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" />
+                                        <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5" />
+                                        <circle cx="12" cy="12" r="2" />
+                                        <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5" />
+                                        <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19" />
+                                    </svg>
+                                </div>
+                                <p>NO SQUADRONS DETECTED</p>
+                                <span className="empty-sub">Awaiting team connections...</span>
+                            </div>
+                        )}
                     </div>
                 )}
             </main >
         </div >
     );
 };
-
-// Team Card Component
-interface TeamCardProps {
-    team: TeamData;
-    onClick: () => void;
-}
-
-const TeamCard: React.FC<TeamCardProps> = ({ team, onClick }) => (
-    <div className={`team-card ${team.is_completed ? 'completed' : ''}`} onClick={onClick} style={{ height: '100%' }}>
-        <div className="card-header">
-            <span className="team-name">{team.team_name}</span>
-            <span className="team-score">{Math.round(team.score)}</span>
-        </div>
-        <div className="card-mission">{team.usecase_title}</div>
-        <div className="card-progress">
-            <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${team.progress}%` }} />
-            </div>
-            <span className="progress-label">{team.is_completed ? 'COMPLETE' : team.current_phase}</span>
-        </div>
-    </div>
-);
