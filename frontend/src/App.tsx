@@ -247,16 +247,21 @@ const FinalRevealPage: React.FC = () => {
 };
 
 const PresentationModePage: React.FC = () => {
-    const { session, generatedImageUrl } = useApp();
+    const { session, activeRevealSubmission } = useApp();
 
     if (!session) {
         return <TacticalLoader message="Presentation" subMessage="Synchronizing presentation deck..." />;
     }
 
+    // Determine the best image URL to show (current selection OR session default)
+    const effectiveImageUrl = activeRevealSubmission?.image_url
+        ? getFullUrl(activeRevealSubmission.image_url)
+        : (session.final_output?.image_url ? getFullUrl(session.final_output.image_url) : '');
+
     return (
         <PresentationMode
             session={session}
-            imageUrl={generatedImageUrl}
+            imageUrl={effectiveImageUrl}
         />
     );
 };
