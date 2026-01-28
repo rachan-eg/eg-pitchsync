@@ -575,11 +575,18 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }, [setLoading, setError, processInitResponse]); // Stable dependencies
 
+    // Ref to track elapsed seconds without triggering re-renders in callbacks
+    const elapsedSecondsRef = useRef(elapsedSeconds);
+    useEffect(() => {
+        elapsedSecondsRef.current = elapsedSeconds;
+    }, [elapsedSeconds]);
+
     const startPhase = useCallback(async (phaseNum: number): Promise<boolean> => {
         if (!session) return false;
 
         const leavingPhaseNum = session.current_phase;
-        const leavingElapsed = elapsedSeconds;
+        // Use ref here to avoid dependency on changing timer value
+        const leavingElapsed = elapsedSecondsRef.current;
 
         setLoading(true); // Mark as loading during transition
         pauseTimer();
@@ -669,7 +676,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         } finally {
             setLoading(false);
         }
-    }, [session, elapsedSeconds, currentPhaseResponses, pauseTimer, startTimer, stopTimer, setLoading, setError, processInitResponse]);
+    }, [session, currentPhaseResponses, pauseTimer, startTimer, stopTimer, setLoading, setError, processInitResponse]);
 
     const submitPhase = useCallback(async (responses: PhaseResponse[]) => {
         if (!session) return;
@@ -693,7 +700,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                         session_id: session.session_id,
                         phase_name: currentPhaseDef.name,
                         responses: responses,
-                        time_taken_seconds: elapsedSeconds
+                        time_taken_seconds: elapsedSecondsRef.current
                     })
                 });
 
@@ -748,7 +755,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                                     weighted_score: result.phase_score,
                                     start_time: null,
                                     end_time: new Date().toISOString(),
-                                    duration_seconds: elapsedSeconds,
+                                    duration_seconds: elapsedSecondsRef.current,
                                     retries: result.metrics.retries,
                                     tokens_used: result.metrics.tokens_used,
                                     time_penalty: result.metrics.time_penalty,
@@ -815,7 +822,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setError(lastError?.message || 'Submission failed after multiple attempts');
         resumeTimer();
         setLoading(false);
-    }, [session, phaseConfig, elapsedSeconds, pauseTimer, resumeTimer, stopTimer, setLoading, setError]);
+    }, [session, phaseConfig, pauseTimer, resumeTimer, stopTimer, setLoading, setError]);
 
     const handleFeedbackAction = useCallback(async (action: 'CONTINUE' | 'RETRY'): Promise<{ navigateTo?: string }> => {
         if (!phaseResult || !session) return {};
@@ -1043,37 +1050,45 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // =========================================================================
     // CONTEXT VALUE
     // =========================================================================
+    const contextValue = useMemo<SessionContextType>(() => ({
+        selectedUsecase,
+        selectedTheme,
+        setSelectedUsecase,
+        setSelectedTheme,
+        session,
+        phaseConfig,
+        scoringInfo,
+        highestUnlockedPhase,
+        phaseResult,
+        setPhaseResult,
+        currentPhaseResponses,
+        setCurrentPhaseResponses,
+        curatedPrompt,
+        setCuratedPrompt,
+        generatedImageUrl,
+        uploadedImages,
+        activeRevealSubmission,
+        setActiveRevealSubmission,
+        totalTokens,
+        initSession,
+        initSessionFromTeamCode,
+        startPhase,
+        submitPhase,
+        handleFeedbackAction,
+        curatePrompt,
+        regeneratePrompt,
+        submitPitchImage,
+        resetToStart
+    }), [
+        selectedUsecase, selectedTheme, session, phaseConfig, scoringInfo,
+        highestUnlockedPhase, phaseResult, currentPhaseResponses, setCurrentPhaseResponses,
+        curatedPrompt, generatedImageUrl, uploadedImages, activeRevealSubmission,
+        totalTokens, initSession, initSessionFromTeamCode, startPhase, submitPhase,
+        handleFeedbackAction, curatePrompt, regeneratePrompt, submitPitchImage, resetToStart
+    ]);
+
     return (
-        <SessionContext.Provider value={{
-            selectedUsecase,
-            selectedTheme,
-            setSelectedUsecase,
-            setSelectedTheme,
-            session,
-            phaseConfig,
-            scoringInfo,
-            highestUnlockedPhase,
-            phaseResult,
-            setPhaseResult,
-            currentPhaseResponses,
-            setCurrentPhaseResponses,
-            curatedPrompt,
-            setCuratedPrompt,
-            generatedImageUrl,
-            uploadedImages,
-            activeRevealSubmission,
-            setActiveRevealSubmission,
-            totalTokens,
-            initSession,
-            initSessionFromTeamCode,
-            startPhase,
-            submitPhase,
-            handleFeedbackAction,
-            curatePrompt,
-            regeneratePrompt,
-            submitPitchImage,
-            resetToStart
-        }}>
+        <SessionContext.Provider value={contextValue}>
             {children}
         </SessionContext.Provider>
     );

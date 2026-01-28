@@ -9,8 +9,8 @@ bind = os.getenv("HOST", "0.0.0.0") + ":" + os.getenv("PORT", "8000")
 
 # --- Worker Processes ---
 # Optimized for t2.large (2 vCPU) by default
-# Formula: (2 x 2) + 1 = 5, but we use 3 to leave headroom for heavy threads
-workers = int(os.getenv("WORKERS", "3"))
+# Formula: (2 x 2) + 1 = 5, but we use 4 to balance performance and thread headroom
+workers = int(os.getenv("WORKERS", "4"))
 worker_class = "uvicorn.workers.UvicornWorker"
 
 # --- Timeouts ---
@@ -19,8 +19,10 @@ timeout = int(os.getenv("GUNICORN_TIMEOUT", "180"))
 keepalive = int(os.getenv("GUNICORN_KEEPALIVE", "5"))
 
 # --- Performance Tuning ---
-max_requests = 1000
-max_requests_jitter = 50
+# Recycle workers after ~5000 requests to prevent memory leaks
+# Jitter staggers restarts across workers to avoid simultaneous recycling
+max_requests = 5000
+max_requests_jitter = 500
 
 # --- Environment Optimization ---
 # Inject critical threading flags into the worker environment
