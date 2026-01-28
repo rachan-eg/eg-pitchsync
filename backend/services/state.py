@@ -83,10 +83,24 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
     # Cap at 1000 just in case
     calculated_total = min(1000, sum(phase_scores.values())) if phase_scores else 0
 
+    # Load contributors and handle legacy merge
+    contributors = []
+    try:
+        contributors = json.loads(getattr(db_session, 'contributors_json', "[]"), strict=False)
+    except Exception:
+        contributors = []
+    
+    # Legacy merge: if contributors list is empty and we have old fields, use them
+    if not contributors:
+        legacy_name = getattr(db_session, 'user_name', None)
+        legacy_email = getattr(db_session, 'user_email', None)
+        if legacy_name or legacy_email:
+            contributors = [{"name": legacy_name or "Anonymous", "email": legacy_email or ""}]
+
     return SessionState(
         session_id=db_session.session_id,
         team_id=db_session.team_id,
-        contributors=json.loads(getattr(db_session, 'contributors_json', "[]")),
+        contributors=contributors,
         current_phase=db_session.current_phase,
         total_score=calculated_total,  # Use calculated sum instead of stale DB value
         total_tokens=db_session.total_tokens,
@@ -237,6 +251,7 @@ def update_session(session: SessionState) -> SessionState:
                 existing.usecase_json != db_row.usecase_json or
                 existing.theme_json != db_row.theme_json or
                 existing.phase_scores_json != db_row.phase_scores_json or
+                existing.contributors_json != db_row.contributors_json or
                 existing.is_complete != db_row.is_complete
             )
             
@@ -253,6 +268,7 @@ def update_session(session: SessionState) -> SessionState:
             existing.phase_start_times_json = db_row.phase_start_times_json
             existing.phase_elapsed_seconds_json = db_row.phase_elapsed_seconds_json
             existing.uploaded_images_json = db_row.uploaded_images_json
+            existing.contributors_json = db_row.contributors_json
             existing.is_complete = db_row.is_complete
             
             if content_changed:

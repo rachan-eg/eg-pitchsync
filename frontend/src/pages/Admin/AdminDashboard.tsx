@@ -238,21 +238,6 @@ export const AdminDashboard: React.FC = () => {
         return { label: 'D', color: '#b39f9fff' };
     };
 
-    // Helper: Time ago formatting
-    const getTimeAgo = (dateStr: string): string => {
-        const now = new Date();
-        const then = new Date(dateStr);
-        const diffMs = now.getTime() - then.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMins / 60);
-        const diffDays = Math.floor(diffHours / 24);
-
-        if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins}m ago`;
-        if (diffHours < 24) return `${diffHours}h ago`;
-        return `${diffDays}d ago`;
-    };
-
     // Base filtered lists
     const activeTeams = useMemo(() => filteredTeams.filter(t => !t.is_completed), [filteredTeams]);
     const completedTeams = useMemo(() => filteredTeams.filter(t => t.is_completed), [filteredTeams]);
@@ -487,30 +472,57 @@ export const AdminDashboard: React.FC = () => {
                                 </svg>
                                 BACK
                             </button>
-                            <div className="td-title-group">
-                                <div>
-                                    <h1>{selectedTeam.team_name}</h1>
+                            <div className="td-title-group" style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+                                <h1 style={{ margin: 0 }}>{selectedTeam.team_name}</h1>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                    <span className={`td-badge ${selectedTeam.is_completed ? 'complete' : 'active'}`}>
+                                        {selectedTeam.is_completed ? '✓ COMPLETE' : '◉ ACTIVE'}
+                                    </span>
+
                                     {(selectedTeam.contributors && selectedTeam.contributors.length > 0) ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
-                                            {selectedTeam.contributors.map((c, idx) => (
-                                                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#94a3b8' }}>
-                                                    <span>👤 {c.name}</span>
-                                                    <span style={{ opacity: 0.6, fontSize: '0.75rem' }}>&lt;{c.email}&gt;</span>
+                                        <>
+                                            {selectedTeam.contributors.slice(0, 5).map((c, idx) => (
+                                                <div key={idx} style={{
+                                                    background: 'rgba(124, 58, 237, 0.1)',
+                                                    border: '1px solid rgba(124, 58, 237, 0.3)',
+                                                    borderRadius: '6px',
+                                                    padding: '2px 10px',
+                                                    fontSize: '0.75rem',
+                                                    color: '#a78bfa',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    height: '24px'
+                                                }} title={c.email}>
+                                                    <span>👤</span>
+                                                    {c.name.split(' ')[0]}
                                                 </div>
                                             ))}
-                                        </div>
+                                            {selectedTeam.contributors.length > 5 && (
+                                                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '4px', background: 'rgba(148, 163, 184, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                                                    +{selectedTeam.contributors.length - 5} more
+                                                </div>
+                                            )}
+                                        </>
                                     ) : selectedTeam.user_name && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#94a3b8', marginTop: '4px' }}>
-                                            <span>👤 {selectedTeam.user_name}</span>
-                                            {selectedTeam.user_email && <span style={{ opacity: 0.7 }}>&lt;{selectedTeam.user_email}&gt;</span>}
+                                        <div style={{
+                                            background: 'rgba(124, 58, 237, 0.1)',
+                                            border: '1px solid rgba(124, 58, 237, 0.3)',
+                                            borderRadius: '6px',
+                                            padding: '2px 10px',
+                                            fontSize: '0.75rem',
+                                            color: '#a78bfa',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            height: '24px'
+                                        }}>
+                                            <span>👤</span>
+                                            {selectedTeam.user_name.split(' ')[0]}
                                         </div>
                                     )}
                                 </div>
-                                <span className={`td-badge ${selectedTeam.is_completed ? 'complete' : 'active'}`}>
-                                    {selectedTeam.is_completed ? '✓ COMPLETE' : '◉ ACTIVE'}
-                                </span>
                             </div>
-                            <span className="td-id">#{selectedTeam.session_id.slice(0, 8).toUpperCase()}</span>
                         </div>
 
                         {isDetailLoading ? (
@@ -791,10 +803,11 @@ export const AdminDashboard: React.FC = () => {
                                                                 <span className="team-name">{team.team_name}</span>
                                                                 {team.contributors && team.contributors.length > 0 ? (
                                                                     <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-                                                                        • {team.contributors.map(c => c.name).join(', ')}
+                                                                        • {team.contributors.slice(0, 5).map(c => c.name.split(' ')[0]).join(' • ')}
+                                                                        {team.contributors.length > 5 && ` + ${team.contributors.length - 5} more`}
                                                                     </span>
                                                                 ) : team.user_name && (
-                                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>• {team.user_name}</span>
+                                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>• {team.user_name.split(' ')[0]}</span>
                                                                 )}
                                                             </div>
                                                             <span className="team-score" style={{ color: tier.color, background: `${tier.color}20` }}>
@@ -809,7 +822,6 @@ export const AdminDashboard: React.FC = () => {
                                                             <span className="progress-label">{team.current_phase}</span>
                                                         </div>
                                                         <div className="card-meta">
-                                                            <span className="card-time">{getTimeAgo(team.last_active)}</span>
                                                             <span className="card-tier" style={{ color: tier.color }}>{tier.label}</span>
                                                         </div>
                                                     </div>
@@ -849,7 +861,17 @@ export const AdminDashboard: React.FC = () => {
                                                         onClick={() => setSelectedTeam(team)}
                                                     >
                                                         <div className="card-header">
-                                                            <span className="team-name">{team.team_name}</span>
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <span className="team-name">{team.team_name}</span>
+                                                                {team.contributors && team.contributors.length > 0 ? (
+                                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                                                                        • {team.contributors.slice(0, 5).map(c => c.name.split(' ')[0]).join(' • ')}
+                                                                        {team.contributors.length > 5 && ` + ${team.contributors.length - 5} more`}
+                                                                    </span>
+                                                                ) : team.user_name && (
+                                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>• {team.user_name.split(' ')[0]}</span>
+                                                                )}
+                                                            </div>
                                                             <span className="team-score" style={{ color: tier.color, background: `${tier.color}20` }}>
                                                                 {Math.round(team.score)}
                                                             </span>
@@ -862,7 +884,6 @@ export const AdminDashboard: React.FC = () => {
                                                             <span className="progress-label">COMPLETE</span>
                                                         </div>
                                                         <div className="card-meta">
-                                                            <span className="card-time">{getTimeAgo(team.last_active)}</span>
                                                             <span className="card-tier" style={{ color: tier.color }}>{tier.label}</span>
                                                         </div>
                                                     </div>

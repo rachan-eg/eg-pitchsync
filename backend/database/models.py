@@ -58,6 +58,10 @@ class SessionData(SQLModel, table=True):
     
     is_complete: bool = Field(default=False)
     
+    # Legacy User Details
+    user_email: Optional[str] = Field(default=None)
+    user_name: Optional[str] = Field(default=None)
+
     # User Details (Captured from SSO) - JSON list of {name, email}
     contributors_json: str = Field(default="[]")
 
