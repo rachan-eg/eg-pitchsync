@@ -86,6 +86,7 @@ def _db_to_domain(db_session: SessionData) -> SessionState:
     return SessionState(
         session_id=db_session.session_id,
         team_id=db_session.team_id,
+        contributors=json.loads(getattr(db_session, 'contributors_json', "[]")),
         current_phase=db_session.current_phase,
         total_score=calculated_total,  # Use calculated sum instead of stale DB value
         total_tokens=db_session.total_tokens,
@@ -130,6 +131,7 @@ def _domain_to_db(session: SessionState) -> SessionData:
     return SessionData(
         session_id=session.session_id,
         team_id=session.team_id,
+        contributors_json=json.dumps(session.contributors),
         current_phase=session.current_phase,
         total_score=session.total_score,
         total_tokens=session.total_tokens,

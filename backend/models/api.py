@@ -17,6 +17,8 @@ from backend.models.session import PhaseResponse, FinalOutput
 class InitRequest(BaseModel):
     """Session initialization request."""
     team_id: str
+    user_email: Optional[str] = None
+    user_name: Optional[str] = None
     usecase_id: Optional[str] = None  # If provided, use this specific usecase
     theme_id: Optional[str] = None    # If provided, use this specific theme
 

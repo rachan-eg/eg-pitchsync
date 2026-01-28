@@ -92,6 +92,7 @@ class SessionState(BaseModel):
     """
     session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     team_id: str
+    contributors: List[Dict[str, str]] = [] # List of {name, email}
     usecase: Dict[str, Any] = {}
     usecase_context: str = ""
     current_phase: int = 1

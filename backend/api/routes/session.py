@@ -37,6 +37,14 @@ async def init_session(req: InitRequest):
     # 1. Check if team already has an existing session
     existing = get_latest_session_for_team(req.team_id)
     
+    # helper to update contributors
+    def update_contributors(s: SessionState, user_email: Optional[str], user_name: Optional[str]):
+        if not user_email: return
+        # Check if already in list
+        if not any(c.get("email") == user_email for c in s.contributors):
+             s.contributors.append({"name": user_name or "Anonymous", "email": user_email})
+             update_session(s)
+
     if existing:
         # Get the existing session's usecase ID
         existing_usecase_id = existing.usecase.get('id') if isinstance(existing.usecase, dict) else None
@@ -56,6 +64,9 @@ async def init_session(req: InitRequest):
         if should_resume:
             print(f"📌 Resuming session for team '{req.team_id}': phase {existing.current_phase}, complete: {existing.is_complete}")
             
+            # Record current contributor
+            update_contributors(existing, req.user_email, req.user_name)
+
             # Ensure phase start time exists (fix for older sessions missing this data)
             phase_key = f"phase_{existing.current_phase}"
             current_phase_start = existing.phase_start_times.get(phase_key)
@@ -124,6 +135,7 @@ async def init_session(req: InitRequest):
     # 3. Create fresh session
     session = SessionState(
         team_id=req.team_id,
+        contributors=[{"name": req.user_name or "Anonymous", "email": req.user_email}] if req.user_email else [],
         usecase=usecase,
         usecase_context=usecase.get("title", str(usecase)) if isinstance(usecase, dict) else str(usecase),
         theme_palette=theme,

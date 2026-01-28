@@ -57,5 +57,9 @@ class SessionData(SQLModel, table=True):
     average_ai_score: float = Field(default=0.0)
     
     is_complete: bool = Field(default=False)
+    
+    # User Details (Captured from SSO) - JSON list of {name, email}
+    contributors_json: str = Field(default="[]")
+
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)

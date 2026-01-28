@@ -95,6 +95,9 @@ def get_teams(token: str = Depends(verify_admin_access)) -> Dict[str, List[Dict[
         formatted_teams.append({
             "session_id": s.session_id,
             "team_name": s.team_id,
+            "user_name": s.user_name if hasattr(s, 'user_name') else None, # Legacy support
+            "user_email": s.user_email if hasattr(s, 'user_email') else None,
+            "contributors": s.contributors if hasattr(s, 'contributors') else [],
             "usecase_id": usecase_id,
             "usecase_title": s.usecase.get("title") if s.usecase else "Unknown Project",
             "progress": round(progress, 0),

@@ -26,6 +26,9 @@ interface TeamData {
     last_active: string;
     is_completed: boolean;
     total_tokens: number;
+    user_name?: string;
+    user_email?: string;
+    contributors?: { name: string, email: string }[];
 }
 
 export const AdminDashboard: React.FC = () => {
@@ -474,7 +477,24 @@ export const AdminDashboard: React.FC = () => {
                                 BACK
                             </button>
                             <div className="td-title-group">
-                                <h1>{selectedTeam.team_name}</h1>
+                                <div>
+                                    <h1>{selectedTeam.team_name}</h1>
+                                    {(selectedTeam.contributors && selectedTeam.contributors.length > 0) ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                                            {selectedTeam.contributors.map((c, idx) => (
+                                                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#94a3b8' }}>
+                                                    <span>👤 {c.name}</span>
+                                                    <span style={{ opacity: 0.6, fontSize: '0.75rem' }}>&lt;{c.email}&gt;</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : selectedTeam.user_name && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#94a3b8', marginTop: '4px' }}>
+                                            <span>👤 {selectedTeam.user_name}</span>
+                                            {selectedTeam.user_email && <span style={{ opacity: 0.7 }}>&lt;{selectedTeam.user_email}&gt;</span>}
+                                        </div>
+                                    )}
+                                </div>
                                 <span className={`td-badge ${selectedTeam.is_completed ? 'complete' : 'active'}`}>
                                     {selectedTeam.is_completed ? '✓ COMPLETE' : '◉ ACTIVE'}
                                 </span>
@@ -756,7 +776,16 @@ export const AdminDashboard: React.FC = () => {
                                                         onClick={() => setSelectedTeam(team)}
                                                     >
                                                         <div className="card-header">
-                                                            <span className="team-name">{team.team_name}</span>
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <span className="team-name">{team.team_name}</span>
+                                                                {team.contributors && team.contributors.length > 0 ? (
+                                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                                                                        • {team.contributors.map(c => c.name).join(', ')}
+                                                                    </span>
+                                                                ) : team.user_name && (
+                                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>• {team.user_name}</span>
+                                                                )}
+                                                            </div>
                                                             <span className="team-score" style={{ color: tier.color, background: `${tier.color}20` }}>
                                                                 {Math.round(team.score)}
                                                             </span>

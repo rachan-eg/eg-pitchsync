@@ -94,7 +94,7 @@ const SessionContext = createContext<SessionContextType | null>(null);
 // =============================================================================
 export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const { startTimer, pauseTimer, resumeTimer, stopTimer, elapsedSeconds } = useTimer();
     const { loading, setLoading, error, setError } = useUI();
 
@@ -122,11 +122,13 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const loadingRef = useRef(loading);
     const errorRef = useRef(error);
     const tokenRef = useRef(token);
+    const userRef = useRef(user);
     const phaseResultRef = useRef(phaseResult);
 
     useEffect(() => { loadingRef.current = loading; }, [loading]);
     useEffect(() => { errorRef.current = error; }, [error]);
     useEffect(() => { tokenRef.current = token; }, [token]);
+    useEffect(() => { userRef.current = user; }, [user]);
     useEffect(() => { phaseResultRef.current = phaseResult; }, [phaseResult]);
 
     // =========================================================================
@@ -574,7 +576,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 body: JSON.stringify({
                     team_id: teamId,
                     usecase_id: selectedUsecase.id,
-                    theme_id: selectedTheme.id
+                    theme_id: selectedTheme.id,
+                    user_email: user?.email,
+                    user_name: user?.name
                 })
             });
 
@@ -593,7 +597,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             setLoading(false);
             return { success: false, isResumed: false, isComplete: false, currentPhase: 1 };
         }
-    }, [selectedUsecase, selectedTheme, setLoading, setError, processInitResponse]);
+    }, [selectedUsecase, selectedTheme, user, token, setLoading, setError, processInitResponse]);
 
     // New function: Initialize session directly from team code info
     const initSessionFromTeamCode = useCallback(async (teamName: string, usecaseId: string) => {
@@ -613,6 +617,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 body: JSON.stringify({
                     team_id: teamName,
                     usecase_id: usecaseId,
+                    user_email: userRef.current?.email,
+                    user_name: userRef.current?.name
                 })
             });
 
