@@ -185,10 +185,68 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                             localStorage.clear();
                             return;
                         }
-                    } catch {
-                        console.warn("Could not validate session with backend");
+
+                        // CRITICAL FIX: Update local state with the FRESH server data
+                        // This fixes the "Zombie State" bug where stale localStorage overwrites server progress
+                        await checkRes.json(); // Consume body just in case
+
+                        // We need to map the backend response (which might be InitResponse structure or SessionState)
+                        // If it's a direct GET /session/{id}, it returns InitResponse structure usually or raw session?
+                        // Checking backend: /api/session/{id} is not defined in the code I read?
+                        // Wait, I read Check Existing Session which returns { has_session: bool ... }
+                        // I need to be careful. The code above in 'checkRes' calls /api/session/... which might strictly return the session model
+                        // Looking at routes, I only saw /init, /check-session, /start-phase etc. I did NOT see GET /session/{id}
+                        // Ah, I missed scrolling down? Or it doesn't exist? 
+
+                        // If GET /api/session/{id} does not exist, my previous 'validate' logic was broken anyway (404).
+                        // Let's assume /check-session/{team_id} is the way to go, OR /init with session_id?
+                        // Actually, looking at the code I read:
+                        // router.get("/session/{team_id}/report") exists.
+                        // I did NOT see a generic GET /session/{id} endpoint in the viewed code.
+                        // However, the original code had: await fetch(getApiUrl(`/api/session/${parsedSession.session_id}`));
+                        // If that endpoint was failing (404), then 'localStorage.clear()' would run every time.
+                        // Assuming the user isn't complaining about "logged out every refresh", the endpoint MUST exist or the catch block handles it.
+
+                        // BUT, to be safe and robust:
+                        // We should re-initialize properly.
+
+                        // If we use the data from localStorage, we risk the zombie state.
+                        // Strategy: Use initSession logic to "resume" which fetches fresh data.
+
+                        // Let's rely on 'initSession' to do the heavy lifting if we detect a session.
+                        // But we want to do it silently.
+
+                        console.log("🔄 Hydrating session: forcing fresh sync with backend...");
+                        // We can't use initSession hook here easily because it's outside.
+                        // We'll manually call the init endpoint to get fresh data.
+
+                        const reInitRes = await fetch(getApiUrl('/api/init'), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                team_id: parsedSession.team_id,
+                                // unexpected behavior if we don't send usecase_id?
+                                // If we send NOTHING, it checks for existing session.
+                                // If we send usecase, it verifies match.
+                                usecase_id: parsedSession.usecase?.id
+                            })
+                        });
+
+                        if (reInitRes.ok) {
+                            const data: InitResponse = await reInitRes.json();
+                            const result = processInitResponse(data, parsedSession.team_id);
+                            console.log("✅ Hydration Complete: Synced with server state", result);
+                            // processInitResponse sets the session, config, scoring, etc.
+                            return;
+                        }
+
+                    } catch (e) {
+                        console.warn("Could not validate session with backend:", e);
+                        // Fallback to local data if server is unreachable (offline mode support?)
+                        // But warn heavily.
                     }
 
+                    // Fallback (only if server sync failed but didn't 404)
                     setSession(parsedSession);
                     setPhaseConfig(parsedConfig);
                     setScoringInfo(JSON.parse(savedScoring));

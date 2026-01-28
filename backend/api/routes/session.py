@@ -215,7 +215,26 @@ async def start_phase(req: StartPhaseRequest):
     if req.leaving_phase_number is not None:
         leaving_key = f"phase_{req.leaving_phase_number}"
         if req.leaving_phase_elapsed_seconds is not None:
-            session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
+            # FIX: Sanity check against server time to preventing "trusting the client" too much
+            # Calculate max possible duration since this phase segment started
+            last_start = session.phase_start_times.get(leaving_key)
+            if last_start:
+                max_duration = (datetime.now(timezone.utc) - last_start).total_seconds()
+                # Allow a generous buffer (e.g. 5 seconds) for network latency/clocks, but cap it
+                # Logic: The NEW elapsed time added cannot exceed real time passed
+                # But wait, req.leaving... is the TOTAL accumulated. 
+                # So verify: (NewTotal - OldTotal) <= (Now - LastStart)
+                old_total = session.phase_elapsed_seconds.get(leaving_key, 0.0)
+                reported_delta = req.leaving_phase_elapsed_seconds - old_total
+                
+                if reported_delta > (max_duration + 5.0):
+                   print(f"⚠️ Timer anomaly: Client reported {reported_delta}s delta, but only {max_duration}s passed. Capping.")
+                   session.phase_elapsed_seconds[leaving_key] = old_total + max_duration
+                else:
+                   session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
+            else:
+                # No start time recorded? Fallback to trusting client but log it
+                session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
         
         # Save draft responses for the leaving phase
         if req.leaving_phase_responses:
@@ -563,6 +582,7 @@ async def submit_phase(req: SubmitPhaseRequest):
             )
     is_test_command = any(r.a.lower().strip() == "test" for r in req.responses)
     
+    
     if settings.TEST_MODE and is_test_command:
         # Mock successful evaluation for testing
         eval_result = {
@@ -589,6 +609,24 @@ async def submit_phase(req: SubmitPhaseRequest):
             # Catch any other unexpected AI errors
             print(f"❌ AI Evaluation error: {type(e).__name__}: {e}")
             raise HTTPException(status_code=500, detail=f"AI evaluation failed: {str(e)}")
+
+    # CRITICAL FIX: Re-fetch session to prevent overwriting concurrent updates (like hints)
+    # that happened while the async AI evaluation was running.
+    session = get_session(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session lost during evaluation")
+        
+    # Recalculate timing based on freshness
+    start_time = session.phase_start_times.get(key) or datetime.now(timezone.utc)
+    end_time = datetime.now(timezone.utc)
+    current_session_elapsed = (end_time - start_time).total_seconds()
+    
+    accumulated_elapsed = 0.0
+    if hasattr(session, 'phase_elapsed_seconds') and session.phase_elapsed_seconds:
+        accumulated_elapsed = session.phase_elapsed_seconds.get(key, 0.0)
+        
+    total_elapsed_seconds = accumulated_elapsed + current_session_elapsed
+    synthetic_start_time = end_time - timedelta(seconds=total_elapsed_seconds)
 
     # Calculate Hint Penalty
     total_hint_penalty = 0.0
