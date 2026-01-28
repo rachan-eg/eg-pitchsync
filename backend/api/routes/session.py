@@ -3,15 +3,11 @@ Session API Routes
 Endpoints for session initialization, phase submission.
 """
 
-import logging
 import random
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.concurrency import run_in_threadpool
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-
-logger = logging.getLogger("pitchsync.api")
 
 from backend.config import settings
 from backend.models import (
@@ -21,7 +17,6 @@ from backend.models import (
     SubmitPhaseRequest, SubmitPhaseResponse,
     THEME_REPO, USECASE_REPO, PHASE_DEFINITIONS, get_phases_for_usecase
 )
-from backend.services.auth import authenticate_user, UserInfo
 from backend.services import (
     create_session, get_session, update_session,
     set_phase_start_time, get_phase_start_time,
@@ -29,7 +24,6 @@ from backend.services import (
     determine_pass_threshold,
     get_or_assign_team_context, get_latest_session_for_team
 )
-from backend.utils.broadcast import get_broadcast_message
 from backend.services.ai import evaluate_phase_async
 from backend.services.ai.evaluator_streaming import evaluate_phase_streaming
 
@@ -37,7 +31,7 @@ router = APIRouter(prefix="/api", tags=["session"])
 
 
 @router.post("/init", response_model=InitResponse)
-def init_session(req: InitRequest) -> InitResponse:
+async def init_session(req: InitRequest):
     """Initialize or resume a game session."""
     
     # 1. Check if team already has an existing session
@@ -60,7 +54,7 @@ def init_session(req: InitRequest) -> InitResponse:
             should_resume = True
         
         if should_resume:
-            logger.info(f"📌 Resuming session for team '{req.team_id}': ID={existing.session_id}, phase={existing.current_phase}, complete={existing.is_complete}")
+            print(f"📌 Resuming session for team '{req.team_id}': phase {existing.current_phase}, complete: {existing.is_complete}")
             
             # Ensure phase start time exists (fix for older sessions missing this data)
             phase_key = f"phase_{existing.current_phase}"
@@ -70,7 +64,7 @@ def init_session(req: InitRequest) -> InitResponse:
                 current_phase_start = datetime.now(timezone.utc)
                 existing.phase_start_times[phase_key] = current_phase_start
                 update_session(existing)
-                logger.debug(f"  ⏱️ Initialized missing phase start time for {phase_key} in session {existing.session_id}")
+                print(f"  ⏱️ Initialized missing phase start time for {phase_key}")
             
             return InitResponse(
                 session_id=existing.session_id,
@@ -97,7 +91,7 @@ def init_session(req: InitRequest) -> InitResponse:
                 current_server_time=datetime.now(timezone.utc)
             )
         else:
-            logger.info(f"🔄 Team '{req.team_id}' switched mission. Requested: {req.usecase_id}, Existing: {existing_usecase_id}. Initializing fresh session.")
+            print(f"🔄 Team '{req.team_id}' selected different usecase (existing: {existing_usecase_id}, requested: {req.usecase_id}). Creating new session.")
 
     # 2. Get usecase and theme (from request or assign randomly)
     if req.usecase_id:
@@ -142,7 +136,7 @@ def init_session(req: InitRequest) -> InitResponse:
     session.phase_start_times["phase_1"] = start_time
     update_session(session)
     
-    logger.info(f"✨ Created new session for team '{req.team_id}': ID={session.session_id}, Mission={usecase.get('title')}")
+    print(f"✨ Created new session for team '{req.team_id}': {session.session_id}")
     
     return InitResponse(
         session_id=session.session_id,
@@ -166,7 +160,7 @@ def init_session(req: InitRequest) -> InitResponse:
 
 
 @router.get("/check-session/{team_id}")
-def check_existing_session(team_id: str) -> Dict[str, Any]:
+async def check_existing_session(team_id: str):
     """Check if a team has an existing incomplete session.
     
     Useful for the frontend to warn users before they start a new game
@@ -199,7 +193,7 @@ def check_existing_session(team_id: str) -> Dict[str, Any]:
 
 
 @router.post("/start-phase", response_model=StartPhaseResponse)
-def start_phase(req: StartPhaseRequest) -> StartPhaseResponse:
+async def start_phase(req: StartPhaseRequest):
     """Start a phase and record timing. Supports pause/resume when switching phases."""
     
     session = get_session(req.session_id)
@@ -221,7 +215,26 @@ def start_phase(req: StartPhaseRequest) -> StartPhaseResponse:
     if req.leaving_phase_number is not None:
         leaving_key = f"phase_{req.leaving_phase_number}"
         if req.leaving_phase_elapsed_seconds is not None:
-            session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
+            # FIX: Sanity check against server time to preventing "trusting the client" too much
+            # Calculate max possible duration since this phase segment started
+            last_start = session.phase_start_times.get(leaving_key)
+            if last_start:
+                max_duration = (datetime.now(timezone.utc) - last_start).total_seconds()
+                # Allow a generous buffer (e.g. 5 seconds) for network latency/clocks, but cap it
+                # Logic: The NEW elapsed time added cannot exceed real time passed
+                # But wait, req.leaving... is the TOTAL accumulated. 
+                # So verify: (NewTotal - OldTotal) <= (Now - LastStart)
+                old_total = session.phase_elapsed_seconds.get(leaving_key, 0.0)
+                reported_delta = req.leaving_phase_elapsed_seconds - old_total
+                
+                if reported_delta > (max_duration + 5.0):
+                   print(f"⚠️ Timer anomaly: Client reported {reported_delta}s delta, but only {max_duration}s passed. Capping.")
+                   session.phase_elapsed_seconds[leaving_key] = old_total + max_duration
+                else:
+                   session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
+            else:
+                # No start time recorded? Fallback to trusting client but log it
+                session.phase_elapsed_seconds[leaving_key] = req.leaving_phase_elapsed_seconds
         
         # Save draft responses for the leaving phase
         if req.leaving_phase_responses:
@@ -246,7 +259,9 @@ def start_phase(req: StartPhaseRequest) -> StartPhaseResponse:
                     
                     if status != "passed":
                         # Update existing entry if not passed (don't overwrite passed data with drafts)
-                        logger.debug(f"📝 Saving draft responses for '{l_name}' (Session: {session.session_id[:8]})")
+                        print(f"📝 Saving leaving phase responses for '{l_name}':")
+                        for r in req.leaving_phase_responses:
+                            print(f"   - Q: {r.question_id}, hint_used: {r.hint_used}")
                         
                         if isinstance(leaving_pdata, dict):
                             leaving_pdata['responses'] = req.leaving_phase_responses
@@ -254,7 +269,7 @@ def start_phase(req: StartPhaseRequest) -> StartPhaseResponse:
                             leaving_pdata.responses = req.leaving_phase_responses
                         session.phases[l_name] = leaving_pdata
                     else:
-                        logger.debug(f"⏭️ Skipping draft save for '{l_name}' - phase already passed")
+                        print(f"⏭️ Skipping response save for '{l_name}' - phase already passed")
     
     # STEP 2: Get or initialize the target phase's data
     key = f"phase_{req.phase_number}"
@@ -282,7 +297,6 @@ def start_phase(req: StartPhaseRequest) -> StartPhaseResponse:
         
     session.current_phase = req.phase_number
     update_session(session)
-    logger.info(f"🏁 Phase transition: Session={session.session_id[:8]}, Entering Phase {req.phase_number} ('{phase_name}')")
     
     # Prepare questions
     questions = []
@@ -309,9 +323,13 @@ def start_phase(req: StartPhaseRequest) -> StartPhaseResponse:
     
     # Debug logging for hint persistence
     if previous_responses:
-        logger.debug(f"📤 Hydrating {len(previous_responses)} previous responses for '{phase_name}'")
+        print(f"📤 Returning previous responses for '{phase_name}':")
+        for r in previous_responses:
+            hint = getattr(r, 'hint_used', r.get('hint_used') if isinstance(r, dict) else False)
+            qid = getattr(r, 'question_id', r.get('question_id') if isinstance(r, dict) else '?')
+            print(f"   - Q: {qid}, hint_used: {hint}")
     else:
-        logger.debug(f"📤 No previous responses to hydrate for '{phase_name}'")
+        print(f"📤 No previous responses for '{phase_name}'")
 
     return StartPhaseResponse(
         phase_id=phase_def.get("id", f"phase_{req.phase_number}"),
@@ -326,7 +344,7 @@ def start_phase(req: StartPhaseRequest) -> StartPhaseResponse:
 
 
 @router.post("/save-hint")
-def save_hint(req: dict) -> Dict[str, Any]:
+async def save_hint(req: dict):
     """
     Immediately save hint usage for a question.
     Called when user unlocks a hint - persists before phase submission.
@@ -382,7 +400,7 @@ def save_hint(req: dict) -> Dict[str, Any]:
     session.phases[phase_name] = phase_data
     update_session(session)
     
-    logger.info(f"💡 Hint marked as used: Session={session_id[:8]}, Phase='{phase_name}', Question='{question_id}'")
+    print(f"💡 Hint saved for session {session_id[:8]}, phase '{phase_name}', question '{question_id}'")
     
     return {"success": True, "message": "Hint saved"}
 
@@ -393,8 +411,7 @@ async def submit_phase_stream(req: SubmitPhaseRequest):
     Submit answers for AI evaluation with real-time progress streaming (SSE).
     Use this endpoint to get live updates as Red Team and Lead Partner agents run.
     """
-    # Use run_in_threadpool for blocking DB call in async route
-    session = await run_in_threadpool(get_session, req.session_id)
+    session = get_session(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
@@ -565,6 +582,7 @@ async def submit_phase(req: SubmitPhaseRequest):
             )
     is_test_command = any(r.a.lower().strip() == "test" for r in req.responses)
     
+    
     if settings.TEST_MODE and is_test_command:
         # Mock successful evaluation for testing
         eval_result = {
@@ -577,48 +595,52 @@ async def submit_phase(req: SubmitPhaseRequest):
     else:
         # Normal AI Evaluation (async for multi-user concurrency)
         try:
-            # Async call for non-blocking AI evaluation
             eval_result = await evaluate_phase_async(
                 usecase=session.usecase,
                 phase_config=phase_def,
                 responses=[r.model_dump() for r in req.responses],
                 previous_feedback=prev_feedback,
-                image_data=req.image_data
+                image_data=req.image_data  # Pass visual evidence
             )
         except TimeoutError as e:
             # AI evaluation timed out - return a clean error to frontend
             raise HTTPException(status_code=504, detail=str(e))
         except Exception as e:
             # Catch any other unexpected AI errors
-            logger.error(f"❌ AI Evaluation Pipeline Error in {req.phase_name}: {type(e).__name__}: {e}")
+            print(f"❌ AI Evaluation error: {type(e).__name__}: {e}")
             raise HTTPException(status_code=500, detail=f"AI evaluation failed: {str(e)}")
+
+    # CRITICAL FIX: Re-fetch session to prevent overwriting concurrent updates (like hints)
+    # that happened while the async AI evaluation was running.
+    session = get_session(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session lost during evaluation")
+        
+    # Recalculate timing based on freshness
+    start_time = session.phase_start_times.get(key) or datetime.now(timezone.utc)
+    end_time = datetime.now(timezone.utc)
+    current_session_elapsed = (end_time - start_time).total_seconds()
+    
+    accumulated_elapsed = 0.0
+    if hasattr(session, 'phase_elapsed_seconds') and session.phase_elapsed_seconds:
+        accumulated_elapsed = session.phase_elapsed_seconds.get(key, 0.0)
+        
+    total_elapsed_seconds = accumulated_elapsed + current_session_elapsed
+    synthetic_start_time = end_time - timedelta(seconds=total_elapsed_seconds)
 
     # Calculate Hint Penalty
     total_hint_penalty = 0.0
     # Assuming responses are in the same order as phase_def["questions"]
     # We should verify this, but for now we trust the client preserves order or we map by ID
-    for response in req.responses:
+    for i, response in enumerate(req.responses):
         if response.hint_used:
-            # Robust lookup by ID first, then fallback to index
-            q_def = None
-            if response.question_id:
-                q_def = next((q for q in phase_def.get("questions", []) if isinstance(q, dict) and q.get("id") == response.question_id), None)
-            
-            if q_def:
-                total_hint_penalty += q_def.get("hint_penalty", 25.0)
-            else:
-                # Fallback to index-based if ID not found is provided by the client's current loop index
-                # This ensures backward compatibility while adding ID-based robustness
-                try:
-                    # Find index by matching question text if possible
-                    idx = next((i for i, q in enumerate(phase_def.get("questions", [])) if (isinstance(q, dict) and q.get("text") == response.q) or q == response.q), -1)
-                    if idx != -1:
-                        target_q = phase_def["questions"][idx]
-                        total_hint_penalty += target_q.get("hint_penalty", 25.0) if isinstance(target_q, dict) else 25.0
-                    else:
-                        total_hint_penalty += 25.0
-                except (IndexError, KeyError, TypeError, StopIteration):
-                    total_hint_penalty += 25.0
+            # Get penalty from question def
+            if i < len(phase_def["questions"]):
+                q_def = phase_def["questions"][i]
+                if isinstance(q_def, dict):
+                     total_hint_penalty += q_def.get("hint_penalty", 50.0)
+                else:
+                     total_hint_penalty += 50.0 # Default if simple string question (though hints usually imply dict structure)
     
     # Extract real AI usage
     ai_usage = eval_result.get('usage', {})
@@ -682,9 +704,9 @@ async def submit_phase(req: SubmitPhaseRequest):
                 f.write(img_bytes)
             
             evidence_url = f"/generated/{filename}"
-            logger.info(f"📸 Persisted phase evidence: {evidence_url}")
+            print(f"📸 Saved phase evidence to {evidence_url}")
         except Exception as e:
-            logger.warning(f"⚠️ Failed to persist phase evidence image: {e}")
+            print(f"⚠️ Failed to persist phase evidence image: {e}")
             # Fallback to keeping it in memory/DB if saving fails (not ideal but safe)
 
     # Update phase data
@@ -777,7 +799,7 @@ def _get_retry_info(session: SessionState, phase_name: str) -> tuple[int, str | 
             retries = completed_trials
                 
         except Exception as e:
-            logger.error(f"Retry detection error for session {session.session_id[:8]}: {e}")
+            print(f"Retry detection error: {e}")
             # Fallback to current increment logic if history parsing fails
             if hasattr(prev_phase_data, 'metrics'):
                 retries = prev_phase_data.metrics.retries + 1
@@ -789,14 +811,13 @@ def _get_retry_info(session: SessionState, phase_name: str) -> tuple[int, str | 
 
 
 @router.get("/session/{team_id}/report")
-def get_session_report(team_id: str) -> Any:
+async def get_session_report(team_id: str):
     """
     Generate and download a PDF report for the team's latest session.
     """
     from backend.services.pdf_generator import generate_report
     from fastapi.responses import FileResponse
     import logging
-    import asyncio
     
     logger = logging.getLogger("pitchsync.api")
     
@@ -805,15 +826,10 @@ def get_session_report(team_id: str) -> Any:
     if not session:
         raise HTTPException(status_code=404, detail="No session found for this team.")
     
-    # 2. Generate PDF (non-blocking - runs in thread pool to avoid blocking event loop)
+    # 2. Generate PDF
     try:
-        logger.info(f"📄 Generating PDF report: Team={team_id}, Session={session.session_id[:8]}")
-        
-        from backend.services.pdf_generator import generate_report
-        from backend.utils.concurrency import limit_pdf_concurrency
-        
-        with limit_pdf_concurrency():
-             pdf_path = generate_report(session)
+        print(f"📄 Generating report for team: {team_id}")
+        pdf_path = generate_report(session)
         
         # 3. Stream file back
         return FileResponse(
@@ -826,9 +842,3 @@ def get_session_report(team_id: str) -> Any:
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
-
-
-@router.get("/broadcast")
-def get_public_broadcast() -> Dict[str, Any]:
-    """Get the current system broadcast message (public)."""
-    return get_broadcast_message()
