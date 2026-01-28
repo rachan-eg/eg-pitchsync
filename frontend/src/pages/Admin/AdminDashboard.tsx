@@ -449,7 +449,18 @@ export const AdminDashboard: React.FC = () => {
             < main className="admin-main" >
                 {activeTab === 'leaderboard' ? (
                     <div className="leaderboard-view">
-                        <Leaderboard entries={leaderboardData} hideTitle hideBackButton />
+                        <Leaderboard
+                            entries={leaderboardData}
+                            hideTitle
+                            hideBackButton
+                            onTeamClick={(teamId) => {
+                                const team = teams.find(t => t.team_name === teamId || t.session_id === teamId);
+                                if (team) {
+                                    setSelectedTeam(team);
+                                    setActiveTab('teams');
+                                }
+                            }}
+                        />
                     </div>
                 ) : inspectedSubmission && selectedSession ? (
                     // Submission Inspection View
