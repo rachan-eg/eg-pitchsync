@@ -26,8 +26,16 @@ from backend.services import (
 )
 from backend.services.ai import evaluate_phase_async
 from backend.services.ai.evaluator_streaming import evaluate_phase_streaming
+from backend.utils.broadcast import get_broadcast_message
 
 router = APIRouter(prefix="/api", tags=["session"])
+
+
+@router.get("/broadcast")
+def get_public_broadcast():
+    """Public endpoint to get the current system broadcast."""
+    return get_broadcast_message()
+
 
 
 @router.post("/init", response_model=InitResponse)
