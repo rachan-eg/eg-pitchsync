@@ -629,7 +629,7 @@
 }
 
 .pi-input-area {
-    background: var(--bg-surface);
+    background: var(--bg-input);
     /*border: 0 solid var(--border-light); */
     border-radius: 12px;
     padding: 0;
